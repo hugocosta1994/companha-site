@@ -49,5 +49,11 @@
   { "id": "SOM-AGUA", "categoria": "som", "raridade": "raro", "eur": 1.99, "lascas": 500, "consumivel": false, "play_id": "seixo_som_agua", "gratis": false },
   { "id": "PAC-RIA", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_ria", "gratis": false, "via_nivel": 2 },
   { "id": "PAC-MOSTEIRO", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_mosteiro", "gratis": false, "via_nivel": 4 },
-  { "id": "PAC-AZULEJO-CALCADA", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_azulejo_calcada", "gratis": false, "via_nivel": 5 }
+  { "id": "PAC-AZULEJO-CALCADA", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_azulejo_calcada", "gratis": false, "via_nivel": 5 },
+  {"id": "MOLD-CENTO", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
+  {"id": "MOLD-TRIMESTRE", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
+  {"id": "MOLD-ANO", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
+  {"id": "PEDRA-ESTACOES", "categoria": "pedra", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
+  {"id": "SELO-100", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
+  {"id": "SELO-AMIGOS", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true}
 ]

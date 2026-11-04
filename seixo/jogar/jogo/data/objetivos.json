@@ -369,6 +369,211 @@
    "premio": {
     "lascas": 50
    }
+  },
+  {
+   "id": "OBJ-L13",
+   "horizonte": "longo",
+   "texto_id": "obj.L13",
+   "tipo": "mestre_tecnica",
+   "alvo": {
+    "variante": "equilibrio",
+    "n": 25
+   },
+   "premio": {
+    "lascas": 40
+   }
+  },
+  {
+   "id": "OBJ-L14",
+   "horizonte": "longo",
+   "texto_id": "obj.L14",
+   "tipo": "mestre_tecnica",
+   "alvo": {
+    "variante": "juntas",
+    "n": 25
+   },
+   "premio": {
+    "lascas": 40
+   }
+  },
+  {
+   "id": "OBJ-L15",
+   "horizonte": "longo",
+   "texto_id": "obj.L15",
+   "tipo": "mestre_tecnica",
+   "alvo": {
+    "variante": "contra_espelho",
+    "n": 25
+   },
+   "premio": {
+    "lascas": 40
+   }
+  },
+  {
+   "id": "OBJ-L16",
+   "horizonte": "longo",
+   "texto_id": "obj.L16",
+   "tipo": "mestre_tecnica",
+   "alvo": {
+    "variante": "orla",
+    "n": 25
+   },
+   "premio": {
+    "lascas": 40
+   }
+  },
+  {
+   "id": "OBJ-L17",
+   "horizonte": "longo",
+   "texto_id": "obj.L17",
+   "tipo": "mestre_tecnica",
+   "alvo": {
+    "nivelMax": "N2",
+    "n": 40
+   },
+   "premio": {
+    "lascas": 50
+   }
+  },
+  {
+   "id": "OBJ-L18",
+   "horizonte": "longo",
+   "texto_id": "obj.L18",
+   "tipo": "mestre_tecnica",
+   "alvo": {
+    "nivelMax": "N3",
+    "n": 25
+   },
+   "premio": {
+    "item": "PAL-NOITE"
+   }
+  },
+  {
+   "id": "OBJ-L19",
+   "horizonte": "longo",
+   "texto_id": "obj.L19",
+   "tipo": "sem_pista_total",
+   "alvo": {
+    "n": 100
+   },
+   "premio": {
+    "lascas": 60,
+    "item": "SELO-100"
+   }
+  },
+  {
+   "id": "OBJ-L20",
+   "horizonte": "longo",
+   "texto_id": "obj.L20",
+   "tipo": "sem_pista_total",
+   "alvo": {
+    "n": 250
+   },
+   "premio": {
+    "lascas": 100
+   }
+  },
+  {
+   "id": "OBJ-L21",
+   "horizonte": "longo",
+   "texto_id": "obj.L21",
+   "tipo": "sem_pista_total",
+   "alvo": {
+    "n": 500
+   },
+   "premio": {
+    "item": "MOLD-CENTO"
+   }
+  },
+  {
+   "id": "OBJ-L22",
+   "horizonte": "longo",
+   "texto_id": "obj.L22",
+   "tipo": "meses_seguidos",
+   "alvo": {
+    "n": 3
+   },
+   "premio": {
+    "lascas": 80,
+    "item": "MOLD-TRIMESTRE"
+   }
+  },
+  {
+   "id": "OBJ-L23",
+   "horizonte": "longo",
+   "texto_id": "obj.L23",
+   "tipo": "meses_seguidos",
+   "alvo": {
+    "n": 6
+   },
+   "premio": {
+    "lascas": 150
+   }
+  },
+  {
+   "id": "OBJ-L24",
+   "horizonte": "longo",
+   "texto_id": "obj.L24",
+   "tipo": "praca_completa",
+   "alvo": {
+    "tipo": "mes",
+    "n": 12
+   },
+   "premio": {
+    "item": "MOLD-ANO"
+   }
+  },
+  {
+   "id": "OBJ-L25",
+   "horizonte": "longo",
+   "texto_id": "obj.L25",
+   "tipo": "estacao_completa",
+   "alvo": {
+    "n": 1
+   },
+   "premio": {
+    "lascas": 60
+   }
+  },
+  {
+   "id": "OBJ-L26",
+   "horizonte": "longo",
+   "texto_id": "obj.L26",
+   "tipo": "estacao_completa",
+   "alvo": {
+    "n": 6
+   },
+   "premio": {
+    "item": "PEDRA-ESTACOES"
+   }
+  },
+  {
+   "id": "OBJ-L27",
+   "horizonte": "longo",
+   "texto_id": "obj.L27",
+   "tipo": "tempo_faixa",
+   "alvo": {
+    "F": 90,
+    "M": 240,
+    "D": 600,
+    "n": 3
+   },
+   "premio": {
+    "lascas": 50
+   }
+  },
+  {
+   "id": "OBJ-L28",
+   "horizonte": "longo",
+   "texto_id": "obj.L28",
+   "tipo": "amigos",
+   "alvo": {
+    "n": 3
+   },
+   "premio": {
+    "lascas": 30,
+    "item": "SELO-AMIGOS"
+   }
   }
  ]
 }

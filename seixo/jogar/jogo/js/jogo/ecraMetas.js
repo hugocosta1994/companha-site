@@ -9,7 +9,7 @@ const criar = (tag, attrs = {}, ...filhos) => {
   return e;
 };
 const img = (src, tam, cls) => criar("img", { src, width: String(tam), height: String(tam), alt: "", "aria-hidden": "true", class: cls, draggable: "false" });
-const ICONE_META = { H1: "hoje", H2: "sem-pista", H3: "arquivo", H4: "arquivo", H5: "tecnica", H6: "variante", S1: "sem-pista", S2: "seq-3", S3: "arquivo", S4: "mestre", S5: "tecnica", S6: "pacote", S7: "praca-mes", S8: "variante", L1: "primeiro", L2: "seq-3", L3: "seq-7", L4: "seq-30", L5: "praca-mes", L6: "tecnica", L7: "tecnica", "L8-JUNTAS": "variante", "L8-CONTRA": "variante", "L8-ORLA": "variante", L9: "pacote", L10: "dez", L11: "moldura", L12: "mestre" };
+const ICONE_META = { H1: "hoje", H2: "sem-pista", H3: "arquivo", H4: "arquivo", H5: "tecnica", H6: "variante", S1: "sem-pista", S2: "seq-3", S3: "arquivo", S4: "mestre", S5: "tecnica", S6: "pacote", S7: "praca-mes", S8: "variante", L1: "primeiro", L2: "seq-3", L3: "seq-7", L4: "seq-30", L5: "praca-mes", L6: "tecnica", L7: "tecnica", "L8-JUNTAS": "variante", "L8-CONTRA": "variante", "L8-ORLA": "variante", L9: "pacote", L10: "dez", L11: "moldura", L12: "mestre", L13: "variante", L14: "variante", L15: "variante", L16: "variante", L17: "tecnica", L18: "tecnica", L19: "cem", L20: "cem", L21: "cem", L22: "praca-mes", L23: "praca-mes", L24: "moldura", L25: "pacote", L26: "pacote", L27: "rapido", L28: "partilha" };
 const iconeMeta = (id) => `img/metas/m-${ICONE_META[String(id).replace(/^OBJ-/, "")] || "pedra"}.svg`;
 const seloNivel = (n) => `img/selos/nivel-${Math.min(5, Math.max(1, n))}.svg`;
 const marca = (feito) => criar("span", { class: "of-marca", "aria-hidden": "true" }, feito ? "\u2713" : "\u25CB");

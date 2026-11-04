@@ -5,6 +5,28 @@ const OBJ_HOJE_LASCAS = 2, OBJ_SEMANA_LASCAS = 10, OBJ_SEMANA_N = 3;
 const POOL_HOJE = Object.freeze(["OBJ-H1", "OBJ-H2", "OBJ-H3", "OBJ-H4", "OBJ-H5", "OBJ-H6"]);
 const POOL_SEMANA = Object.freeze(["OBJ-S1", "OBJ-S2", "OBJ-S3", "OBJ-S4", "OBJ-S5", "OBJ-S6", "OBJ-S7", "OBJ-S8"]);
 const MS_DIA = 864e5;
+const TEMPO_MIN_MS = Object.freeze({ F: 2e4, M: 4e4, D: 6e4 });
+const mesN = (m) => Number(m.slice(0, 4)) * 12 + Number(m.slice(5, 7));
+function melhorSequenciaMeses(doc) {
+  const ms = Object.entries(doc && doc.pracas || {}).filter(([k, v]) => /^\d{4}-\d{2}$/.test(k) && v && v.completaEm).map(([k]) => mesN(k)).sort((a, b) => a - b);
+  let melhor = 0, c = 0;
+  ms.forEach((m, i) => {
+    c = i > 0 && m === ms[i - 1] + 1 ? c + 1 : 1;
+    melhor = Math.max(melhor, c);
+  });
+  return melhor;
+}
+function mesesSeguidosAtual(doc, hoje) {
+  const set = new Set(Object.entries(doc && doc.pracas || {}).filter(([k, v]) => /^\d{4}-\d{2}$/.test(k) && v && v.completaEm).map(([k]) => mesN(k)));
+  let m = mesN(hoje.slice(0, 7));
+  if (!set.has(m)) m -= 1;
+  let c = 0;
+  while (set.has(m)) {
+    c++;
+    m--;
+  }
+  return c;
+}
 const objetivosInicial = () => ({ cumpridos: {}, hoje: { id: null, data: null }, semana: { ids: [], semanaISO: null }, progresso: {} });
 function objetivosDeV1(doc) {
   const o = objetivosInicial();
@@ -132,9 +154,46 @@ function progressoDe(obj, doc, { hoje, infoDe } = {}) {
       return res(doc.oficio && doc.oficio.descobertas.includes(al.descoberta) ? 1 : 0, 1);
     case "nivel":
       return res(doc.oficio ? nivelDePo(doc.oficio.po) : 1, al.nivel);
+    case "mestre_tecnica": {
+      const sp = rs.filter((x) => x.semPista && x.info);
+      if (al.variante) return res(sp.filter((x) => x.info.variante === al.variante).length, al.n);
+      const rank = (v) => Number(String(v || "N1").slice(1)) || 1;
+      return res(sp.filter((x) => rank(x.info.classificacao && x.info.classificacao.nivelMax) >= rank(al.nivelMax)).length, al.n);
+    }
+    case "sem_pista_total":
+      return res(rs.filter((x) => x.semPista).length, al.n);
+    case "meses_seguidos":
+      return res(melhorSequenciaMeses(doc), al.n);
+    case "estacao_completa":
+      return res(Object.entries(doc.pracas || {}).filter(([k, v]) => /^EST-/.test(k) && v && v.completaEm).length, al.n);
+    case "tempo_faixa": {
+      const melhor = { F: Infinity, M: Infinity, D: Infinity }, F = { facil: "F", medio: "M", dificil: "D" };
+      for (const x of rs) {
+        const f = x.info && F[x.info.dificuldade], ms = x.reg.tempoMs;
+        if (x.semPista && f && ms > 0 && ms >= TEMPO_MIN_MS[f]) melhor[f] = Math.min(melhor[f], ms);
+      }
+      const n = ["F", "M", "D"].filter((f) => melhor[f] <= (al[f] || 0) * 1e3).length;
+      return res(n, 3);
+    }
+    case "amigos":
+      return res((doc.social && doc.social.amigos || []).length, al.n);
     default:
       return res(0, 1);
   }
+}
+function atualizarProgresso(doc, catalogo, ctx) {
+  if (!doc.objetivos) doc.objetivos = objetivosInicial();
+  const p = doc.objetivos.progresso || (doc.objetivos.progresso = {});
+  let mudou = false;
+  for (const obj of catalogo) {
+    if (obj.horizonte !== "longo") continue;
+    const { atual } = progressoDe(obj, doc, ctx);
+    if (p[obj.id] !== atual) {
+      p[obj.id] = atual;
+      mudou = true;
+    }
+  }
+  return mudou;
 }
 function jaCumprido(doc, obj, hoje) {
   const d = doc.objetivos && doc.objetivos.cumpridos[obj.id];
@@ -170,6 +229,7 @@ function verificar(doc, catalogo, ctx) {
     }
     eventos.push(["objetivo:cumprido", { id: obj.id, horizonte: obj.horizonte, premio }]);
   }
+  if (atualizarProgresso(doc, catalogo, ctx)) mudou = true;
   return { mudou, eventos };
 }
 export {
@@ -178,11 +238,15 @@ export {
   OBJ_SEMANA_N,
   POOL_HOJE,
   POOL_SEMANA,
+  TEMPO_MIN_MS,
   ativar,
+  atualizarProgresso,
   idHoje,
   idsSemana,
   inicioSemana,
   listarAtivos,
+  melhorSequenciaMeses,
+  mesesSeguidosAtual,
   objetivosDeV1,
   objetivosInicial,
   progressoDe,
