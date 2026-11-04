@@ -1,0 +1,382 @@
+/* SEIXO — ecrã de puzzle do protótipo (retrato 360×640) */
+:root {
+  /* cores: ver css/tokens.css (T-1078) */
+  /* T-453: safe areas = o maior de env(), da variável injetada pelo Capacitor e do fallback mínimo (WebView com env()=0). */
+  --seg-topo: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px), 32px); /* T-454: fallback 24→32 dp: aparelhos com notch/furo têm status bar de 28–48 dp e o WebView pode dar env()=0; custa 8 dp em baixo de 640 */
+  --seg-fundo: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px), 16px);
+  --seg-esq: max(env(safe-area-inset-left, 0px), var(--safe-area-inset-left, 0px));
+  --seg-dir: max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tinta);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent; user-select: none; }
+/* Largura até 412 dp (T-351, GDD §2.8/CA-27): o tabuleiro mede-se pela largura de #app, por isso o 8×8 tem
+   casa 44 dp a 360 dp e 48 dp a partir de 392 dp. A altura acompanha (até 760) para o 8×8 mais alto caber. */
+#app { width: 100%; max-width: 412px; height: 100%; margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center; padding: 8px 16px; padding-top: calc(8px + var(--seg-topo)); padding-bottom: calc(8px + var(--seg-fundo)); padding-left: calc(16px + var(--seg-esq)); padding-right: calc(16px + var(--seg-dir)); overflow-x: hidden; overflow-y: auto; }
+/* T-438 (V1-13): se o conteúdo (puzzle + painel do Início) passar a altura útil, #app desliza em vez de cortar a fila de botões. */
+/* V1-13 (B-03..B-06): texto a 16 sp e a informação do dia sem truncar custam ~27 px; recuperam-se nas margens
+   (#app 12→8, diário 4→0, botões 8→6, mensagem 6→4, linhas do arquivo 32→28) e no seletor de protótipo escondido. */
+.topo { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.topo h1 { flex: 1; min-width: 0; font-size: 17px; line-height: 22px; margin: 0; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.escolha { font-size: 16px; color: var(--tinta-suave); white-space: nowrap; }
+.escolha select { font: inherit; padding: 2px 4px; }
+.espaco { flex: 1; }
+/* B-01 (L2): a regra fica a 16 sp e parte em duas linhas em vez de encolher; a mensagem também a 16 sp. */
+.regra { width: 100%; margin: 0 0 2px; font-size: 16px; line-height: 1.2; text-align: center; text-wrap: balance; }
+.mensagem { width: 100%; min-height: 20px; margin: 0 0 4px; font-size: 16px; line-height: 20px; text-align: center; color: var(--aviso); }
+.mensagem.ok { color: var(--ok); font-weight: 600; }
+.botoes { display: flex; flex-wrap: wrap; justify-content: center; max-width: 100%; gap: 8px; margin-top: 6px; }
+/* B-02 (CA-27): alvos de toque de 48 dp em todos os botões do ecrã (a exceção do 8×8 é só para as casas). */
+.botoes button { font: inherit; font-size: 16px; min-height: 48px; padding: 0 10px; white-space: nowrap; border-radius: 10px;
+  border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); }
+.botoes button:disabled { opacity: .45; }
+.botoes button[hidden] { display: none; }
+
+/* Puzzle do dia e arquivo do mês (T-368; GDD §6.1/§6.5). Provisório até aos mockups do Início e do Arquivo. */
+.diario { position: relative; width: 100%; margin-top: 0; font-size: 16px; color: var(--tinta-suave); }
+.dia-linha { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* B-06: a informação do dia partilha a linha só com Loja e ⚙ e parte em duas em vez de truncar; a sequência desce para a linha de «Jogar». */
+.dia-info { flex: 1; min-width: 0; margin: 0; color: var(--tinta); font-weight: 600; line-height: 20px; text-wrap: balance; }
+.dia-sequencia { flex: 1; min-width: 0; margin: 0; line-height: 1.2; }
+.diario button { font: inherit; min-height: 48px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); }
+.diario button[hidden] { display: none; }
+/* Alvo de toque de 48 dp (CA-27, T-386) sem gastar altura (B-02, 360×640): a linha continua a ocupar 32 px,
+   o padding vertical alarga a área de toque e a margem negativa devolve-a ao layout. */
+.arquivo summary { position: relative; min-width: 48px; text-align: center; cursor: pointer; min-height: 48px; line-height: 28px; padding: 10px 0; margin: -10px 0; }
+/* aberto por cima do tabuleiro, para não o empurrar para fora do ecrã */
+/* B-04: o painel ocupa a largura toda do ecrã (até à margem de #app) com folgas de 2 px, para os 7 dias da semana
+   terem 48 dp já a 360 dp ((360 - 2 - 4 - 12) / 7 = 48,9). */
+.arquivo-dias { position: absolute; left: -16px; right: -16px; z-index: 2; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+  padding: 2px; background: var(--fundo); border: 1px solid var(--botao-borda); border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+.arquivo-dias .dia-arq { min-height: 48px; padding: 0; font-variant-numeric: tabular-nums; }
+.dia-arq.a_meio { border-style: dashed; }
+.dia-arq.resolvido, .dia-arq.resolvido_com_pistas { background: var(--tinta); color: var(--botao); }
+.dia-arq.hoje { outline: 2px solid var(--ok); outline-offset: 1px; }
+.arquivo-vazio { grid-column: 1 / -1; margin: 4px 0; }
+/* Definições: som e volume (T-359). Provisório até ao ecrã de Definições. */
+.definicoes { flex: none; }
+.definicoes summary { cursor: pointer; list-style: none; width: 48px; height: 48px; line-height: 48px; text-align: center;
+  font-size: 22px; border-radius: 10px; border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); }
+.definicoes summary::-webkit-details-marker { display: none; }
+.definicoes-painel { position: absolute; left: 0; right: 0; z-index: 3; padding: 4px 12px; font-size: 16px; color: var(--tinta);
+  background: var(--fundo); border: 1px solid var(--botao-borda); border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+.def-linha { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.def-linha input[type=checkbox] { width: 48px; height: 48px; margin: 0; accent-color: var(--ok); } /* V1-13: alvo 48 dp */
+.def-linha input[type=range] { flex: 1; min-height: 48px; }
+
+/* Pacotes e largos (T-394; GDD §4.3, CA-25). Provisório até ao mockup do Arquivo e aos assets da praça. */
+.arquivo-linha { display: flex; gap: 16px; align-items: center; }
+.pacotes summary { color: var(--tinta); }
+.pacotes-corpo { display: block; max-height: 70vh; overflow-y: auto; }
+.pacotes-abas { display: flex; gap: 6px; }
+.pacotes-abas .pacote-aba { flex: 1; }
+.pacote-aba[aria-selected="true"] { background: var(--tinta); color: var(--botao); }
+.pacote-estado { margin: 6px 0; color: var(--tinta); }
+.pacote-precos { display: flex; gap: 8px; margin-bottom: 6px; }
+.pacote-precos button { flex: 1; }
+.praca-grelha { display: grid; gap: 4px; }
+.diario .praca-q { position: relative; min-height: 48px; padding: 0; aspect-ratio: 1; overflow: hidden; border-radius: 6px; }
+.praca-q canvas { width: 100%; height: 100%; display: block; }
+.praca-q .praca-num { position: absolute; left: 3px; top: 1px; font-size: 16px; line-height: 1; color: var(--tinta); text-shadow: 0 0 2px var(--botao); }
+.praca-q.a_meio { border-style: dashed; border-width: 2px; }
+.praca-q:disabled { opacity: .6; }
+.praca-motivo { margin: 8px 0 0; display: flex; justify-content: center; }
+.praca-motivo-desenho { width: 128px; height: 128px; border-radius: 6px; opacity: .45; filter: saturate(.4); transition: opacity .3s, filter .3s; }
+.praca-motivo.acesa .praca-motivo-desenho { opacity: 1; filter: none; box-shadow: 0 0 10px color-mix(in srgb, var(--ok) 45%, transparent); }
+.praca-motivo.acender { animation: acender-motivo 1.2s ease-out 1; }
+@keyframes acender-motivo { 0% { transform: scale(1); opacity: .4; } 40% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1); } }
+
+/* Loja (T-395; GDD §6.6, CA-20). Ecrã por cima do jogo; o topo (Restaurar compras incluído) não rola. */
+#app { position: relative; }
+.loja { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; background: var(--fundo);
+  padding: 12px 16px; padding-top: calc(12px + var(--seg-topo)); padding-bottom: calc(12px + var(--seg-fundo)); padding-left: calc(16px + var(--seg-esq)); padding-right: calc(16px + var(--seg-dir)); overflow-y: auto; font-size: 16px; color: var(--tinta); }
+.loja[hidden] { display: none; }
+.loja button { font: inherit; min-height: 48px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); }
+.loja button:disabled { opacity: .5; }
+.loja-topo { flex: none; }
+.loja-cab { display: flex; align-items: center; gap: 8px; }
+.loja-cab { min-height: 56px; }
+.loja-titulo { flex: 1; margin: 0; font-size: 20px; text-align: center; }
+.loja-fechar { width: auto; min-width: 48px; font-size: 16px; font-weight: 600; }
+.loja-saldo { margin: 0; font-weight: 600; color: var(--tinta); white-space: nowrap; }
+.loja-restaurar { width: 100%; margin: 4px 0 8px; }
+.loja-abas { display: flex; gap: 6px; }
+.loja-aba { flex: 1; }
+.loja-aba[aria-selected="true"] { background: var(--tinta); color: var(--botao); }
+.loja-msg { min-height: 20px; margin: 6px 0; color: var(--ok); }
+.loja-lista { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
+.loja-lista[data-sep=pistas], .loja-artigo[data-categoria=kit], .loja-artigo[data-categoria=apoio], .loja-artigo[data-categoria=pista] { grid-column: 1 / -1; }
+.loja-artigo { display: flex; flex-direction: column; gap: 8px; align-items: stretch; padding: 8px; border: 1px solid var(--botao-borda); border-radius: 10px; }
+.loja-texto { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.loja-desc, .loja-info { font-size: 16px; color: var(--tinta-suave); margin: 0; }
+.loja-acoes { display: flex; flex-direction: column; gap: 6px; flex: none; }
+.loja-acoes button { width: 100%; }
+.loja-faltam { font-size: 16px; color: var(--tinta-suave); }
+.loja-tem { font-size: 16px; color: var(--ok); }
+.loja .em-uso { background: var(--tinta); color: var(--botao); opacity: 1; }
+.def-restaurar { width: 100%; min-height: 48px; font: inherit; border-radius: 10px; border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); }
+
+/* Praça do mês (T-369; GDD §4.5, §6.4). Provisório até ao mockup do ecrã Praça. */
+.praca-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--tinta); }
+.praca-cab button { width: 48px; font-size: 20px; }
+.praca-q.futuro { background: transparent; border-style: dashed; }
+
+/* Tutorial (T-393; GDD §4.7): a dica fica por cima da grelha, no lugar da regra, nunca a tapar. */
+.tutorial-dica { width: 100%; margin: 0 0 2px; font-size: 16px; line-height: 1.25; text-align: center; color: var(--ok); font-weight: 600; text-wrap: balance; }
+.tutorial-dica[hidden], .regra[hidden], .diario[hidden] { display: none; }
+
+/* T-426: o quadrado a assentar na praça (jogo/assentar.js), por cima do tabuleiro resolvido, sem mexer no layout */
+.assentar { position: absolute; z-index: 5; display: flex; align-items: center; justify-content: center; animation: assentar-entrar .3s ease-out 1; }
+.assentar.sair { opacity: 0; transition: opacity .4s; }
+.assentar-cartao { background: var(--botao); border: 1px solid var(--botao-borda); border-radius: 12px; padding: 10px 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18); display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 92%; }
+.assentar-titulo { font-size: 16px; color: var(--tinta); }
+.assentar-legenda { font-size: 16px; color: var(--tinta-suave); text-align: center; }
+.assentar-grelha { display: grid; gap: 2px; width: 220px; max-width: 70vw; }
+.assentar-q { width: 100%; height: auto; aspect-ratio: 1; display: block; border-radius: 3px; }
+.assentar-q.novo { position: relative; z-index: 1; animation: assentar-cair .7s cubic-bezier(.2,.8,.3,1.15) .35s 1 both, assentar-brilho 1.2s ease-out 1.05s 1; }
+@keyframes assentar-entrar { from { opacity: 0; } }
+@keyframes assentar-cair { from { transform: translateY(-40px) scale(2.2); opacity: 0; } 60% { opacity: 1; } to { transform: none; opacity: 1; } }
+@keyframes assentar-brilho { 0% { box-shadow: 0 0 0 3px var(--ok); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .assentar, .assentar-q.novo { animation: none; } }
+/* T-427: amostra visual de cada cosmético na Loja (ecraLoja.js desenharAmostra) */
+.loja-amostra { width: 48px; height: 48px; flex: none; border-radius: 6px; align-self: center; }
+
+.aviso-gravacao { width: 100%; margin: 0 0 4px; padding: 6px 8px; font-size: 16px; line-height: 1.25; text-align: center; color: var(--aviso); border: 1px solid var(--aviso); border-radius: 8px; cursor: pointer; }
+.aviso-gravacao[hidden] { display: none; }
+
+/* T-454 (contratos/ecras.md): E2 só puzzle; E1 Menu, E3 Pausa, E4 Resultado e sub-ecrãs como sobreposições. */
+#diario { display: none; } /* o painel do Início passou ao Menu e aos sub-ecrãs (as peças são movidas para lá) */
+#app:not(.em-tutorial) .botoes #btn-seguinte, #app:not(.em-tutorial) .botoes #btn-partilhar { display: none; }
+.btn-pausa { font: inherit; font-size: 16px; font-weight: 600; min-width: 48px; min-height: 48px; padding: 0 12px;
+  border: 0; background: none; color: var(--tinta); white-space: nowrap; }
+.btn-pausa .icone { font-size: 22px; margin-right: 2px; }
+.topo { min-height: 48px; }
+.ecra { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--fundo); color: var(--tinta); font-size: 16px;
+  padding: 8px 16px; padding-top: calc(8px + var(--seg-topo)); padding-bottom: calc(16px + var(--seg-fundo));
+  padding-left: calc(16px + var(--seg-esq)); padding-right: calc(16px + var(--seg-dir)); overflow-y: auto; }
+.ecra[hidden] { display: none; }
+.ecra-menu { z-index: 8; } .ecra-sub { z-index: 8; } .ecra-resultado { z-index: 7; } .ecra-pausa { z-index: 9; }
+.ec-mola { flex: 1; min-height: 8px; }
+.ec-cab { display: flex; justify-content: space-between; align-items: center; min-height: 56px; gap: 8px; }
+.ec-titulo { margin: 0; font-size: 24px; line-height: 30px; font-weight: 700; }
+.ec-titulo.centro, .ec-centro { text-align: center; } .ec-titulo.centro { margin-top: 32px; font-size: 28px; }
+.ec-lascas { font-weight: 600; }
+.ec-suave { margin: 0 0 4px; color: var(--tinta-suave); }
+.ec-nome { margin: 0 0 4px; font-size: 20px; font-weight: 650; }
+.ec-centro { margin: 4px 0; } .forte { font-weight: 600; }
+.ec-cartao { margin-top: var(--e5); padding: var(--e4); border-radius: var(--r-cartao); background: var(--superficie); border: 1px solid var(--linha-suave); box-shadow: var(--sombra-1); }
+.ec-botao { font: inherit; font-weight: 600; min-height: 56px; width: 100%; border-radius: 28px; padding: 0 16px; border: 2px solid var(--acento);
+  background: var(--botao); color: var(--acento); }
+.ec-botao.cheio { background: var(--acento); color: var(--texto-acento); }
+.ec-botao.sec { border-color: var(--botao-borda); color: var(--tinta); }
+.ec-botao.grande { font-size: 18px; }
+.ec-botao[hidden] { display: none; }
+.ec-cartao .ec-botao { margin-top: 12px; }
+.ec-grelha4 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ec-grelha4 .ec-botao[hidden] { display: none; }
+.ec-dica { margin: 0 0 8px; text-align: center; color: var(--tinta-suave); }
+.ecra-pausa { gap: 12px; } /* fundo: tokens.css */
+.ec-sub { margin: 0 0 4px; text-align: center; font-size: 22px; }
+.ecra-resultado .ec-botao { margin-top: 12px; }
+.res-host { position: relative; align-self: center; width: 100%; min-height: 8px; margin: 8px 0; display: flex; justify-content: center; }
+.res-host .assentar { position: static; width: auto !important; height: auto !important; }
+.ecra-sub { padding-top: calc(0px + var(--seg-topo)); }
+.ec-barra { display: flex; align-items: center; gap: 8px; min-height: 56px; }
+.ec-voltar { width: auto; min-height: 48px; border-radius: 24px; padding: 0 16px; }
+.ec-sub-titulo { margin: 0; font-size: 20px; }
+.ec-sub-corpo { scrollbar-width: none; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: 8px; margin-inline: -14px; padding-inline: 14px; }
+/* peças do antigo painel, agora dentro dos sub-ecrãs: painéis em fluxo normal em vez de flutuantes */
+.ec-sub-corpo details > summary { min-height: 48px; line-height: 28px; padding: 10px 0; margin: 0; font-weight: 600; list-style: none; }
+.ec-sub-corpo .arquivo-dias { position: static; left: auto; right: auto; box-shadow: none; max-height: none; }
+.ec-sub-corpo .definicoes-painel { position: static; box-shadow: none; border: 0; padding: 0; }
+.ec-sub-corpo .def-restaurar { margin-bottom: 8px; }
+.ec-sub-corpo .pacotes-corpo { max-height: none; }
+.ec-sub-corpo button, .ec-sub-corpo summary { font: inherit; min-height: 48px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); }
+.ec-sub-corpo summary { border: 0; background: none; padding: 10px 0; }
+.ec-sub-corpo .dia-arq { padding: 0; }
+.ec-sub-corpo .dia-arq.resolvido, .ec-sub-corpo .dia-arq.resolvido_com_pistas { background: var(--tinta); color: var(--botao); }
+.ec-sub-corpo .praca-q { position: relative; padding: 0; aspect-ratio: 1; overflow: hidden; border-radius: 6px; }
+.ec-sub-corpo .praca-q.a_meio { border-style: dashed; border-width: 2px; }
+.ec-sub-corpo .pacote-aba[aria-selected="true"] { background: var(--tinta); color: var(--botao); }
+.ec-sub-corpo .def-linha { display: flex; }
+.ec-sub-corpo .def-linha input { padding: 0; }
+.ec-sub-corpo .def-restaurar { width: 100%; }
+/* calendário de 7 colunas e praça do mês: ver o bloco T-1115 mais abaixo (T-1117: margem de 16 dp, 328 dp a 360 dp) */
+.ec-sub-corpo .arquivo-dias { gap: 2px; padding: 0; border: 0; background: none; }
+/* B-13: sem margens negativas (o overflow de .pacotes-corpo recortava-as); 7 colunas cabem em 380 dp (≈52 dp por célula) */
+.ec-sub-corpo .pacotes-corpo { overflow: visible; }
+.ec-sub-corpo #praca > summary { display: none; }
+.ec-sub-corpo #praca-corpo .praca-grelha { gap: 2px; }
+/* T-1117 (corrige T-1115): as grelhas de 7 colunas (calendário do arquivo e praça do mês) respeitam a margem de 16 dp de fluxo.md §10, sem sangria.
+   A 360 dp restam 328 dp (46,86 dp por coluna); a altura mantém 48 dp e a área tocável alarga-se à largura de 48 dp com um ::after
+   (sobreposição de ~1 dp entre vizinhas; o pseudo-elemento recebe o toque). As células partilham o contorno (margem -1 px). */
+.ec-sub-corpo #arquivo-dias, .ec-sub-corpo #praca-corpo .praca-grelha { gap: 0; }
+.ec-sub-corpo #arquivo-dias, .ec-sub-corpo .praca-grelha { padding: 0 1px 1px 0; } /* T-1121 (B-17): compensa a margem -1 px da última coluna, senão a margem direita é 15 dp */
+.ec-sub-corpo .arquivo-dias .dia-arq, .ec-sub-corpo .praca-q { position: relative; aspect-ratio: auto; min-height: 48px; min-width: 0; margin: 0 -1px -1px 0; }
+.ec-sub-corpo .arquivo-dias .dia-arq::after, .ec-sub-corpo .praca-q::after { content: ''; position: absolute; inset: 0 -0.6px; }
+.ecra [hidden] { display: none !important; }
+
+/* T-460: tempo no ecrã (E2) e E9 Como jogar */
+.tempo { flex: none; min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; color: var(--tinta-suave); }
+.tempo[hidden] { display: none; }
+.comojogar { display: flex; flex-direction: column; gap: 12px; }
+.cj-cartao { margin-top: 0; }
+.cj-cartao h3 { margin: 0 0 4px; font-size: 18px; }
+.cj-cartao p { margin: 0 0 8px; line-height: 1.3; }
+.cj-ex { display: flex; justify-content: center; }
+.cj-exemplo { width: 120px; height: 120px; border-radius: 6px; }
+.comojogar .ec-botao { margin-top: 4px; }
+
+/* T-471: id do build no menu (texto pequeno, 12 sp, contraste da tinta suave) */
+.ec-build { margin: 4px 0 0; font-size: 12px; line-height: 16px; text-align: center; color: var(--tinta-suave); }
+.ec-build[hidden] { display: none; }
+
+/* T-792 (v2): ofício, metas e coleção. Alvos >= 48 dp, sem scroll horizontal, texto >= 16 sp */
+.of-faixa { display: flex; flex-direction: column; align-items: stretch; gap: 4px; text-align: left; min-height: 72px; padding: 10px 16px; width: 100%; }
+.of-nome { font-weight: 700; font-size: 18px; }
+.of-suave { color: var(--tinta-suave); font-size: 16px; line-height: 22px; }
+.of-barra { height: 8px; border-radius: 4px; background: var(--linha-suave); overflow: hidden; }
+.of-barra span { display: block; height: 100%; background: var(--tinta); }
+.of-raiz, .of-corpo { display: flex; flex-direction: column; gap: 12px; }
+.of-abas { display: flex; gap: 8px; }
+.of-aba { flex: 1; min-height: 48px; font: inherit; border-radius: 10px; border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); }
+.of-aba[aria-selected="true"] { background: var(--tinta); color: var(--botao); }
+.of-conteudo { display: flex; flex-direction: column; }
+.of-cartao { margin-top: 0; }
+.of-cartao h3, .colecao h3 { margin: 0 0 4px; font-size: 18px; }
+.of-cartao p { margin: 0 0 8px; }
+.of-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.of-lista li { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 0; border-top: 1px solid var(--linha-suave); line-height: 22px; }
+.of-lista li:first-child { border-top: 0; }
+.of-lista li.feito { color: var(--tinta-suave); }
+.of-marca { flex: none; width: 24px; text-align: center; }
+.meta-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.meta-premio { flex: none; font-weight: 600; font-size: 16px; }
+.colecao { margin-top: 12px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.experimentar { position: absolute; inset: 0; z-index: 11; display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--fundo); color: var(--tinta);
+  padding: 12px 16px; padding-top: calc(12px + var(--seg-topo)); padding-bottom: calc(12px + var(--seg-fundo)); padding-left: calc(16px + var(--seg-esq)); padding-right: calc(16px + var(--seg-dir)); overflow-y: auto; font-size: 16px; }
+.experimentar[hidden] { display: none; }
+.exp-tabuleiro { width: min(100%, 360px); aspect-ratio: 1; border-radius: 12px; touch-action: manipulation; }
+.experimentar .ec-botao { width: 100%; }
+.loja .loja-experimentar { min-width: 48px; }
+
+/* T-990: selos e ícones (img/), forma distingue o estado, não só a cor */
+.of-cartao { align-items: stretch; }
+.of-selo { align-self: center; width: 96px; height: 96px; }
+.of-selos { display: flex; justify-content: center; gap: 8px; margin: 4px 0 8px; }
+.of-selo-p { width: 48px; height: 48px; }
+.of-selo-p.por-ganhar { opacity: .3; filter: grayscale(1); }
+.meta-icone { flex: none; width: 48px; height: 48px; }
+.of-lista.metas li { min-height: 64px; }
+.of-lista li.feito .meta-icone { opacity: .75; }
+
+/* T-990 (V2-10): modo escuro pelo sistema; só os tokens mudam, o tabuleiro tem a sua paleta. Contraste texto/fundo >= 7:1 */
+@media (prefers-color-scheme: dark) {
+  .of-barra span { background: var(--tinta); }
+  .of-selo, .of-selo-p, .meta-icone { background: var(--superficie); border-radius: 50%; padding: 2px; }
+}
+
+/* T-1048 — calceteiros, objetivo visível, saltar tutorial */
+.ec-larga { grid-column: 1 / -1; }
+.objetivo-hoje { margin: 0 16px 4px; font-size: 16px; line-height: 22px; color: var(--tinta-suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-height: 620px) { .objetivo-hoje { display: none; } }
+.calc .calc-campo { width: 100%; min-height: 48px; box-sizing: border-box; font-size: 16px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--linha-suave); background: var(--fundo, #fff); color: var(--tinta); margin: 4px 0 8px; }
+.calc .ec-botao { margin: 4px 0; min-height: 48px; width: 100%; }
+.calc .calc-codigo { font-family: ui-monospace, monospace; font-size: 16px; word-break: break-all; user-select: all; padding: 8px 12px; border-radius: 10px; background: var(--linha-suave); margin: 4px 0 8px; }
+.calc .calc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.calc .calc-chip { width: auto; padding: 0 12px; }
+.calc .calc-chip[aria-pressed="true"] { background: var(--tinta); color: var(--fundo, #fff); }
+.calc .calc-tabela li { display: flex; align-items: center; gap: 8px; min-height: 48px; }
+.calc .calc-eu { font-weight: 700; }
+.calc .calc-rm { width: 48px; min-width: 48px; padding: 0; margin: 0; }
+.calc .calc-barras { display: flex; align-items: flex-end; gap: 4px; height: 52px; }
+.calc .calc-barra { flex: 1; background: var(--tinta); border-radius: 2px 2px 0 0; opacity: .7; }
+
+/* T-1070: espaço entre o cartão do dia e a faixa do ajudante; grelha do menu mais respirável. */
+.ec-faixa:not(:empty) { margin-top: 16px; }
+.ec-grelha4 { gap: 16px 12px; }
+
+/* T-1082 — menu novo (arte/paleta-v3.md §4): só tokens de css/tokens.css. Alvos >= 48 dp; margens 16 dp (padding do .ecra). */
+.mn-cab { min-height: 56px; }
+.mn-cab .ec-titulo { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 20px; }
+.mn-chips { display: flex; gap: 4px; flex: none; }
+.mn-chip { font: inherit; font-weight: 700; min-width: 48px; min-height: 48px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  border: 0; background: none; color: var(--tinta); border-radius: 24px; }
+.mn-chip .mn-ico { color: var(--acento); width: 20px; height: 20px; }
+.mn-engrenagem { flex: none; width: 48px; height: 48px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: var(--tinta-suave); border-radius: 24px; }
+.mn-chip:focus-visible, .mn-engrenagem:focus-visible, .nv-sep:focus-visible, .mn-cartao:focus-visible { outline: 3px solid var(--selecionado); outline-offset: -3px; }
+.mn-hero { margin-top: 8px; background: var(--superficie); border: 1px solid var(--linha-suave); box-shadow: 0 1px 2px var(--linha-suave); }
+.mn-hero .ec-nome { margin: 2px 0 2px; }
+.mn-objetivo { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; color: var(--tinta); font-weight: 600; }
+.mn-objetivo[hidden] { display: none; }
+.mn-objetivo .mn-ico { flex: none; width: 22px; height: 22px; color: var(--ok); }
+.mn-jogar.ec-botao { min-height: 64px; margin-top: 16px; font-size: 20px; }
+.mn-diario { margin-top: 16px; }
+.mn-diario[hidden], .mn-cartoes[hidden], .mn-chips[hidden] { display: none; }
+.mn-diario-cab { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.mn-sub { font-weight: 700; color: var(--tinta); }
+.mn-semana { display: flex; justify-content: space-between; }
+.mn-dia { width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: var(--tinta-suave); border: 2px solid var(--botao-borda); box-sizing: border-box; }
+.mn-dia.feito { background: var(--ok); border-color: var(--ok); color: var(--texto-acento); }
+.mn-dia.feito .mn-ico { width: 20px; height: 20px; }
+.mn-dia.hoje { border: 4px solid var(--acento); color: var(--tinta); }
+.mn-dia.hoje.feito { border-color: var(--acento); }
+.mn-dia.futuro { border-color: var(--linha-suave); }
+.mn-cartoes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.mn-cartao { font: inherit; min-height: 96px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; padding: 12px 16px; text-align: left;
+  background: var(--superficie); color: var(--tinta); border: 1px solid var(--botao-borda); border-radius: 16px; }
+.mn-cartao-nome { font-size: 18px; font-weight: 700; }
+.mn-cartao .ec-suave { margin: 0; }
+@media (max-height: 699px) { .ecra-menu .ec-faixa { display: none; } }
+
+/* Barra inferior: 5 separadores iguais (>= 72 dp a 360 dp), rótulo sempre visível; por cima das sobreposições (loja z 10). */
+.nav-inferior { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 412px; z-index: 12; display: flex;
+  padding-bottom: var(--seg-fundo); padding-left: var(--seg-esq); padding-right: var(--seg-dir); background: var(--superficie); border-top: 1px solid var(--linha-suave); }
+.nav-inferior[hidden] { display: none; }
+.nv-sep { font: inherit; flex: 1; min-width: 0; min-height: 72px; padding: 6px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  border: 0; background: none; color: var(--tinta-suave); }
+.nv-rot { font-size: 13px; line-height: 16px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nv-sep .mn-ico { padding: 4px 16px; box-sizing: content-box; width: 24px; height: 24px; border-radius: 16px; margin: -4px 0; }
+.nv-sep.ativo { color: var(--tinta); font-weight: 700; }
+.nv-sep.ativo .mn-ico { background: color-mix(in srgb, var(--acento) 18%, transparent); color: var(--acento); fill: currentColor; }
+.nv-sep.ativo .mn-ico path { fill: currentColor; fill-opacity: .25; }
+#app.com-nav .ecra, #app.com-nav .loja { padding-bottom: calc(72px + var(--seg-fundo) + 8px); }
+
+/* T-1087 — separadores internos da Praça (Praça | Puzzles | Calceteiros); alvos >= 48 dp. */
+.mn-abas { display: flex; gap: 4px; margin: 4px 0 8px; padding: 4px; border-radius: 28px; background: var(--linha-suave); }
+.mn-abas[hidden] { display: none; }
+.mn-aba { font: inherit; font-weight: 600; flex: 1; min-width: 0; min-height: 48px; padding: 0 8px; border: 0; border-radius: 24px; background: none; color: var(--tinta-suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mn-aba[aria-selected="true"] { background: var(--acento); color: var(--texto-acento); }
+.mn-aba:focus-visible { outline: 3px solid var(--selecionado); outline-offset: 2px; }
+/* ocre decorativo da chama da série (paleta D); token --destaque ainda não existe em tokens.css (pedido à Arte), daí o fallback */
+#menu-serie .mn-ico { color: var(--destaque, #C58A1B); }
+
+/* Caminho (T-1112; mockup T-1111): cartão de largura total no Início, alvo >= 80 dp, sempre ativo; um só aspeto (T-1117: sem etiqueta/barra «Em curso»). */
+.mn-continuo { flex-direction: row; align-items: center; gap: 12px; width: 100%; min-height: 80px; margin-top: 12px; box-sizing: border-box; }
+.mn-continuo-ic { flex: none; width: 48px; height: 48px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--acento) 16%, transparent); color: var(--acento); }
+.mn-continuo-ic .mn-ico { width: 28px; height: 28px; }
+.mn-continuo-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mn-continuo-seta { flex: none; width: 24px; text-align: center; font-size: 24px; color: var(--tinta-suave); }
+@media (max-height: 699px) { .ecra-menu .mn-diario, .ecra-menu .mn-cartoes { display: none; } } /* ecrãs curtos: cedem a semana e os cartões; o Caminho nunca */
+.btn-saltar { flex: none; font: inherit; font-size: 16px; font-weight: 600; min-width: 48px; min-height: 48px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); white-space: nowrap; }
+.btn-saltar:disabled { opacity: .45; }
+.btn-saltar[hidden] { display: none; }
+.loja-caminho { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin: 0 0 12px; padding: 12px 16px; border: 1px solid var(--botao-borda); border-radius: 16px; background: var(--superficie); }
+.loja-caminho p { margin: 0; }
+.loja-caminho button { font: inherit; font-weight: 600; min-height: 48px; border-radius: 24px; border: 2px solid var(--acento); background: var(--botao); color: var(--acento); }
+
+/* WebView antigo (Chrome 69): sem aspect-ratio, quadrado por padding-top. */
+@supports not (aspect-ratio: 1) {
+  .diario .praca-q::before, .ec-sub-corpo .praca-q::before { content: ""; display: block; padding-top: 100%; }
+  .ec-sub-corpo .arquivo-dias .dia-arq::before, .ec-sub-corpo .arquivo-dias .praca-q::before { display: none; }
+  .assentar-q, .exp-tabuleiro { height: auto; } /* canvas quadrados: proporção pelos atributos width/height */
+  .exp-tabuleiro { width: 100%; max-width: 360px; }
+}

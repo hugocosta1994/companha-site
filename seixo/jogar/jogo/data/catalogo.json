@@ -1,0 +1,53 @@
+[
+  { "id": "PEDRA-BASALTO",       "categoria": "pedra",   "raridade": null,    "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": true },
+  { "id": "PEDRA-CALCARIO-ROSA", "categoria": "pedra",   "raridade": "comum", "eur": 0.99, "lascas": 200,  "consumivel": false, "play_id": "seixo_pedra_calcario_rosa", "gratis": false },
+  { "id": "PEDRA-SEIXO-RIO",     "categoria": "pedra",   "raridade": "comum", "eur": 0.99, "lascas": 200,  "consumivel": false, "play_id": "seixo_pedra_seixo_rio", "gratis": false },
+  { "id": "PEDRA-MARMORE",       "categoria": "pedra",   "raridade": "raro",  "eur": 1.99, "lascas": 500,  "consumivel": false, "play_id": "seixo_pedra_marmore", "gratis": false },
+  { "id": "PEDRA-AZULEJO",       "categoria": "pedra",   "raridade": "raro",  "eur": 1.99, "lascas": 500,  "consumivel": false, "play_id": "seixo_pedra_azulejo", "gratis": false },
+
+  { "id": "PAL-LISBOA",          "categoria": "paleta",  "raridade": null,    "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": true },
+  { "id": "PAL-ALTO-CONTRASTE",  "categoria": "paleta",  "raridade": null,    "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": true, "acessibilidade": true },
+  { "id": "PAL-DALTONISMO",      "categoria": "paleta",  "raridade": null,    "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": true, "acessibilidade": true },
+  { "id": "PAL-ANIL",            "categoria": "paleta",  "raridade": "comum", "eur": 0.99, "lascas": 200,  "consumivel": false, "play_id": "seixo_pal_anil", "gratis": false },
+  { "id": "PAL-OCRE",            "categoria": "paleta",  "raridade": "comum", "eur": 0.99, "lascas": 200,  "consumivel": false, "play_id": "seixo_pal_ocre", "gratis": false },
+  { "id": "PAL-NOITE",           "categoria": "paleta",  "raridade": "raro",  "eur": 1.99, "lascas": 500,  "consumivel": false, "play_id": "seixo_pal_noite", "gratis": false },
+
+  { "id": "MOLD-ONDAS",          "categoria": "moldura", "raridade": null,    "eur": 1.49, "lascas": 300,  "consumivel": false, "play_id": "seixo_mold_ondas", "gratis": false },
+  { "id": "MOLD-CORDA",          "categoria": "moldura", "raridade": null,    "eur": 1.49, "lascas": 300,  "consumivel": false, "play_id": "seixo_mold_corda", "gratis": false },
+  { "id": "MOLD-FLOR",           "categoria": "moldura", "raridade": null,    "eur": 1.49, "lascas": 300,  "consumivel": false, "play_id": "seixo_mold_flor", "gratis": false },
+  { "id": "MOLD-AAAA-MM",        "categoria": "moldura", "raridade": null,    "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "modelo": true, "ganha_se": "praca_completa" },
+
+  { "id": "PISTA-1",             "categoria": "pista",   "raridade": null,    "eur": null, "lascas": 15,   "consumivel": true,  "play_id": null, "gratis": false, "quantidade": 1 },
+  { "id": "PISTA-5",             "categoria": "pista",   "raridade": null,    "eur": null, "lascas": 75,   "consumivel": true,  "play_id": null, "gratis": false, "quantidade": 5, "reservado": true },
+  { "id": "PISTA-15",            "categoria": "pista",   "raridade": null,    "eur": null, "lascas": 225,  "consumivel": true,  "play_id": null, "gratis": false, "quantidade": 15, "reservado": true },
+
+  { "id": "PAC-ROSSIO",          "categoria": "pacote",  "raridade": null,    "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": true },
+  { "id": "PAC-CHIADO",          "categoria": "pacote",  "raridade": null,    "eur": 1.99, "lascas": 300,  "consumivel": false, "play_id": "seixo_pac_chiado", "gratis": false },
+  { "id": "PAC-RIBEIRA",         "categoria": "pacote",  "raridade": null,    "eur": 1.99, "lascas": 300,  "consumivel": false, "play_id": "seixo_pac_ribeira", "gratis": false },
+
+  { "id": "ARQ-AAAA-MM",         "categoria": "arquivo", "raridade": null,    "eur": null, "lascas": 150,  "consumivel": false, "play_id": null, "gratis": false, "modelo": true },
+  { "id": "ARQ-TUDO",            "categoria": "arquivo", "raridade": null,    "eur": 4.99, "lascas": null, "consumivel": false, "play_id": "seixo_arq_tudo", "gratis": false },
+
+  { "id": "KIT-CALCETEIRO",      "categoria": "kit",     "raridade": null,    "eur": 4.99, "lascas": null, "consumivel": false, "play_id": "seixo_kit_calceteiro", "gratis": false, "partes": ["PAC-CHIADO", "PEDRA-MARMORE", "PAL-ANIL"] },
+  { "id": "APOIO-COMPANHA",      "categoria": "apoio",   "raridade": null,    "eur": 2.99, "lascas": null, "consumivel": false, "play_id": "seixo_apoio_companha", "gratis": false },
+
+  { "id": "PEDRA-ARDOSIA", "categoria": "pedra", "raridade": "comum", "eur": 0.99, "lascas": 200, "consumivel": false, "play_id": "seixo_pedra_ardosia", "gratis": false },
+  { "id": "PEDRA-GRANITO", "categoria": "pedra", "raridade": "comum", "eur": 0.99, "lascas": 200, "consumivel": false, "play_id": "seixo_pedra_granito", "gratis": false },
+  { "id": "PEDRA-LIOZ", "categoria": "pedra", "raridade": "raro", "eur": 1.99, "lascas": 500, "consumivel": false, "play_id": "seixo_pedra_lioz", "gratis": false },
+  { "id": "PAL-RIA", "categoria": "paleta", "raridade": "comum", "eur": 0.99, "lascas": 200, "consumivel": false, "play_id": "seixo_pal_ria", "gratis": false },
+  { "id": "PAL-MOSTEIRO", "categoria": "paleta", "raridade": "raro", "eur": 1.99, "lascas": 500, "consumivel": false, "play_id": "seixo_pal_mosteiro", "gratis": false },
+  { "id": "MOLD-CAIS", "categoria": "moldura", "raridade": null, "eur": 1.49, "lascas": 300, "consumivel": false, "play_id": "seixo_mold_cais", "gratis": false },
+  { "id": "MOLD-AZULEJO", "categoria": "moldura", "raridade": null, "eur": 1.49, "lascas": 300, "consumivel": false, "play_id": "seixo_mold_azulejo", "gratis": false },
+  { "id": "MOLD-MESTRE", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 5, "naoVende": true },
+  { "id": "SELO-2", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 2, "naoVende": true },
+  { "id": "SELO-3", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 3, "naoVende": true },
+  { "id": "SELO-4", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 4, "naoVende": true },
+  { "id": "SELO-5", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 5, "naoVende": true },
+  { "id": "SOM-PEDRA", "categoria": "som", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": true },
+  { "id": "SOM-MADEIRA", "categoria": "som", "raridade": "comum", "eur": 0.99, "lascas": 200, "consumivel": false, "play_id": "seixo_som_madeira", "gratis": false },
+  { "id": "SOM-SINO", "categoria": "som", "raridade": "comum", "eur": 0.99, "lascas": 200, "consumivel": false, "play_id": "seixo_som_sino", "gratis": false },
+  { "id": "SOM-AGUA", "categoria": "som", "raridade": "raro", "eur": 1.99, "lascas": 500, "consumivel": false, "play_id": "seixo_som_agua", "gratis": false },
+  { "id": "PAC-RIA", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_ria", "gratis": false, "via_nivel": 2 },
+  { "id": "PAC-MOSTEIRO", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_mosteiro", "gratis": false, "via_nivel": 4 },
+  { "id": "PAC-AZULEJO-CALCADA", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_azulejo_calcada", "gratis": false, "via_nivel": 5 }
+]

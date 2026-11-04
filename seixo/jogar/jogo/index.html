@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-PT">
+<head><script src="compat.js"></script><link rel="preload" href="data/catalogo.json" as="fetch" crossorigin="anonymous"><link rel="preload" href="data/puzzles.json" as="fetch" crossorigin="anonymous"><link rel="preload" href="data/diarios.json" as="fetch" crossorigin="anonymous"><link rel="preload" href="data/curados.json" as="fetch" crossorigin="anonymous">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Pedra a Pedra</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/ecra.css">
+  <link rel="stylesheet" href="css/tabuleiro.css">
+  <link rel="stylesheet" href="css/botao-google.css">
+  <link rel="stylesheet" href="css/conta.css">
+</head>
+<body>
+  <main id="app">
+    <header class="topo">
+      <button id="btn-pausa" class="btn-pausa" type="button"></button>
+      <h1 id="titulo">Pedra a Pedra</h1>
+      <label class="escolha">Puzzle <select id="escolha" aria-label="Escolher puzzle"></select></label>
+    </header>
+    <p id="regra" class="regra"></p>
+    <p id="mensagem" class="mensagem" role="status" aria-live="polite"></p>
+    <div class="espaco"></div>
+    <canvas id="tabuleiro" aria-label="Tabuleiro de calçada"></canvas>
+    <div class="espaco"></div>
+    <nav class="botoes">
+      <button id="btn-desfazer" type="button">↶ Desfazer</button>
+      <button id="btn-recomecar" type="button">Recomeçar</button>
+      <button id="btn-seguinte" type="button" hidden>Seguinte →</button>
+    </nav>
+  </main>
+  <script src="js/contas/contas.config.js"></script>
+  <script type="module" src="js/main.bundle.js"></script>
+</body>
+</html>

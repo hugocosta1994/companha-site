@@ -1,0 +1,1434 @@
+{
+ "versao": 1,
+ "geradorVersao": "g1",
+ "niveis": {
+  "facil": [
+   {
+    "formato": 1,
+    "id": "CAMRES-F-1",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": ".....B.P.....PP......B.P.....PP.P...",
+    "juntas": [],
+    "solucao": "PBBPPBBPBPBPBPPBPBPBPBBPBPBPBPPBPBPB",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 27,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-1",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-F-2",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": "B.....B.B......P.PB..........P.P....",
+    "juntas": [],
+    "solucao": "BBPBPPBPBPPBPBBPBPBPPBPBPBPBBPPPBPBB",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 28,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-2",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-F-3",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": "....P..........B..P.PB.......P....PP",
+    "juntas": [],
+    "solucao": "PBBPPBPPBPBBBPPBBPPBPBPBBPBPBPBBPBPP",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 28,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-3",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-F-4",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": "....BBBB..B...P...B..P.......B..P...",
+    "juntas": [],
+    "solucao": "PPBPBBBBPPBPPBPBPBBPBPBPPPBBPBBBPBPP",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 26,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-4",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-F-5",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": "..P...B.......BP.B.........PP.BB.P..",
+    "juntas": [],
+    "solucao": "PBPBPBBPBBPPPPBPBBPBPBBPBPBPPBBBPPBP",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 26,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-5",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-F-6",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": ".B.....B..P...B.P..B......P..B...B..",
+    "juntas": [],
+    "solucao": "PBBPBPPBPBPBBPBPPBPBBPBPBPPBPBBPPBBP",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 27,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-6",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-F-7",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": ".PP....P......B..P...P...PP..P....B.",
+    "juntas": [],
+    "solucao": "BPPBPBBPPBPBPBBPBPPBBPPBBPPBBPPBBPBP",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 26,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-7",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-F-8",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": ".PP.......PP.....B.P......B....P....",
+    "juntas": [],
+    "solucao": "BPPBBPBBPBPPPBBPPBBPPBBPPBBPPBPPBPBB",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 28,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-8",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-F-9",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": "B.B.B......B....BB.P.B........PP..P.",
+    "juntas": [],
+    "solucao": "BPBPBPPBPBPBPBPPBBBPBBPPBBPPBPPPBBPB",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 25,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-9",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-F-10",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "facil",
+    "dadas": "...P...B...BP.P......B....P..B.....B",
+    "juntas": [],
+    "solucao": "BPBPBPPBBPPBPBPBBPBPBBPPPBPPBBBPPBPB",
+    "classificacao": {
+     "nivelMax": "N1",
+     "passos": {
+      "N1": 27,
+      "N2": 0,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-F-10",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   }
+  ],
+  "medio": [
+   {
+    "formato": 1,
+    "id": "CAMRES-M-1",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": "...P......BB.P.....P..B...B...P....P",
+    "juntas": [],
+    "solucao": "BPBPPBPBPPBBBPBBPPBPPBBPPBBPPBPBPBBP",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 26,
+      "N2": 1,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-1",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-M-2",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": ".P........P.BB......P..B.......P...P",
+    "juntas": [],
+    "solucao": "PPBBPBPBBPPBBBPPBPBPPBPBPBBPBPBPPBBP",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 25,
+      "N2": 3,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-2",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-M-3",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": "B...B..PP....P...............B.P....",
+    "juntas": [],
+    "solucao": "BBPPBPBPPBBPPPBBPBBBPPBPPBBPPBPPBBPB",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 26,
+      "N2": 3,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-3",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-M-4",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": "P.B...P...P...P.P......B........B.B.",
+    "juntas": [],
+    "solucao": "PPBPBBPBPBPBBBPBPPPPBPBBBBPBPPBPBPBP",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 24,
+      "N2": 3,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-4",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-M-5",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": "...P.B...P...B...B...B....P..BP.....",
+    "juntas": [],
+    "solucao": "BPBPPBBPBPBPPBPBPBBPBBPPPBPPBBPBPBBP",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 26,
+      "N2": 1,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-5",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-M-6",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": ".....BP..PP..B...........P...BB..B..",
+    "juntas": [],
+    "solucao": "PPBPBBPBBPPBBBPBPPBPPBBPPPBPBBBBPBPP",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 25,
+      "N2": 2,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-6",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-M-7",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": ".B.PP.B....B...B...BP.......B..B....",
+    "juntas": [],
+    "solucao": "PBBPPBBPBPPBBPPBBPPBPBPBBPBPBPPBPBBP",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 25,
+      "N2": 1,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-7",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-M-8",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": "...P.B..BP....B......B...P.....P..P.",
+    "juntas": [],
+    "solucao": "PBPPBBPBBPBPBPBBPPPBPBPBBPBPBPBPPBPB",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 26,
+      "N2": 1,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-8",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-M-9",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": "PP....P....P..P......B.........P.P..",
+    "juntas": [],
+    "solucao": "PPBBPBPBPBBPBBPPBPPPBBPBBBPPBPBPBPPB",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 22,
+      "N2": 6,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-9",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-M-10",
+    "n": 6,
+    "variante": "equilibrio",
+    "dificuldade": "medio",
+    "dadas": ".....B......B..P.B..B.BB.......P.P..",
+    "juntas": [],
+    "solucao": "PBPBPBPBPBBPBPBPPBPPBPBBBBPBPPBPBPBP",
+    "classificacao": {
+     "nivelMax": "N2",
+     "passos": {
+      "N1": 26,
+      "N2": 1,
+      "N3": 0
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-M-10",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   }
+  ],
+  "dificil": [
+   {
+    "formato": 1,
+    "id": "CAMRES-D-1",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": ".B..................................",
+    "juntas": [
+     [
+      0,
+      0,
+      1,
+      0,
+      "="
+     ],
+     [
+      0,
+      3,
+      1,
+      3,
+      "="
+     ],
+     [
+      0,
+      4,
+      1,
+      4,
+      "="
+     ],
+     [
+      2,
+      1,
+      2,
+      2,
+      "x"
+     ],
+     [
+      2,
+      3,
+      2,
+      4,
+      "="
+     ],
+     [
+      2,
+      3,
+      3,
+      3,
+      "x"
+     ],
+     [
+      3,
+      4,
+      3,
+      5,
+      "="
+     ],
+     [
+      4,
+      2,
+      4,
+      3,
+      "x"
+     ]
+    ],
+    "solucao": "PBPBBPPBPBBPBPBPPBBBPBPPPPBPBBBPBPPB",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 29,
+      "N2": 5,
+      "N3": 1
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-1",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-D-2",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": "...............B....................",
+    "juntas": [
+     [
+      0,
+      4,
+      0,
+      5,
+      "="
+     ],
+     [
+      1,
+      3,
+      1,
+      4,
+      "="
+     ],
+     [
+      3,
+      2,
+      3,
+      3,
+      "="
+     ],
+     [
+      4,
+      0,
+      5,
+      0,
+      "="
+     ],
+     [
+      5,
+      1,
+      5,
+      2,
+      "="
+     ]
+    ],
+    "solucao": "PBPPBBPBBPPBBPBBPPPBPPBBBPBBPPBPPBBP",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 23,
+      "N2": 10,
+      "N3": 2
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-2",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-D-3",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": "..............................P.....",
+    "juntas": [
+     [
+      1,
+      2,
+      2,
+      2,
+      "="
+     ],
+     [
+      1,
+      4,
+      1,
+      5,
+      "x"
+     ],
+     [
+      2,
+      2,
+      2,
+      3,
+      "x"
+     ],
+     [
+      2,
+      3,
+      3,
+      3,
+      "="
+     ],
+     [
+      3,
+      2,
+      4,
+      2,
+      "x"
+     ],
+     [
+      4,
+      0,
+      4,
+      1,
+      "x"
+     ],
+     [
+      4,
+      4,
+      5,
+      4,
+      "="
+     ],
+     [
+      5,
+      4,
+      5,
+      5,
+      "="
+     ]
+    ],
+    "solucao": "BPBBPPBBPPBPPBPBPBBPBBPPPBPPBBPPBPBB",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 27,
+      "N2": 5,
+      "N3": 3
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-3",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-D-4",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": ".....P..............................",
+    "juntas": [
+     [
+      0,
+      1,
+      1,
+      1,
+      "="
+     ],
+     [
+      2,
+      0,
+      2,
+      1,
+      "="
+     ],
+     [
+      2,
+      4,
+      2,
+      5,
+      "x"
+     ],
+     [
+      3,
+      0,
+      3,
+      1,
+      "="
+     ],
+     [
+      4,
+      2,
+      5,
+      2,
+      "x"
+     ],
+     [
+      4,
+      4,
+      4,
+      5,
+      "="
+     ],
+     [
+      5,
+      2,
+      5,
+      3,
+      "="
+     ],
+     [
+      5,
+      4,
+      5,
+      5,
+      "="
+     ]
+    ],
+    "solucao": "BPBBPPPPBBPBBBPPBPBBPBPPPPBPBBPBPPBB",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 26,
+      "N2": 7,
+      "N3": 2
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-4",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-D-5",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": "..B.................................",
+    "juntas": [
+     [
+      0,
+      0,
+      1,
+      0,
+      "="
+     ],
+     [
+      0,
+      2,
+      0,
+      3,
+      "x"
+     ],
+     [
+      0,
+      5,
+      1,
+      5,
+      "="
+     ],
+     [
+      1,
+      0,
+      1,
+      1,
+      "x"
+     ],
+     [
+      1,
+      2,
+      2,
+      2,
+      "="
+     ],
+     [
+      1,
+      4,
+      2,
+      4,
+      "x"
+     ],
+     [
+      2,
+      5,
+      3,
+      5,
+      "="
+     ],
+     [
+      3,
+      3,
+      4,
+      3,
+      "x"
+     ],
+     [
+      4,
+      1,
+      5,
+      1,
+      "x"
+     ],
+     [
+      5,
+      1,
+      5,
+      2,
+      "x"
+     ],
+     [
+      5,
+      3,
+      5,
+      4,
+      "x"
+     ],
+     [
+      5,
+      4,
+      5,
+      5,
+      "x"
+     ]
+    ],
+    "solucao": "PBBPPBPBPBPBBPPBBPBPBPBPPBPBPBBPBPBP",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 27,
+      "N2": 7,
+      "N3": 1
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-5",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-D-6",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": "................B...................",
+    "juntas": [
+     [
+      0,
+      0,
+      0,
+      1,
+      "="
+     ],
+     [
+      0,
+      5,
+      1,
+      5,
+      "="
+     ],
+     [
+      2,
+      2,
+      2,
+      3,
+      "x"
+     ],
+     [
+      2,
+      4,
+      3,
+      4,
+      "="
+     ],
+     [
+      3,
+      2,
+      3,
+      3,
+      "x"
+     ],
+     [
+      5,
+      1,
+      5,
+      2,
+      "="
+     ]
+    ],
+    "solucao": "BBPPBPBPBBPPPPBPBBPBPBBPBPPBPBPBBPPB",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 29,
+      "N2": 4,
+      "N3": 2
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-6",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-D-7",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": ".................B..................",
+    "juntas": [
+     [
+      0,
+      1,
+      1,
+      1,
+      "x"
+     ],
+     [
+      1,
+      1,
+      1,
+      2,
+      "x"
+     ],
+     [
+      1,
+      1,
+      2,
+      1,
+      "x"
+     ],
+     [
+      1,
+      2,
+      2,
+      2,
+      "="
+     ],
+     [
+      1,
+      3,
+      1,
+      4,
+      "="
+     ],
+     [
+      1,
+      4,
+      2,
+      4,
+      "x"
+     ],
+     [
+      2,
+      5,
+      3,
+      5,
+      "x"
+     ],
+     [
+      3,
+      3,
+      4,
+      3,
+      "x"
+     ],
+     [
+      4,
+      1,
+      4,
+      2,
+      "="
+     ],
+     [
+      5,
+      3,
+      5,
+      4,
+      "x"
+     ]
+    ],
+    "solucao": "BPBPPBPBPBBPBPPBPBPBBPBPBPPBPBPBBPBP",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 32,
+      "N2": 2,
+      "N3": 1
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-7",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-D-8",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": "....................B...............",
+    "juntas": [
+     [
+      0,
+      2,
+      1,
+      2,
+      "x"
+     ],
+     [
+      0,
+      4,
+      0,
+      5,
+      "="
+     ],
+     [
+      0,
+      5,
+      1,
+      5,
+      "="
+     ],
+     [
+      1,
+      4,
+      1,
+      5,
+      "x"
+     ],
+     [
+      1,
+      4,
+      2,
+      4,
+      "x"
+     ],
+     [
+      2,
+      3,
+      2,
+      4,
+      "x"
+     ],
+     [
+      3,
+      2,
+      3,
+      3,
+      "="
+     ],
+     [
+      3,
+      2,
+      4,
+      2,
+      "x"
+     ],
+     [
+      4,
+      0,
+      4,
+      1,
+      "x"
+     ],
+     [
+      4,
+      1,
+      5,
+      1,
+      "="
+     ],
+     [
+      4,
+      5,
+      5,
+      5,
+      "="
+     ]
+    ],
+    "solucao": "BPBBPPBBPPBPPPBBPBBPBBPPPBPPBBPBPPBB",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 30,
+      "N2": 4,
+      "N3": 1
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-8",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-D-9",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": "................P...................",
+    "juntas": [
+     [
+      0,
+      3,
+      0,
+      4,
+      "="
+     ],
+     [
+      0,
+      5,
+      1,
+      5,
+      "="
+     ],
+     [
+      2,
+      5,
+      3,
+      5,
+      "x"
+     ],
+     [
+      3,
+      1,
+      3,
+      2,
+      "="
+     ],
+     [
+      3,
+      2,
+      4,
+      2,
+      "="
+     ],
+     [
+      3,
+      3,
+      4,
+      3,
+      "x"
+     ],
+     [
+      4,
+      1,
+      5,
+      1,
+      "x"
+     ]
+    ],
+    "solucao": "PBPBBPBPBBPPPBBPPBBPPBBPPBPPBBBPBPPB",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 30,
+      "N2": 3,
+      "N3": 2
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-9",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   },
+   {
+    "formato": 1,
+    "id": "CAMRES-D-10",
+    "n": 6,
+    "variante": "juntas",
+    "dificuldade": "dificil",
+    "dadas": "..............B.....................",
+    "juntas": [
+     [
+      0,
+      3,
+      1,
+      3,
+      "x"
+     ],
+     [
+      1,
+      0,
+      2,
+      0,
+      "x"
+     ],
+     [
+      1,
+      2,
+      1,
+      3,
+      "="
+     ],
+     [
+      2,
+      1,
+      3,
+      1,
+      "x"
+     ],
+     [
+      3,
+      0,
+      3,
+      1,
+      "="
+     ],
+     [
+      3,
+      1,
+      4,
+      1,
+      "x"
+     ],
+     [
+      3,
+      2,
+      3,
+      3,
+      "x"
+     ],
+     [
+      3,
+      3,
+      4,
+      3,
+      "x"
+     ],
+     [
+      4,
+      2,
+      5,
+      2,
+      "="
+     ],
+     [
+      4,
+      3,
+      5,
+      3,
+      "x"
+     ],
+     [
+      4,
+      4,
+      4,
+      5,
+      "x"
+     ]
+    ],
+    "solucao": "PBPBPBBBPPBPPPBPBBBBPBPPBPBPBPPPBBPB",
+    "classificacao": {
+     "nivelMax": "N3",
+     "passos": {
+      "N1": 31,
+      "N2": 3,
+      "N3": 1
+     }
+    },
+    "origem": {
+     "tipo": "caminho",
+     "data": null,
+     "pacote": null,
+     "indice": null,
+     "seed": "CAMRES-D-10",
+     "versaoGerador": "g1",
+     "molde": null
+    }
+   }
+  ]
+ }
+}

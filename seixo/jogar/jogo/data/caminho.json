@@ -1,0 +1,16 @@
+{
+  "versao": 1,
+  "_nota": "Modo Caminho (contratos/caminho.md §1, GDD §13.2). Troços de 10 níveis; o troço N>=cicloDesde repete o troço cicloDesde. Faixa F/M/D por posição. 'variantes' (opcional) por posição; sem ela vale 'variante'. D só em juntas 6x6 ou equilibrio/contra-espelho 8x8: o equilibrio 6x6 nao chega a N3.",
+  "cicloDesde": 6,
+  "trocos": [
+    { "troco": 1, "n": 6, "variante": "equilibrio", "tecnicaMax": "N1", "faixas": ["F","F","F","F","F","F","M","F","F","M"] },
+    { "troco": 2, "n": 6, "variante": "equilibrio", "tecnicaMax": "N2", "faixas": ["F","M","F","M","M","F","M","F","M","M"] },
+    { "troco": 3, "n": 6, "variante": "equilibrio", "tecnicaMax": "N2", "faixas": ["F","M","M","F","M","M","F","M","M","D"],
+      "variantes": ["equilibrio","equilibrio","juntas","equilibrio","equilibrio","juntas","equilibrio","equilibrio","juntas","juntas"] },
+    { "troco": 4, "n": 8, "variante": "equilibrio", "tecnicaMax": "N2", "faixas": ["F","M","F","M","M","F","M","M","F","D"] },
+    { "troco": 5, "n": 8, "variante": "equilibrio", "tecnicaMax": "N2", "faixas": ["F","M","M","F","M","M","F","M","M","D"],
+      "variantes": ["equilibrio","equilibrio","contra_espelho","equilibrio","equilibrio","contra_espelho","equilibrio","equilibrio","contra_espelho","equilibrio"] },
+    { "troco": 6, "n": 8, "variante": "equilibrio", "tecnicaMax": "N3", "faixas": ["F","M","F","M","D","F","M","M","F","D"],
+      "variantes": ["equilibrio","equilibrio","equilibrio","contra_espelho","equilibrio","equilibrio","contra_espelho","equilibrio","equilibrio","equilibrio"] }
+  ]
+}

@@ -1,0 +1,152 @@
+/* SEIXO - tokens de cor da UI (T-1078, paleta-v3). FICHEIRO UNICO DE CORES DA INTERFACE; gerado por arte/paleta-v3/gerar_paleta_v3.py.
+   Provisorio: a decisao final e do Fundador. Mudar de paleta: <html data-paleta-ui="antiga|azulejo|basalto|noite|terracota"> (sem tocar na logica),
+   ou trocar o bloco :root. Reverter = data-paleta-ui="antiga" (ou copiar esse bloco para :root).
+   Sem atributo: claro = basalto; com o sistema em modo escuro = noite. O canvas do tabuleiro usa a paleta de cosmeticos.js (ver paleta-v3.md). */
+:root {
+  --fundo: #F0EDE6;
+  --superficie: #FBFAF6;
+  --tinta: #1E2227;
+  --tinta-suave: #555D66;
+  --acento: #33495E;
+  --texto-acento: #FFFFFF;
+  --ok: #1F6B45;
+  --aviso: #B3261E;
+  --botao: #FBFAF6;
+  --botao-borda: #7C8085;
+  --linha-suave: rgba(30,34,39,.12);
+  --leito: #DAD5CA;
+  --pedra-escura: #1E2227;
+  --pedra-clara: #FBFAF6;
+  --junta: #5A5F66;
+  --selecionado: #2B5F8F;
+  --revelado: #7A4F00;
+}
+html[data-paleta-ui="antiga"] {
+  --fundo: #EFE9DC;
+  --superficie: #F7F3EA;
+  --tinta: #2D2A26;
+  --tinta-suave: #6B6253;
+  --acento: #2E6B4A;
+  --texto-acento: #EFE9DC;
+  --ok: #2E6B4A;
+  --aviso: #C0392B;
+  --botao: #F7F3EA;
+  --botao-borda: #B3A993;
+  --linha-suave: rgba(0,0,0,.1);
+  --leito: #E6DCCB;
+  --pedra-escura: #24282D;
+  --pedra-clara: #FBF8F1;
+  --junta: #6E655A;
+  --selecionado: #1F5F8B;
+  --revelado: #33240A;
+}
+html[data-paleta-ui="azulejo"] {
+  --fundo: #F2F5FA;
+  --superficie: #FFFFFF;
+  --tinta: #14213D;
+  --tinta-suave: #4A5873;
+  --acento: #1D4ED8;
+  --texto-acento: #FFFFFF;
+  --ok: #14744A;
+  --aviso: #B42318;
+  --botao: #FFFFFF;
+  --botao-borda: #74839F;
+  --linha-suave: rgba(20,33,61,.12);
+  --leito: #DCE5F2;
+  --pedra-escura: #172033;
+  --pedra-clara: #FFFFFF;
+  --junta: #4A5873;
+  --selecionado: #1D4ED8;
+  --revelado: #8A5A00;
+}
+html[data-paleta-ui="basalto"] {
+  --fundo: #F0EDE6;
+  --superficie: #FBFAF6;
+  --tinta: #1E2227;
+  --tinta-suave: #555D66;
+  --acento: #33495E;
+  --texto-acento: #FFFFFF;
+  --ok: #1F6B45;
+  --aviso: #B3261E;
+  --botao: #FBFAF6;
+  --botao-borda: #7C8085;
+  --linha-suave: rgba(30,34,39,.12);
+  --leito: #DAD5CA;
+  --pedra-escura: #1E2227;
+  --pedra-clara: #FBFAF6;
+  --junta: #5A5F66;
+  --selecionado: #2B5F8F;
+  --revelado: #7A4F00;
+}
+html[data-paleta-ui="noite"] {
+  --fundo: #12161C;
+  --superficie: #1C222B;
+  --tinta: #ECE8E0;
+  --tinta-suave: #A9B1BD;
+  --acento: #F2B84B;
+  --texto-acento: #1B1403;
+  --ok: #5CD18C;
+  --aviso: #FF8A80;
+  --botao: #1C222B;
+  --botao-borda: #6A7686;
+  --linha-suave: rgba(255,255,255,.14);
+  --leito: #29313D;
+  --pedra-escura: #07090C;
+  --pedra-clara: #EFEAE0;
+  --junta: #9AA3AE;
+  --selecionado: #6CB6FF;
+  --revelado: #F2B84B;
+}
+html[data-paleta-ui="terracota"] {
+  --fundo: #FBF4EC;
+  --superficie: #FFFFFF;
+  --tinta: #2A1E18;
+  --tinta-suave: #6A5446;
+  --acento: #B4472B;
+  --texto-acento: #FFFFFF;
+  --ok: #2B7A55;
+  --aviso: #B3261E;
+  --botao: #FFFFFF;
+  --botao-borda: #98806B;
+  --linha-suave: rgba(42,30,24,.12);
+  --leito: #EBD7C2;
+  --pedra-escura: #2A1E18;
+  --pedra-clara: #FFF9F0;
+  --junta: #6A5446;
+  --selecionado: #1F5F8B;
+  --revelado: #7A4F00;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-paleta-ui]) {
+    --fundo: #12161C;
+    --superficie: #1C222B;
+    --tinta: #ECE8E0;
+    --tinta-suave: #A9B1BD;
+    --acento: #F2B84B;
+    --texto-acento: #1B1403;
+    --ok: #5CD18C;
+    --aviso: #FF8A80;
+    --botao: #1C222B;
+    --botao-borda: #6A7686;
+    --linha-suave: rgba(255,255,255,.14);
+    --leito: #29313D;
+    --pedra-escura: #07090C;
+    --pedra-clara: #EFEAE0;
+    --junta: #9AA3AE;
+    --selecionado: #6CB6FF;
+    --revelado: #F2B84B;
+  }
+}
+.ecra-pausa { background: color-mix(in srgb, var(--fundo) 97%, transparent); }
+/* T-1195: sistema visual aprovado (arte/sistema-visual.html). Tokens de forma e extras de cor. */
+:root {
+  --destaque: #C58A1B; /* DECORATIVO (chama, moeda): nunca texto nem estado */
+  --borda: var(--botao-borda);
+  --desativado-fundo: #E4E0D6; --desativado-texto: #555D66;
+  --sombra-1: 0 1px 2px rgba(30,34,39,.12), 0 4px 12px rgba(30,34,39,.10);
+  --r-campo: 8px; --r-cartao: 16px; --r-pilula: 999px;
+  --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 24px; --e6: 32px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-paleta-ui]) { --desativado-fundo: #242B35; --desativado-texto: #A9B1BD; --sombra-1: 0 1px 2px rgba(0,0,0,.5); }
+}

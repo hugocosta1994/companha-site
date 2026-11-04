@@ -1,0 +1,1090 @@
+{
+ "_doc": "SEIXO — soluções-molde (GDD G-07, T-423). Cada variante é uma solução completa válida (regras do Equilíbrio, §2.2); contraEspelho=true quando também cumpre o contra-espelho (contrato §2.2 regra 4). origem.molde = id da variante usada. Escolha no diário e no Rossio: GDD G-07a…G-07e.",
+ "formato": 1,
+ "versaoMoldes": "m1",
+ "moldes": [
+  {
+   "id": "M-XADREZ-4",
+   "nome": "Xadrez (tutorial)",
+   "n": 4,
+   "motivo": "xadrez",
+   "regular": true,
+   "contraEspelho": true,
+   "solucao": "PPBBBBPPPPBBBBPP",
+   "variantes": [
+    {
+     "id": "M-XADREZ-4",
+     "transformacao": "id",
+     "solucao": "PPBBBBPPPPBBBBPP",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-XADREZ-4@r90",
+     "transformacao": "r90",
+     "solucao": "BPBPBPBPPBPBPBPB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-XADREZ-4@eH",
+     "transformacao": "eH",
+     "solucao": "BBPPPPBBBBPPPPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-XADREZ-4@tD",
+     "transformacao": "tD",
+     "solucao": "PBPBPBPBBPBPBPBP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-LOSANGOS-6",
+   "nome": "Losangos",
+   "n": 6,
+   "motivo": "xadrez",
+   "regular": true,
+   "contraEspelho": true,
+   "solucao": "BPPBBPPBBPPBPBBPPBBPPBBPBPPBBPPBBPPB",
+   "variantes": [
+    {
+     "id": "M-LOSANGOS-6",
+     "transformacao": "id",
+     "solucao": "BPPBBPPBBPPBPBBPPBBPPBBPBPPBBPPBBPPB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-LOSANGOS-6@r90",
+     "transformacao": "r90",
+     "solucao": "PBBPPBBPPBBPBPPBBPPBBPPBPBBPPBBPPBBP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-CRUZ-6",
+   "nome": "Cruz",
+   "n": 6,
+   "motivo": "estrela",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BBPBPPBBPBPPPPBPBBBBPBPPPPBPBBPPBPBB",
+   "variantes": [
+    {
+     "id": "M-CRUZ-6",
+     "transformacao": "id",
+     "solucao": "BBPBPPBBPBPPPPBPBBBBPBPPPPBPBBPPBPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-CRUZ-6@r90",
+     "transformacao": "r90",
+     "solucao": "PPBPBBPPBPBBBBPBPPPPBPBBBBPBPPBBPBPP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-XADREZ-6",
+   "nome": "Xadrez miúdo",
+   "n": 6,
+   "motivo": "xadrez",
+   "regular": true,
+   "contraEspelho": true,
+   "solucao": "BPBPBPPBPBPBBPBPBPPBPBPBBPBPBPPBPBPB",
+   "variantes": [
+    {
+     "id": "M-XADREZ-6",
+     "transformacao": "id",
+     "solucao": "BPBPBPPBPBPBBPBPBPPBPBPBBPBPBPPBPBPB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-XADREZ-6@r90",
+     "transformacao": "r90",
+     "solucao": "PBPBPBBPBPBPPBPBPBBPBPBPPBPBPBBPBPBP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-CATA-VENTO-6",
+   "nome": "Cata-vento",
+   "n": 6,
+   "motivo": "rosa_dos_ventos",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BBPBPPBPPBBPPPBPBBBBPBPPPBBPPBPPBPBB",
+   "variantes": [
+    {
+     "id": "M-CATA-VENTO-6",
+     "transformacao": "id",
+     "solucao": "BBPBPPBPPBBPPPBPBBBBPBPPPBBPPBPPBPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-CATA-VENTO-6@r90",
+     "transformacao": "r90",
+     "solucao": "PPBPBBPBBPPBBBPBPPPPBPBBBPPBBPBBPBPP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-ESPINHA-6",
+   "nome": "Espinha",
+   "n": 6,
+   "motivo": "onda",
+   "regular": false,
+   "contraEspelho": false,
+   "solucao": "BPBPPBBBPPBPPBPBBPPPBBPBBPBPPBPBPBBP",
+   "variantes": [
+    {
+     "id": "M-ESPINHA-6",
+     "transformacao": "id",
+     "solucao": "BPBPPBBBPPBPPBPBBPPPBBPBBPBPPBPBPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@r90",
+     "transformacao": "r90",
+     "solucao": "PBPPBBBPPBBPPBBPPBBPBBPPBPPBBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@r180",
+     "transformacao": "r180",
+     "solucao": "PBBPBPBPPBPBBPBBPPPBBPBPPBPPBBBPPBPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@r270",
+     "transformacao": "r270",
+     "solucao": "BPPBBPPBBPPBPPBBPBBPPBBPPBBPPBBBPPBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@eH",
+     "transformacao": "eH",
+     "solucao": "BPPBPBPBPPBBPBBPBPBPBBPPBPPBPBPBBPBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@eV",
+     "transformacao": "eV",
+     "solucao": "PBPBBPBPBPPBPPBBPBPBPBBPBBPPBPBPBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@tD",
+     "transformacao": "tD",
+     "solucao": "BBPPBPPBBPPBBPPBBPPPBBPBPBBPPBBPPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@tA",
+     "transformacao": "tA",
+     "solucao": "PBBPPBBPPBBPBPBBPPPBBPPBBPPBBPPBPPBB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@idi",
+     "transformacao": "idi",
+     "solucao": "PBPBBPPPBBPBBPBPPBBBPPBPPBPBBPBPBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@r90i",
+     "transformacao": "r90i",
+     "solucao": "BPBBPPPBBPPBBPPBBPPBPPBBPBBPPBBPPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@r180i",
+     "transformacao": "r180i",
+     "solucao": "BPPBPBPBBPBPPBPPBBBPPBPBBPBBPPPBBPBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@r270i",
+     "transformacao": "r270i",
+     "solucao": "PBBPPBBPPBBPBBPPBPPBBPPBBPPBBPPPBBPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@eHi",
+     "transformacao": "eHi",
+     "solucao": "PBBPBPBPBBPPBPPBPBPBPPBBPBBPBPBPPBPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@eVi",
+     "transformacao": "eVi",
+     "solucao": "BPBPPBPBPBBPBBPPBPBPBPPBPPBBPBPBPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@tDi",
+     "transformacao": "tDi",
+     "solucao": "PPBBPBBPPBBPPBBPPBBBPPBPBPPBBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-6@tAi",
+     "transformacao": "tAi",
+     "solucao": "BPPBBPPBBPPBPBPPBBBPPBBPPBBPPBBPBBPP",
+     "contraEspelho": false
+    }
+   ]
+  },
+  {
+   "id": "M-FITAS-6",
+   "nome": "Fitas",
+   "n": 6,
+   "motivo": "onda",
+   "regular": false,
+   "contraEspelho": false,
+   "solucao": "BPBBPPPBBPPBBBPPBPBPPBBPPPBBPBPBPPBB",
+   "variantes": [
+    {
+     "id": "M-FITAS-6",
+     "transformacao": "id",
+     "solucao": "BPBBPPPBBPPBBBPPBPBPPBBPPPBBPBPBPPBB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-6@r90",
+     "transformacao": "r90",
+     "solucao": "PPBBPBBPPBBPPBPPBBPBBPPBBPBBPPBBPPBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-6@r180",
+     "transformacao": "r180",
+     "solucao": "BBPPBPBPBBPPPBBPPBPBPPBBBPPBBPPPBBPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-6@r270",
+     "transformacao": "r270",
+     "solucao": "PBPPBBPPBBPBBPPBBPBBPPBPPBBPPBBPBBPP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-6@idi",
+     "transformacao": "idi",
+     "solucao": "PBPPBBBPPBBPPPBBPBPBBPPBBBPPBPBPBBPP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-6@r90i",
+     "transformacao": "r90i",
+     "solucao": "BBPPBPPBBPPBBPBBPPBPPBBPPBPPBBPPBBPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-6@r180i",
+     "transformacao": "r180i",
+     "solucao": "PPBBPBPBPPBBBPPBBPBPBBPPPBBPPBBBPPBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-6@r270i",
+     "transformacao": "r270i",
+     "solucao": "BPBBPPBBPPBPPBBPPBPPBBPBBPPBBPPBPPBB",
+     "contraEspelho": false
+    }
+   ]
+  },
+  {
+   "id": "M-MAR-LARGO-8",
+   "nome": "Mar largo",
+   "n": 8,
+   "motivo": "onda",
+   "regular": true,
+   "contraEspelho": true,
+   "solucao": "BBPPBBPPPPBBPPBBBBPPBBPPPPBBPPBBPPBBPPBBBBPPBBPPPPBBPPBBBBPPBBPP",
+   "variantes": [
+    {
+     "id": "M-MAR-LARGO-8",
+     "transformacao": "id",
+     "solucao": "BBPPBBPPPPBBPPBBBBPPBBPPPPBBPPBBPPBBPPBBBBPPBBPPPPBBPPBBBBPPBBPP",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-MAR-LARGO-8@r90",
+     "transformacao": "r90",
+     "solucao": "BPBPPBPBBPBPPBPBPBPBBPBPPBPBBPBPBPBPPBPBBPBPPBPBPBPBBPBPPBPBBPBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-MAR-LARGO-8@r180",
+     "transformacao": "r180",
+     "solucao": "PPBBPPBBBBPPBBPPPPBBPPBBBBPPBBPPBBPPBBPPPPBBPPBBBBPPBBPPPPBBPPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-MAR-LARGO-8@r270",
+     "transformacao": "r270",
+     "solucao": "PBPBBPBPPBPBBPBPBPBPPBPBBPBPPBPBPBPBBPBPPBPBBPBPBPBPPBPBBPBPPBPB",
+     "contraEspelho": false
+    }
+   ]
+  },
+  {
+   "id": "M-FITAS-8",
+   "nome": "Fitas",
+   "n": 8,
+   "motivo": "onda",
+   "regular": true,
+   "contraEspelho": false,
+   "solucao": "PPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPB",
+   "variantes": [
+    {
+     "id": "M-FITAS-8",
+     "transformacao": "id",
+     "solucao": "PPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-8@r90",
+     "transformacao": "r90",
+     "solucao": "BBPPBBPPPBBPPBBPPPBBPPBBBPPBBPPBBBPPBBPPPBBPPBBPPPBBPPBBBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-8@r180",
+     "transformacao": "r180",
+     "solucao": "BPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-8@r270",
+     "transformacao": "r270",
+     "solucao": "BPPBBPPBBBPPBBPPPBBPPBBPPPBBPPBBBPPBBPPBBBPPBBPPPBBPPBBPPPBBPPBB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-8@idi",
+     "transformacao": "idi",
+     "solucao": "BBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-8@r90i",
+     "transformacao": "r90i",
+     "solucao": "PPBBPPBBBPPBBPPBBBPPBBPPPBBPPBBPPPBBPPBBBPPBBPPBBBPPBBPPPBBPPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-8@r180i",
+     "transformacao": "r180i",
+     "solucao": "PBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-FITAS-8@r270i",
+     "transformacao": "r270i",
+     "solucao": "PBBPPBBPPPBBPPBBBPPBBPPBBBPPBBPPPBBPPBBPPPBBPPBBBPPBBPPBBBPPBBPP",
+     "contraEspelho": false
+    }
+   ]
+  },
+  {
+   "id": "M-ONDA-8",
+   "nome": "Onda",
+   "n": 8,
+   "motivo": "onda",
+   "regular": false,
+   "contraEspelho": false,
+   "solucao": "BBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPP",
+   "variantes": [
+    {
+     "id": "M-ONDA-8",
+     "transformacao": "id",
+     "solucao": "BBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ONDA-8@r90",
+     "transformacao": "r90",
+     "solucao": "BPPBPPBBBBPPBPPBPBBPBBPPPPBBPBBPBPPBPPBBBBPPBPPBPBBPBBPPPPBBPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ONDA-8@r180",
+     "transformacao": "r180",
+     "solucao": "PPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPBPBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ONDA-8@r270",
+     "transformacao": "r270",
+     "solucao": "PBBPBBPPPPBBPBBPBPPBPPBBBBPPBPPBPBBPBBPPPPBBPBBPBPPBPPBBBBPPBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ONDA-8@eH",
+     "transformacao": "eH",
+     "solucao": "PPBBPPBBBPPBBPPBBBPPBBPPPBBPPBBPBPPBBPPBBBPPBBPPPBBPPBBPPPBBPPBB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ONDA-8@eV",
+     "transformacao": "eV",
+     "solucao": "BBPPBBPPPBBPPBBPPPBBPPBBBPPBBPPBPBBPPBBPPPBBPPBBBPPBBPPBBBPPBBPP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ONDA-8@tD",
+     "transformacao": "tD",
+     "solucao": "BBPPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBBPP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ONDA-8@tA",
+     "transformacao": "tA",
+     "solucao": "PPBBPBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPBPPBB",
+     "contraEspelho": false
+    }
+   ]
+  },
+  {
+   "id": "M-ESPINHA-8",
+   "nome": "Espinha",
+   "n": 8,
+   "motivo": "onda",
+   "regular": false,
+   "contraEspelho": false,
+   "solucao": "BBPBPPBPPBBPPBBPPPBPBBPBBPPBBPPBBBPBPPBPPBBPPBBPPPBPBBPBBPPBBPPB",
+   "variantes": [
+    {
+     "id": "M-ESPINHA-8",
+     "transformacao": "id",
+     "solucao": "BBPBPPBPPBBPPBBPPPBPBBPBBPPBBPPBBBPBPPBPPBBPPBBPPPBPBBPBBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@r90",
+     "transformacao": "r90",
+     "solucao": "BPPBBPPBPPBBPPBBPBBPPBBPBPPBBPPBBBPPBBPPPBBPPBBPPPBBPPBBBBPPBBPP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@r180",
+     "transformacao": "r180",
+     "solucao": "BPPBBPPBBPBBPBPPPBBPPBBPPBPPBPBBBPPBBPPBBPBBPBPPPBBPPBBPPBPPBPBB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@r270",
+     "transformacao": "r270",
+     "solucao": "PPBBPPBBBBPPBBPPPBBPPBBPPPBBPPBBBPPBBPPBPBBPPBBPBBPPBBPPBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@eH",
+     "transformacao": "eH",
+     "solucao": "PBPPBPBBPBBPPBBPBPBBPBPPBPPBBPPBPBPPBPBBPBBPPBBPBPBBPBPPBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@eV",
+     "transformacao": "eV",
+     "solucao": "BPPBBPPBPPBPBBPBPBBPPBBPBBPBPPBPBPPBBPPBPPBPBBPBPBBPPBBPBBPBPPBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@tD",
+     "transformacao": "tD",
+     "solucao": "BPPBBPPBBBPPBBPPPBBPPBBPBPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPPPPBBPPBB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@tA",
+     "transformacao": "tA",
+     "solucao": "BBPPBBPPPPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPBPBBPPBBPPPBBPPBBBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@idi",
+     "transformacao": "idi",
+     "solucao": "PPBPBBPBBPPBBPPBBBPBPPBPPBBPPBBPPPBPBBPBBPPBBPPBBBPBPPBPPBBPPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@r90i",
+     "transformacao": "r90i",
+     "solucao": "PBBPPBBPBBPPBBPPBPPBBPPBPBBPPBBPPPBBPPBBBPPBBPPBBBPPBBPPPPBBPPBB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@r180i",
+     "transformacao": "r180i",
+     "solucao": "PBBPPBBPPBPPBPBBBPPBBPPBBPBBPBPPPBBPPBBPPBPPBPBBBPPBBPPBBPBBPBPP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@r270i",
+     "transformacao": "r270i",
+     "solucao": "BBPPBBPPPPBBPPBBBPPBBPPBBBPPBBPPPBBPPBBPBPPBBPPBPPBBPPBBPBBPPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@eHi",
+     "transformacao": "eHi",
+     "solucao": "BPBBPBPPBPPBBPPBPBPPBPBBPBBPPBBPBPBBPBPPBPPBBPPBPBPPBPBBPBBPPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@eVi",
+     "transformacao": "eVi",
+     "solucao": "PBBPPBBPBBPBPPBPBPPBBPPBPPBPBBPBPBBPPBBPBBPBPPBPBPPBBPPBPPBPBBPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@tDi",
+     "transformacao": "tDi",
+     "solucao": "PBBPPBBPPPBBPPBBBPPBBPPBPBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBBBBPPBBPP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESPINHA-8@tAi",
+     "transformacao": "tAi",
+     "solucao": "PPBBPPBBBBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBPBPPBBPPBBBPPBBPPPBBPPBBP",
+     "contraEspelho": false
+    }
+   ]
+  },
+  {
+   "id": "M-ROSA-8",
+   "nome": "Rosa",
+   "n": 8,
+   "motivo": "rosa_dos_ventos",
+   "regular": false,
+   "contraEspelho": false,
+   "solucao": "BPBPPBPBPBPBBPBPBPPBBPPBPBBPPBBPPBBPPBBPBPPBBPPBPBPBBPBPBPBPPBPB",
+   "variantes": [
+    {
+     "id": "M-ROSA-8",
+     "transformacao": "id",
+     "solucao": "BPBPPBPBPBPBBPBPBPPBBPPBPBBPPBBPPBBPPBBPBPPBBPPBPBPBBPBPBPBPPBPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ROSA-8@idi",
+     "transformacao": "idi",
+     "solucao": "PBPBBPBPBPBPPBPBPBBPPBBPBPPBBPPBBPPBBPPBPBBPPBBPBPBPPBPBPBPBBPBP",
+     "contraEspelho": false
+    }
+   ]
+  },
+  {
+   "id": "M-ESTRELA-8",
+   "nome": "Estrela",
+   "n": 8,
+   "motivo": "estrela",
+   "regular": false,
+   "contraEspelho": false,
+   "solucao": "BPPBBPPBPBBPPBBPPBPBBPBPBPBPPBPBBPBPPBPBPBPBBPBPPBBPPBBPBPPBBPPB",
+   "variantes": [
+    {
+     "id": "M-ESTRELA-8",
+     "transformacao": "id",
+     "solucao": "BPPBBPPBPBBPPBBPPBPBBPBPBPBPPBPBBPBPPBPBPBPBBPBPPBBPPBBPBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-ESTRELA-8@idi",
+     "transformacao": "idi",
+     "solucao": "PBBPPBBPBPPBBPPBBPBPPBPBPBPBBPBPPBPBBPBPBPBPPBPBBPPBBPPBPBBPPBBP",
+     "contraEspelho": false
+    }
+   ]
+  },
+  {
+   "id": "M-SETA-8",
+   "nome": "Seta",
+   "n": 8,
+   "motivo": null,
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BBPPBBPPPBBPBPPBPPBBPPBBBPPBPBBPBBPPBBPPPBBPBPPBPPBBPPBBBPPBPBBP",
+   "variantes": [
+    {
+     "id": "M-SETA-8",
+     "transformacao": "id",
+     "solucao": "BBPPBBPPPBBPBPPBPPBBPPBBBPPBPBBPBBPPBBPPPBBPBPPBPPBBPPBBBPPBPBBP",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-SETA-8@r90",
+     "transformacao": "r90",
+     "solucao": "BPPBBPPBPPBBPPBBPBBPPBBPBBPPBBPPPPBBPPBBBPPBBPPBBBPPBBPPPBBPPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-SETA-8@r180",
+     "transformacao": "r180",
+     "solucao": "PBBPBPPBBBPPBBPPBPPBPBBPPPBBPPBBPBBPBPPBBBPPBBPPBPPBPBBPPPBBPPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-SETA-8@r270",
+     "transformacao": "r270",
+     "solucao": "PBBPPBBPPPBBPPBBBPPBBPPBBBPPBBPPPPBBPPBBPBBPPBBPBBPPBBPPBPPBBPPB",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-SETA-8@eH",
+     "transformacao": "eH",
+     "solucao": "PPBBPPBBBPPBPBBPBBPPBBPPPBBPBPPBPPBBPPBBBPPBPBBPBBPPBBPPPBBPBPPB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-SETA-8@eV",
+     "transformacao": "eV",
+     "solucao": "BPPBPBBPPPBBPPBBPBBPBPPBBBPPBBPPBPPBPBBPPPBBPPBBPBBPBPPBBBPPBBPP",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-SETA-8@tD",
+     "transformacao": "tD",
+     "solucao": "BPPBBPPBBBPPBBPPPBBPPBBPPPBBPPBBBBPPBBPPBPPBBPPBPPBBPPBBPBBPPBBP",
+     "contraEspelho": false
+    },
+    {
+     "id": "M-SETA-8@tA",
+     "transformacao": "tA",
+     "solucao": "PBBPPBBPBBPPBBPPBPPBBPPBPPBBPPBBBBPPBBPPPBBPPBBPPPBBPPBBBPPBBPPB",
+     "contraEspelho": false
+    }
+   ]
+  },
+  {
+   "id": "M-ENTRANCADO-8",
+   "nome": "Entrançado",
+   "n": 8,
+   "motivo": null,
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BBPBPBPPBPBBPPBPPBBPBPPBBBPPBBPPPPBBPPBBBPPBPBBPPBPPBBPBPPBPBPBB",
+   "variantes": [
+    {
+     "id": "M-ENTRANCADO-8",
+     "transformacao": "id",
+     "solucao": "BBPBPBPPBPBBPPBPPBBPBPPBBBPPBBPPPPBBPPBBBPPBPBBPPBPPBBPBPPBPBPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-ENTRANCADO-8@r90",
+     "transformacao": "r90",
+     "solucao": "PPBPBPBBPBPPBBPBBPPBPBBPPPBBPPBBBBPPBBPPPBBPBPPBBPBBPPBPBBPBPBPP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-ESCAMAS-8",
+   "nome": "Escamas",
+   "n": 8,
+   "motivo": null,
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BBPPBBPPBPBBPPBPPBBPBPPBPBPPBBPBBPBBPPBPBPPBPBBPPBPPBBPBPPBBPPBB",
+   "variantes": [
+    {
+     "id": "M-ESCAMAS-8",
+     "transformacao": "id",
+     "solucao": "BBPPBBPPBPBBPPBPPBBPBPPBPBPPBBPBBPBBPPBPBPPBPBBPPBPPBBPBPPBBPPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-ESCAMAS-8@r90",
+     "transformacao": "r90",
+     "solucao": "PPBBPPBBPBPPBBPBBPPBPBBPBPBBPPBPPBPPBBPBPBBPBPPBBPBBPPBPBBPPBBPP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-ZIGUEZAGUE-8",
+   "nome": "Ziguezague",
+   "n": 8,
+   "motivo": null,
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BPPBPBBPPPBBPPBBPBBPBPPBBBPPBBPPPPBBPPBBBPPBPBBPBBPPBBPPPBBPBPPB",
+   "variantes": [
+    {
+     "id": "M-ZIGUEZAGUE-8",
+     "transformacao": "id",
+     "solucao": "BPPBPBBPPPBBPPBBPBBPBPPBBBPPBBPPPPBBPPBBBPPBPBBPBBPPBBPPPBBPBPPB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-ZIGUEZAGUE-8@r90",
+     "transformacao": "r90",
+     "solucao": "PBBPBPPBBBPPBBPPBPPBPBBPPPBBPPBBBBPPBBPPPBBPBPPBPPBBPPBBBPPBPBBP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-TRELICA-8",
+   "nome": "Trelica",
+   "n": 8,
+   "motivo": "trelica",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BPBPBPBPPBBPBPPBBBPBPBPPPPBBPPBBBBPPBBPPPPBPBPBBBPPBPBBPPBPBPBPB",
+   "variantes": [
+    {
+     "id": "M-TRELICA-8",
+     "transformacao": "id",
+     "solucao": "BPBPBPBPPBBPBPPBBBPBPBPPPPBBPPBBBBPPBBPPPPBPBPBBBPPBPBBPPBPBPBPB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-TRELICA-8@eV",
+     "transformacao": "eV",
+     "solucao": "PBPBPBPBBPPBPBBPPPBPBPBBBBPPBBPPPPBBPPBBBBPBPBPPPBBPBPPBBPBPBPBP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-CORDAO-8",
+   "nome": "Cordao",
+   "n": 8,
+   "motivo": "cordao",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BBPBPBPPBPPBPBBPPPBPBPBBBBPPBBPPPPBBPPBBBBPBPBPPPBBPBPPBPPBPBPBB",
+   "variantes": [
+    {
+     "id": "M-CORDAO-8",
+     "transformacao": "id",
+     "solucao": "BBPBPBPPBPPBPBBPPPBPBPBBBBPPBBPPPPBBPPBBBBPBPBPPPBBPBPPBPPBPBPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-CORDAO-8@eV",
+     "transformacao": "eV",
+     "solucao": "PPBPBPBBPBBPBPPBBBPBPBPPPPBBPPBBBBPPBBPPPPBPBPBBBPPBPBBPBBPBPBPP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-BORDADO-8",
+   "nome": "Bordado",
+   "n": 8,
+   "motivo": "bordado",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BPBBPPBPPBBPBPPBBBPBPBPPBPBPBPBPPBPBPBPBPPBPBPBBBPPBPBBPPBPPBBPB",
+   "variantes": [
+    {
+     "id": "M-BORDADO-8",
+     "transformacao": "id",
+     "solucao": "BPBBPPBPPBBPBPPBBBPBPBPPBPBPBPBPPBPBPBPBPPBPBPBBBPPBPBBPPBPPBBPB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-BORDADO-8@eV",
+     "transformacao": "eV",
+     "solucao": "PBPPBBPBBPPBPBBPPPBPBPBBPBPBPBPBBPBPBPBPBBPBPBPPPBBPBPPBBPBBPPBP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-VIDRACA-8",
+   "nome": "Vidraca",
+   "n": 8,
+   "motivo": "vidraca",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BBPPBBPPBBPBPBPPPPBBPPBBPBBPBPPBBPPBPBBPBBPPBBPPPPBPBPBBPPBBPPBB",
+   "variantes": [
+    {
+     "id": "M-VIDRACA-8",
+     "transformacao": "id",
+     "solucao": "BBPPBBPPBBPBPBPPPPBBPPBBPBBPBPPBBPPBPBBPBBPPBBPPPPBPBPBBPPBBPPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-VIDRACA-8@eV",
+     "transformacao": "eV",
+     "solucao": "PPBBPPBBPPBPBPBBBBPPBBPPBPPBPBBPPBBPBPPBPPBBPPBBBBPBPBPPBBPPBBPP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-ALMADA-8",
+   "nome": "Almada",
+   "n": 8,
+   "motivo": "almada",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BBPPBBPPBPPBPBBPPPBPBPBBPBPBPBPBBPBPBPBPBBPBPBPPPBBPBPPBPPBBPPBB",
+   "variantes": [
+    {
+     "id": "M-ALMADA-8",
+     "transformacao": "id",
+     "solucao": "BBPPBBPPBPPBPBBPPPBPBPBBPBPBPBPBBPBPBPBPBBPBPBPPPBBPBPPBPPBBPPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-ALMADA-8@eV",
+     "transformacao": "eV",
+     "solucao": "PPBBPPBBPBBPBPPBBBPBPBPPBPBPBPBPPBPBPBPBPPBPBPBBBPPBPBBPBBPPBBPP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-AZULEJO-8",
+   "nome": "Azulejo",
+   "n": 8,
+   "motivo": "azulejo",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BBPPBBPPBPPBPBBPPPBPBPBBPBPPBBPBBPBBPPBPBBPBPBPPPBBPBPPBPPBBPPBB",
+   "variantes": [
+    {
+     "id": "M-AZULEJO-8",
+     "transformacao": "id",
+     "solucao": "BBPPBBPPBPPBPBBPPPBPBPBBPBPPBBPBBPBBPPBPBBPBPBPPPBBPBPPBPPBBPPBB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-AZULEJO-8@eV",
+     "transformacao": "eV",
+     "solucao": "PPBBPPBBPBBPBPPBBBPBPBPPBPBBPPBPPBPPBBPBPPBPBPBBBPPBPBBPBBPPBBPP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-LABIRINTO-8",
+   "nome": "Labirinto",
+   "n": 8,
+   "motivo": "labirinto",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BPBPBPBPPPBBPPBBBBPBPBPPPBBPBPPBBPPBPBBPPPBPBPBBBBPPBBPPPBPBPBPB",
+   "variantes": [
+    {
+     "id": "M-LABIRINTO-8",
+     "transformacao": "id",
+     "solucao": "BPBPBPBPPPBBPPBBBBPBPBPPPBBPBPPBBPPBPBBPPPBPBPBBBBPPBBPPPBPBPBPB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-LABIRINTO-8@eV",
+     "transformacao": "eV",
+     "solucao": "PBPBPBPBBBPPBBPPPPBPBPBBBPPBPBBPPBBPBPPBBBPBPBPPPPBBPPBBBPBPBPBP",
+     "contraEspelho": true
+    }
+   ]
+  },
+  {
+   "id": "M-MALHA-8",
+   "nome": "Malha",
+   "n": 8,
+   "motivo": "malha",
+   "regular": false,
+   "contraEspelho": true,
+   "solucao": "BPBPBPBPPBPPBBPBBPPBPBBPPPBPBPBBBBPBPBPPPBBPBPPBBPBBPPBPPBPBPBPB",
+   "variantes": [
+    {
+     "id": "M-MALHA-8",
+     "transformacao": "id",
+     "solucao": "BPBPBPBPPBPPBBPBBPPBPBBPPPBPBPBBBBPBPBPPPBBPBPPBBPBBPPBPPBPBPBPB",
+     "contraEspelho": true
+    },
+    {
+     "id": "M-MALHA-8@eV",
+     "transformacao": "eV",
+     "solucao": "PBPBPBPBBPBBPPBPPBBPBPPBBBPBPBPPPPBPBPBBBPPBPBBPPBPPBBPBBPBPBPBP",
+     "contraEspelho": true
+    }
+   ]
+  }
+ ],
+ "rossio": [
+  {
+   "indice": 1,
+   "molde": "M-XADREZ-4",
+   "alternativa": null,
+   "nota": "P1 fixo (tutorial): a solução do P1 já é o molde; só se preenche origem.molde"
+  },
+  {
+   "indice": 2,
+   "molde": "M-LOSANGOS-6",
+   "alternativa": "M-FITAS-6@r90"
+  },
+  {
+   "indice": 3,
+   "molde": "M-ESPINHA-6",
+   "alternativa": "M-CATA-VENTO-6"
+  },
+  {
+   "indice": 4,
+   "molde": "M-LOSANGOS-6",
+   "alternativa": null
+  },
+  {
+   "indice": 5,
+   "molde": "M-CRUZ-6",
+   "alternativa": null
+  },
+  {
+   "indice": 6,
+   "molde": "M-XADREZ-6",
+   "alternativa": null
+  },
+  {
+   "indice": 7,
+   "molde": "M-ESPINHA-6",
+   "alternativa": "M-ESPINHA-6@eV"
+  },
+  {
+   "indice": 8,
+   "molde": "M-FITAS-6",
+   "alternativa": "M-FITAS-6@r180"
+  },
+  {
+   "indice": 9,
+   "molde": "M-CATA-VENTO-6",
+   "alternativa": "M-ESPINHA-6@r90"
+  },
+  {
+   "indice": 10,
+   "molde": "M-CRUZ-6@r90",
+   "alternativa": null,
+   "nota": "substitui o P5 fixo; continua a ser a apresentação das Juntas"
+  },
+  {
+   "indice": 11,
+   "molde": "M-LOSANGOS-6@r90",
+   "alternativa": null
+  },
+  {
+   "indice": 12,
+   "molde": "M-CATA-VENTO-6@r90",
+   "alternativa": null
+  },
+  {
+   "indice": 13,
+   "molde": "M-MAR-LARGO-8",
+   "alternativa": "M-ONDA-8@eH",
+   "nota": "primeiro 8×8: o mar largo do Rossio"
+  },
+  {
+   "indice": 14,
+   "molde": "M-ONDA-8",
+   "alternativa": null
+  },
+  {
+   "indice": 15,
+   "molde": "M-FITAS-6@r90",
+   "alternativa": null
+  },
+  {
+   "indice": 16,
+   "molde": "M-ESTRELA-8",
+   "alternativa": "M-ESCAMAS-8@r90"
+  },
+  {
+   "indice": 17,
+   "molde": "M-ESPINHA-6@r180",
+   "alternativa": null
+  },
+  {
+   "indice": 18,
+   "molde": "M-ESCAMAS-8",
+   "alternativa": null
+  },
+  {
+   "indice": 19,
+   "molde": "M-ENTRANCADO-8",
+   "alternativa": null
+  },
+  {
+   "indice": 20,
+   "molde": "M-ROSA-8",
+   "alternativa": "M-ESPINHA-8",
+   "nota": "substitui o P4 fixo; fecho com a rosa"
+  }
+ ],
+ "diario": {
+  "probMolde": 1,
+  "seedsPorMolde": 8,
+  "pools": [
+   [
+    "M-LOSANGOS-6",
+    "M-CATA-VENTO-6",
+    "M-XADREZ-6",
+    "M-ESPINHA-6",
+    "M-CRUZ-6",
+    "M-FITAS-6"
+   ],
+   [
+    "M-ESPINHA-6",
+    "M-FITAS-6",
+    "M-CATA-VENTO-6"
+   ],
+   [
+    "M-CRUZ-6",
+    "M-FITAS-6",
+    "M-LOSANGOS-6",
+    "M-ESPINHA-6",
+    "M-CATA-VENTO-6",
+    "M-XADREZ-6"
+   ],
+   [
+    "M-ONDA-8",
+    "M-ROSA-8",
+    "M-MAR-LARGO-8",
+    "M-ESTRELA-8",
+    "M-FITAS-8",
+    "M-ESCAMAS-8",
+    "M-SETA-8",
+    "M-ENTRANCADO-8",
+    "M-ZIGUEZAGUE-8",
+    "M-ESPINHA-8"
+   ],
+   [
+    "M-ESPINHA-8",
+    "M-ENTRANCADO-8",
+    "M-ONDA-8",
+    "M-ESCAMAS-8"
+   ],
+   [
+    "M-CATA-VENTO-6",
+    "M-ESPINHA-6",
+    "M-FITAS-6",
+    "M-CRUZ-6"
+   ],
+   [
+    "M-SETA-8",
+    "M-MAR-LARGO-8",
+    "M-ENTRANCADO-8",
+    "M-ESCAMAS-8",
+    "M-ZIGUEZAGUE-8",
+    "M-TRELICA-8",
+    "M-CORDAO-8",
+    "M-BORDADO-8",
+    "M-VIDRACA-8",
+    "M-ALMADA-8",
+    "M-AZULEJO-8",
+    "M-LABIRINTO-8",
+    "M-MALHA-8"
+   ]
+  ]
+ }
+}

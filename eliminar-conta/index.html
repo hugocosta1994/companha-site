@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eliminar conta e dados — Companha</title>
+<style>
+:root{--bg:#fff;--fg:#1d1d1f;--mut:#555;--ac:#2d5be3;--bd:#ccc}
+@media(prefers-color-scheme:dark){:root{--bg:#16181d;--fg:#eee;--mut:#aaa;--ac:#7aa2ff;--bd:#444}}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif;max-width:34rem;margin:0 auto;padding:1.5rem 1rem}
+label,input,button{display:block;width:100%;box-sizing:border-box;font:inherit}
+input{padding:.7rem;border:1px solid var(--bd);border-radius:6px;background:transparent;color:inherit;margin:.3rem 0 1rem}
+button{padding:.8rem;border:0;border-radius:6px;background:var(--ac);color:#fff;min-height:44px}
+p.m{color:var(--mut)}#r{margin-top:1rem;font-weight:600}
+</style></head><body>
+<h1>Eliminar conta e dados</h1>
+<p>Companha (SEIXO, MOINHO e outros jogos). Pode eliminar a conta diretamente na app, em Definições &gt; Conta &gt; Eliminar conta. Se já não tem a app, peça aqui.</p>
+<p class="m">Eliminamos a conta e todo o progresso guardado na nuvem, no prazo máximo de 30 dias. O progresso guardado no seu dispositivo não é afetado: apague-o desinstalando a app. Não guardamos mais dados pessoais além do email e do progresso do jogo. Dúvidas: <a href="mailto:hugoxpcosta.1994@gmail.com">hugoxpcosta.1994@gmail.com</a>. <a href="../privacidade/">Política de privacidade</a>.</p>
+<form id="f"><label for="e">Email da conta</label>
+<input id="e" type="email" required autocomplete="email" maxlength="254">
+<button type="submit">Pedir eliminação</button></form>
+<p id="r" role="status"></p>
+<script>
+// Preencher após criar o projeto Supabase (valores públicos; chave publicável/anon, protegida por RLS).
+const SUPABASE_URL = "https://xflhqhhuwyqnbhxxxbzv.supabase.co";
+const CHAVE_PUBLICA = "sb_publishable_TwzdBAhxBH3ttw1vlsvdFQ_7_BaxutE";
+document.getElementById("f").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const r = document.getElementById("r");
+  if (SUPABASE_URL.startsWith("COLOCAR")) { r.textContent = "Serviço ainda não configurado."; return; }
+  const em = document.getElementById("e").value.trim();
+  if (em.length < 5 || em.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { r.textContent = "Email inválido."; return; }
+  try {
+    const res = await fetch(SUPABASE_URL + "/rest/v1/pedidos_eliminacao", {
+      method: "POST",
+      headers: { apikey: CHAVE_PUBLICA, Authorization: "Bearer " + CHAVE_PUBLICA, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ email: em })
+    });
+    r.textContent = res.ok ? "Pedido registado. Trataremos dele em 30 dias, no máximo." : "Não foi possível registar o pedido. Tente mais tarde.";
+  } catch { r.textContent = "Sem ligação. Tente mais tarde."; }
+});
+</script></body></html>

@@ -1,0 +1,17 @@
+/* Botão «Continuar com Google» — diretrizes de marca da Google (G oficial a cores, inalterado).
+   Uso: <button class="btn-google" type="button"><span class="btn-google__g"></span><span class="btn-google__t">Continuar com Google</span></button>
+   Escuro: <button class="btn-google btn-google--escuro">. Carregamento: aria-busy="true". */
+.btn-google{--gb:#fff;--gbd:#747775;--gt:#1f1f1f;--gh:rgba(31,31,31,.08);
+  display:flex;align-items:center;justify-content:center;gap:12px;width:100%;
+  min-height:48px;padding:0 16px;box-sizing:border-box;background:var(--gb);color:var(--gt);
+  border:1px solid var(--gbd);border-radius:24px;font:500 15px/20px Roboto,"Segoe UI",system-ui,sans-serif;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn-google--escuro{--gb:#131314;--gbd:#8e918f;--gt:#e3e3e3;--gh:rgba(227,227,227,.1)}
+.btn-google__g{flex:none;width:24px;height:24px;background:url(google-g-claro.svg) center/contain no-repeat}
+.btn-google--escuro .btn-google__g{background-image:url(google-g-escuro.svg)}
+.btn-google:active{background-image:linear-gradient(var(--gh),var(--gh))}
+.btn-google:focus-visible{outline:2px solid #4285f4;outline-offset:2px}
+.btn-google[disabled],.btn-google[aria-busy="true"]{opacity:.6;pointer-events:none}
+.btn-google[aria-busy="true"] .btn-google__g{background:none;border:3px solid #4285f4;border-right-color:transparent;border-radius:50%;width:18px;height:18px;animation:btn-google-gira .8s linear infinite}
+@keyframes btn-google-gira{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.btn-google[aria-busy="true"] .btn-google__g{animation-duration:2s}}

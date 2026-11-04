@@ -1,0 +1,28 @@
+/* Base partilhada (fluxo.md §10): safe areas, alvos >= 48 dp, texto >= 16 px, sem seleção nem zoom de toque. */
+:root { --fundo: #2b2118; --texto: #f0e4cf; --alvo: 48px; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--texto); font: 16px/1.4 system-ui, sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+#app { min-height: 100%; display: flex; flex-direction: column; padding: env(safe-area-inset-top) max(16px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px, env(safe-area-inset-left)); }
+button { min-height: var(--alvo); min-width: var(--alvo); font: inherit; color: inherit; background: rgba(255,255,255,.12); border: 0; border-radius: 12px; padding: 0 20px; }
+button:active { background: rgba(255,255,255,.24); }
+
+/* Conta (E16): campos com alvo >= 48 px, tema pelas variáveis do jogo */
+.contas-f { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; color: var(--texto); }
+.contas-f input { min-height: 48px; padding: 0 12px; font-size: 16px; border: 2px solid var(--tinta); border-radius: var(--r2); background: var(--superficie); color: var(--tinta); }
+.contas-f { font-weight: 600; }
+
+/* Login obrigatório (E17): margens e safe areas; alvos >= 48 px */
+.contas-login { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.contas-login h1 { letter-spacing: .12em; margin: 8px 0; }
+.contas-login button { min-height: 56px; }
+.contas-ck { display: flex; align-items: center; gap: 10px; min-height: 48px; margin: 8px 0; color: var(--texto); }
+.contas-ck input { width: 24px; height: 24px; flex: none; }
+.contas-ck a { color: inherit; text-decoration: underline; padding: 12px 4px; }
+
+.contas-login button.a-carregar { opacity: .85; cursor: progress; }
+.spinner { display: inline-block; width: 1em; height: 1em; margin-right: .5em; vertical-align: -.15em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: gira .8s linear infinite; }
+@keyframes gira { to { transform: rotate(360deg); } }
+
+/* Botão Google (T-1258): sobrepõe as regras genéricas de button; escuro segue o tema do sistema. */
+.contas-login button.btn-google { min-height: 56px; padding: 0 16px; margin: 6px 0; background: var(--gb); color: var(--gt); border: 1px solid var(--gbd); font-weight: 500; font-size: 16px; }
+@media (prefers-color-scheme: dark) { .contas-login button.btn-google { --gb:#131314; --gbd:#8e918f; --gt:#e3e3e3; --gh:rgba(227,227,227,.1); } .contas-login button.btn-google .btn-google__g { background-image: url(google-g-escuro.svg); } }

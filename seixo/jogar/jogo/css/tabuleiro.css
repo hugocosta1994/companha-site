@@ -1,0 +1,3 @@
+/* SEIXO — tabuleiro (área B). O canvas ocupa a largura toda da app (GDD §2.8): sai do padding de #app
+   para o lado e o rebordo/margem exterior desenham-se dentro dele. */
+#tabuleiro { display: block; touch-action: none; flex: none; max-width: none; }

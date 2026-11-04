@@ -1,0 +1,374 @@
+{
+ "formato": 1,
+ "objetivos": [
+  {
+   "id": "OBJ-H1",
+   "horizonte": "hoje",
+   "texto_id": "obj.H1",
+   "tipo": "resolver_n",
+   "alvo": {
+    "janela": "hoje",
+    "filtro": "diario",
+    "n": 1
+   },
+   "premio": {
+    "lascas": 2
+   }
+  },
+  {
+   "id": "OBJ-H2",
+   "horizonte": "hoje",
+   "texto_id": "obj.H2",
+   "tipo": "resolver_sem_pista",
+   "alvo": {
+    "janela": "hoje",
+    "filtro": "diario",
+    "n": 1
+   },
+   "premio": {
+    "lascas": 2
+   }
+  },
+  {
+   "id": "OBJ-H3",
+   "horizonte": "hoje",
+   "texto_id": "obj.H3",
+   "tipo": "resolver_n",
+   "alvo": {
+    "janela": "hoje",
+    "filtro": "arquivo",
+    "n": 1
+   },
+   "premio": {
+    "lascas": 2
+   }
+  },
+  {
+   "id": "OBJ-H4",
+   "horizonte": "hoje",
+   "texto_id": "obj.H4",
+   "tipo": "resolver_n",
+   "alvo": {
+    "janela": "hoje",
+    "filtro": "qualquer",
+    "n": 2
+   },
+   "premio": {
+    "lascas": 2
+   }
+  },
+  {
+   "id": "OBJ-H5",
+   "horizonte": "hoje",
+   "texto_id": "obj.H5",
+   "tipo": "resolver_n",
+   "alvo": {
+    "janela": "hoje",
+    "filtro": "medio_dificil",
+    "n": 1
+   },
+   "premio": {
+    "lascas": 2
+   }
+  },
+  {
+   "id": "OBJ-H6",
+   "horizonte": "hoje",
+   "texto_id": "obj.H6",
+   "tipo": "variante",
+   "alvo": {
+    "janela": "hoje",
+    "comparar": "ontem",
+    "n": 1
+   },
+   "premio": {
+    "lascas": 2
+   }
+  },
+  {
+   "id": "OBJ-S1",
+   "horizonte": "semana",
+   "texto_id": "obj.S1",
+   "tipo": "resolver_sem_pista",
+   "alvo": {
+    "janela": "semana",
+    "filtro": "diario",
+    "n": 5
+   },
+   "premio": {
+    "lascas": 10
+   }
+  },
+  {
+   "id": "OBJ-S2",
+   "horizonte": "semana",
+   "texto_id": "obj.S2",
+   "tipo": "sequencia",
+   "alvo": {
+    "janela": "semana",
+    "dias_seguidos": 3
+   },
+   "premio": {
+    "lascas": 10
+   }
+  },
+  {
+   "id": "OBJ-S3",
+   "horizonte": "semana",
+   "texto_id": "obj.S3",
+   "tipo": "resolver_n",
+   "alvo": {
+    "janela": "semana",
+    "filtro": "arquivo",
+    "n": 5
+   },
+   "premio": {
+    "lascas": 10
+   }
+  },
+  {
+   "id": "OBJ-S4",
+   "horizonte": "semana",
+   "texto_id": "obj.S4",
+   "tipo": "resolver_n",
+   "alvo": {
+    "janela": "semana",
+    "filtro": "dificil",
+    "n": 1
+   },
+   "premio": {
+    "lascas": 10
+   }
+  },
+  {
+   "id": "OBJ-S5",
+   "horizonte": "semana",
+   "texto_id": "obj.S5",
+   "tipo": "resolver_n",
+   "alvo": {
+    "janela": "semana",
+    "filtro": "medio",
+    "n": 3
+   },
+   "premio": {
+    "lascas": 10
+   }
+  },
+  {
+   "id": "OBJ-S6",
+   "horizonte": "semana",
+   "texto_id": "obj.S6",
+   "tipo": "resolver_n",
+   "alvo": {
+    "janela": "semana",
+    "filtro": "mesmo_pacote",
+    "n": 2
+   },
+   "premio": {
+    "lascas": 10
+   }
+  },
+  {
+   "id": "OBJ-S7",
+   "horizonte": "semana",
+   "texto_id": "obj.S7",
+   "tipo": "resolver_n",
+   "alvo": {
+    "janela": "semana",
+    "filtro": "quadrado",
+    "n": 5
+   },
+   "premio": {
+    "lascas": 10
+   }
+  },
+  {
+   "id": "OBJ-S8",
+   "horizonte": "semana",
+   "texto_id": "obj.S8",
+   "tipo": "variante",
+   "alvo": {
+    "janela": "semana",
+    "comparar": "semana_anterior",
+    "n": 2
+   },
+   "premio": {
+    "lascas": 10
+   }
+  },
+  {
+   "id": "OBJ-L1",
+   "horizonte": "longo",
+   "texto_id": "obj.L1",
+   "tipo": "resolver_sem_pista",
+   "alvo": {
+    "janela": "sempre",
+    "filtro": "diario",
+    "n": 1
+   },
+   "premio": {
+    "lascas": 10
+   }
+  },
+  {
+   "id": "OBJ-L2",
+   "horizonte": "longo",
+   "texto_id": "obj.L2",
+   "tipo": "sequencia",
+   "alvo": {
+    "recorde": 3
+   },
+   "premio": {
+    "lascas": 15
+   }
+  },
+  {
+   "id": "OBJ-L3",
+   "horizonte": "longo",
+   "texto_id": "obj.L3",
+   "tipo": "sequencia",
+   "alvo": {
+    "recorde": 7
+   },
+   "premio": {
+    "lascas": 25
+   }
+  },
+  {
+   "id": "OBJ-L4",
+   "horizonte": "longo",
+   "texto_id": "obj.L4",
+   "tipo": "sequencia",
+   "alvo": {
+    "recorde": 30
+   },
+   "premio": {
+    "lascas": 60
+   }
+  },
+  {
+   "id": "OBJ-L5",
+   "horizonte": "longo",
+   "texto_id": "obj.L5",
+   "tipo": "praca_completa",
+   "alvo": {
+    "tipo": "mes",
+    "n": 1
+   },
+   "premio": {
+    "lascas": 30
+   }
+  },
+  {
+   "id": "OBJ-L6",
+   "horizonte": "longo",
+   "texto_id": "obj.L6",
+   "tipo": "descobrir",
+   "alvo": {
+    "descoberta": "DESC-N2"
+   },
+   "premio": {
+    "lascas": 20
+   }
+  },
+  {
+   "id": "OBJ-L7",
+   "horizonte": "longo",
+   "texto_id": "obj.L7",
+   "tipo": "descobrir",
+   "alvo": {
+    "descoberta": "DESC-N3"
+   },
+   "premio": {
+    "lascas": 30
+   }
+  },
+  {
+   "id": "OBJ-L8-JUNTAS",
+   "horizonte": "longo",
+   "texto_id": "obj.L8a",
+   "tipo": "descobrir",
+   "alvo": {
+    "descoberta": "DESC-JUNTAS"
+   },
+   "premio": {
+    "lascas": 15
+   }
+  },
+  {
+   "id": "OBJ-L8-CONTRA",
+   "horizonte": "longo",
+   "texto_id": "obj.L8b",
+   "tipo": "descobrir",
+   "alvo": {
+    "descoberta": "DESC-CONTRA"
+   },
+   "premio": {
+    "lascas": 15
+   }
+  },
+  {
+   "id": "OBJ-L8-ORLA",
+   "horizonte": "longo",
+   "texto_id": "obj.L8c",
+   "tipo": "descobrir",
+   "alvo": {
+    "descoberta": "DESC-ORLA"
+   },
+   "premio": {
+    "lascas": 15
+   }
+  },
+  {
+   "id": "OBJ-L9",
+   "horizonte": "longo",
+   "texto_id": "obj.L9",
+   "tipo": "pacote_completo",
+   "alvo": {
+    "n": 1
+   },
+   "premio": {
+    "lascas": 40
+   }
+  },
+  {
+   "id": "OBJ-L10",
+   "horizonte": "longo",
+   "texto_id": "obj.L10",
+   "tipo": "pacote_completo",
+   "alvo": {
+    "n": 3
+   },
+   "premio": {
+    "lascas": 80,
+    "item": "PAL-OCRE"
+   }
+  },
+  {
+   "id": "OBJ-L11",
+   "horizonte": "longo",
+   "texto_id": "obj.L11",
+   "tipo": "colecao",
+   "alvo": {
+    "tipo": "mes",
+    "n": 3
+   },
+   "premio": {
+    "lascas": 50,
+    "item": "MOLD-FLOR"
+   }
+  },
+  {
+   "id": "OBJ-L12",
+   "horizonte": "longo",
+   "texto_id": "obj.L12",
+   "tipo": "nivel",
+   "alvo": {
+    "nivel": 5
+   },
+   "premio": {
+    "lascas": 50
+   }
+  }
+ ]
+}

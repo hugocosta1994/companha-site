@@ -1,0 +1,1 @@
+globalThis.CONTAS_CONFIG = { fornecedor: "supabase", url: "https://xflhqhhuwyqnbhxxxbzv.supabase.co", chavePublica: "sb_publishable_TwzdBAhxBH3ttw1vlsvdFQ_7_BaxutE", redirectUrl: "pt.companha.tabuleiro://auth-callback", googleWebClientId: "321834177350-1t0lpj5le3e5ql62u96v9bfa1cqooekk.apps.googleusercontent.com" };

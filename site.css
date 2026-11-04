@@ -1,0 +1,46 @@
+:root{--cal:#F2ECDF;--papel:#FBF8F1;--tinta:#1B2233;--tinta2:#5A5248;--mar:#1E3A5F;--tr:#D2483D;--junta:#D9CFBC;--btn:#1E3A5F;--btn-t:#F2ECDF;--serif:Rockwell,"Roboto Slab",Georgia,serif}
+@media(prefers-color-scheme:dark){:root{--cal:#121826;--papel:#1B2233;--tinta:#F2ECDF;--tinta2:#B9B0A0;--junta:#2C3550;--btn:#F2ECDF;--btn-t:#1E3A5F}.claro{display:none!important}}
+@media(prefers-color-scheme:light){.escuro{display:none!important}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--cal);color:var(--tinta);font:17px/1.55 system-ui,sans-serif}
+h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.2;margin:0 0 .5em}h1{font-size:2rem}h2{font-size:1.5rem;margin-top:1.6em}
+a{color:inherit}a:focus-visible,button:focus-visible{outline:3px solid var(--mar);outline-offset:2px}
+@media(prefers-color-scheme:dark){a:focus-visible,button:focus-visible{outline-color:var(--cal)}}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}@media(min-width:768px){.wrap{padding:0 20px}}
+header.topo{position:sticky;top:0;z-index:5;background:var(--cal);border-bottom:1px solid var(--junta)}
+header.topo .wrap{display:flex;align-items:center;justify-content:space-between;min-height:56px;flex-wrap:wrap}
+header.topo img{height:32px;display:block}
+nav a{display:inline-flex;align-items:center;min-height:48px;padding:0 10px;text-decoration:none;font-weight:600}
+nav a:hover{text-decoration:underline}
+#menu-b{display:none;min-height:48px;padding:0 14px;background:none;border:1px solid var(--junta);border-radius:14px;color:inherit;font:inherit;cursor:pointer}
+@media(max-width:479px){#menu-b{display:block}nav{display:none;width:100%}nav.aberto{display:flex;flex-direction:column}}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:14px;background:var(--btn);color:var(--btn-t);font-weight:700;text-decoration:none;border:2px solid var(--btn)}
+.btn.contorno{background:none;color:var(--tinta);border-color:var(--tinta)}.btn.grande{min-height:56px}
+.heroi{padding:40px 0 24px;display:grid;gap:24px;text-align:center;justify-items:center}.heroi img{width:96px;height:96px}
+@media(min-width:960px){.heroi{grid-template-columns:1.4fr 1fr;text-align:left;justify-items:start}.heroi img{justify-self:center;width:160px;height:160px}}
+.cartoes{display:grid;gap:16px}@media(min-width:720px){.cartoes{grid-template-columns:1fr 1fr}}
+.cartao{background:var(--papel);border:1px solid var(--junta);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.cartao img.ic{width:96px;height:96px;border-radius:14px}.cartao .acoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+.seixo{--cj:#F4EFE6;--ac:#1F4E8C}.moinho{--cj:#EFE6D4;--ac:#1E3A5F}
+.banda{background:var(--cj);color:#1B2233;padding:28px 0;border-bottom:1px solid var(--junta)}
+.banda .wrap{display:grid;gap:16px}.banda img.ic{width:96px;height:96px;border-radius:14px}
+.banda .btn{background:var(--ac);border-color:var(--ac);color:#fff}.banda .btn.grande{width:100%}
+@media(min-width:720px){.banda .btn.grande{width:auto}.banda .wrap{grid-template-columns:1fr 1fr;align-items:center}}
+.nota{color:var(--tinta2);font-size:.95rem}.banda .nota{color:#4a4338}
+.capt{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 0 12px;list-style:none;margin:0}
+.capt li{flex:0 0 220px;scroll-snap-align:start}.capt img{width:220px;height:auto;border-radius:14px;border:1px solid var(--junta);display:block}
+.capt figcaption{font-size:.9rem;color:var(--tinta2)}
+.equipa{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;list-style:none;padding:0 0 12px;margin:0}
+.equipa li{flex:0 0 110px;text-align:center;scroll-snap-align:start;font-size:.85rem}.equipa img{width:80px;height:80px;border-radius:50%}.equipa b{display:block}
+@media(min-width:960px){.equipa{flex-wrap:wrap;overflow:visible}}
+ol.passos{padding-left:1.2em}.leitura{max-width:680px;margin:0 auto;padding:24px 16px;line-height:1.6}
+footer.rodape{background:var(--mar);color:#F2ECDF;margin-top:48px;padding:28px 0}
+footer.rodape .wrap{display:grid;gap:10px}footer.rodape img{width:40px;height:40px}footer.rodape a{display:inline-block;min-height:48px;line-height:48px;margin-right:14px}
+.zoom{display:none}.zoom:target{display:flex;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:20;align-items:center;justify-content:center}.zoom img{max-height:90vh;max-width:90vw}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body.jogar{margin:0;overflow:hidden}.jbarra{height:44px;display:flex;align-items:center;gap:12px;padding:0 12px;background:var(--cal);border-bottom:1px solid var(--junta)}
+.jbarra img{height:28px}.jbarra a,.jbarra button{color:inherit;font:inherit;background:none;border:0;cursor:pointer;min-height:44px;padding:0 6px}
+.jbarra .esp{flex:1}.jarea{height:calc(100dvh - 44px);display:flex;justify-content:center;background:var(--cj,#F4EFE6)}
+.jarea iframe{border:0;width:100%;max-width:480px;height:100%;background:#fff}
+#aviso{position:fixed;inset:auto 16px 16px;background:var(--papel);border:1px solid var(--junta);border-radius:14px;padding:12px 16px;z-index:9;display:none}
+#falha{display:none;padding:24px;text-align:center}

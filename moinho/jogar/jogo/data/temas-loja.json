@@ -1,0 +1,154 @@
+{
+  "madeira": {
+    "n": "Madeira",
+    "fundo": "#E9D8B8",
+    "sup": "#F5EAD0",
+    "linha": "#3A2F22",
+    "ponto": "#7A5C36",
+    "branca": "#F7F1E3",
+    "preta": "#3A2F22",
+    "sel": "#B5532B",
+    "desb": "inicio",
+    "contraste": {
+      "branca/sup": 1.06,
+      "preta/sup": 10.91,
+      "linha/sup": 10.91,
+      "branca/preta": 11.58,
+      "ponto/sup": 5.15,
+      "sel/sup": 4.15
+    }
+  },
+  "ardosia": {
+    "n": "Ardosia",
+    "fundo": "#3B444C",
+    "sup": "#5C6872",
+    "linha": "#E3E8EB",
+    "ponto": "#AEB9C1",
+    "branca": "#F4F6F7",
+    "preta": "#0A0D10",
+    "sel": "#F0B36B",
+    "desb": "5 vitórias contra a IA",
+    "contraste": {
+      "branca/sup": 5.27,
+      "preta/sup": 3.41,
+      "linha/sup": 4.62,
+      "branca/preta": 17.97,
+      "ponto/sup": 2.86,
+      "sel/sup": 3.09
+    }
+  },
+  "papel": {
+    "n": "Papel",
+    "fundo": "#EFE6D2",
+    "sup": "#FBF6EA",
+    "linha": "#26364A",
+    "ponto": "#5E6F85",
+    "branca": "#FBF6EA",
+    "preta": "#26364A",
+    "sel": "#B3321F",
+    "desb": "3 puzzles",
+    "contraste": {
+      "branca/sup": 1,
+      "preta/sup": 11.39,
+      "linha/sup": 11.39,
+      "branca/preta": 11.39,
+      "ponto/sup": 4.76,
+      "sel/sup": 5.74
+    }
+  },
+  "noite": {
+    "n": "Noite",
+    "fundo": "#141C33",
+    "sup": "#1E2A4A",
+    "linha": "#C8D2EA",
+    "ponto": "#8C9BC0",
+    "branca": "#F2D27A",
+    "preta": "#0B1020",
+    "sel": "#FF9F6B",
+    "desb": "1 partida de Alquerque",
+    "contraste": {
+      "branca/sup": 9.61,
+      "preta/sup": 1.34,
+      "linha/sup": 9.33,
+      "branca/preta": 12.87,
+      "ponto/sup": 5.09,
+      "sel/sup": 7.02
+    }
+  },
+  "ceramica": {
+    "n": "Azulejo",
+    "fundo": "#F3EEE2",
+    "sup": "#FFFFFF",
+    "linha": "#1F3F8F",
+    "ponto": "#5B73B5",
+    "branca": "#FFFFFF",
+    "preta": "#1F3F8F",
+    "sel": "#9A6800",
+    "desb": "loja (cosmetico)",
+    "contraste": {
+      "branca/sup": 1,
+      "preta/sup": 9.7,
+      "linha/sup": 9.7,
+      "branca/preta": 9.7,
+      "ponto/sup": 4.6,
+      "sel/sup": 4.82
+    }
+  },
+  "lareira": {
+    "n": "Lareira",
+    "fundo": "#2A1710",
+    "sup": "#4A2A1C",
+    "linha": "#F2D9B8",
+    "ponto": "#C9A07A",
+    "branca": "#FFF1DC",
+    "preta": "#140905",
+    "sel": "#FFB347",
+    "desb": "pacote Lareira (loja)",
+    "contraste": {
+      "branca/sup": 11.51,
+      "preta/sup": 1.53,
+      "linha/sup": 9.39,
+      "branca/preta": 17.62,
+      "ponto/sup": 5.36,
+      "sel/sup": 7.19
+    }
+  },
+  "granito": {
+    "n": "Granito",
+    "fundo": "#C9C6C0",
+    "sup": "#8F8C86",
+    "linha": "#1A1C20",
+    "ponto": "#1A1C20",
+    "branca": "#FAF8F4",
+    "preta": "#1A1C20",
+    "sel": "#5E0F0A",
+    "desb": "Apoiante (loja)",
+    "contraste": {
+      "branca/sup": 3.16,
+      "preta/sup": 5.09,
+      "linha/sup": 5.09,
+      "branca/preta": 16.08,
+      "ponto/sup": 5.09,
+      "sel/sup": 4.04
+    }
+  },
+  "alvorada": {
+    "n": "Alvorada",
+    "fundo": "#F6DCC8",
+    "sup": "#9A7FA8",
+    "linha": "#1E1228",
+    "ponto": "#1E1228",
+    "branca": "#FFF8EE",
+    "preta": "#1E1228",
+    "sel": "#5A1608",
+    "desb": "oferta do tutorial",
+    "contraste": {
+      "branca/sup": 3.33,
+      "preta/sup": 5.1,
+      "linha/sup": 5.1,
+      "branca/preta": 16.99,
+      "ponto/sup": 5.1,
+      "sel/sup": 3.85
+    }
+  }
+}
