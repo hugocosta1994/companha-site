@@ -38,7 +38,7 @@
   { "id": "PAL-MOSTEIRO", "categoria": "paleta", "raridade": "raro", "eur": 1.99, "lascas": 500, "consumivel": false, "play_id": "seixo_pal_mosteiro", "gratis": false },
   { "id": "MOLD-CAIS", "categoria": "moldura", "raridade": null, "eur": 1.49, "lascas": 300, "consumivel": false, "play_id": "seixo_mold_cais", "gratis": false },
   { "id": "MOLD-AZULEJO", "categoria": "moldura", "raridade": null, "eur": 1.49, "lascas": 300, "consumivel": false, "play_id": "seixo_mold_azulejo", "gratis": false },
-  { "id": "MOLD-MESTRE", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 5, "naoVende": true },
+  { "id": "MOLD-MESTRE", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 5, "naoVende": true, "obtencao": {"tipo": "nivel", "ref": "NIV-5"}, "condicao_id": "colecao.cond.mold_mestre" },
   { "id": "SELO-2", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 2, "naoVende": true },
   { "id": "SELO-3", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 3, "naoVende": true },
   { "id": "SELO-4", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "nivel", "nivel": 4, "naoVende": true },
@@ -50,10 +50,11 @@
   { "id": "PAC-RIA", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_ria", "gratis": false, "via_nivel": 2 },
   { "id": "PAC-MOSTEIRO", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_mosteiro", "gratis": false, "via_nivel": 4 },
   { "id": "PAC-AZULEJO-CALCADA", "categoria": "pacote", "raridade": null, "eur": 1.99, "lascas": 300, "consumivel": false, "play_id": "seixo_pac_azulejo_calcada", "gratis": false, "via_nivel": 5 },
-  {"id": "MOLD-CENTO", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
-  {"id": "MOLD-TRIMESTRE", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
-  {"id": "MOLD-ANO", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
-  {"id": "PEDRA-ESTACOES", "categoria": "pedra", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
-  {"id": "SELO-100", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true},
-  {"id": "SELO-AMIGOS", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true}
+  {"id": "MOLD-CENTO", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true, "obtencao": {"tipo": "objetivo", "ref": "OBJ-L21"}, "condicao_id": "colecao.cond.mold_cento" },
+  {"id": "MOLD-TRIMESTRE", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true, "obtencao": {"tipo": "objetivo", "ref": "OBJ-L22"}, "condicao_id": "colecao.cond.mold_trimestre" },
+  {"id": "MOLD-ANO", "categoria": "moldura", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true, "obtencao": {"tipo": "objetivo", "ref": "OBJ-L24"}, "condicao_id": "colecao.cond.mold_ano" },
+  {"id": "PEDRA-ESTACOES", "categoria": "pedra", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true, "obtencao": {"tipo": "objetivo", "ref": "OBJ-L26"}, "condicao_id": "colecao.cond.pedra_estacoes" },
+  {"id": "SELO-100", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true, "obtencao": {"tipo": "objetivo", "ref": "OBJ-L19"}, "condicao_id": "colecao.cond.selo_100" },
+  {"id": "SELO-AMIGOS", "categoria": "selo", "raridade": null, "eur": null, "lascas": null, "consumivel": false, "play_id": null, "gratis": false, "via": "objetivo", "naoVende": true, "obtencao": {"tipo": "objetivo", "ref": "OBJ-L28"}, "condicao_id": "colecao.cond.selo_amigos" },
+  { "id": "SEM-ANUNCIOS", "categoria": "servico", "raridade": null, "eur": 2.99, "lascas": null, "consumivel": false, "play_id": "seixo_sem_anuncios", "gratis": false, "via": "eur", "direito": "sem_anuncios" }
 ]

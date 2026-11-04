@@ -37,7 +37,12 @@ function iniciarPartida(raiz, cfg, ganchos) {
   tab.svg.setAttribute("aria-label", t("titulo"));
   meio.append(tab.svg);
   const obj = el("div", "objetivo", t("mo.tut.objetivo"));
-  raiz.append(topo, obj, cima.el, meio, baixo.el);
+  const faixaMP = cfg.modo === "mp" ? el("div", "faixa-mp") : null;
+  if (faixaMP) {
+    const h = el("h2", "mp-titulo", cfg.titulo || "");
+    faixaMP.append(h, el("p", "mp-cor", cfg.corTexto || ""), el("p", "mp-espera"));
+    raiz.append(topo, faixaMP, obj, cima.el, meio, baixo.el);
+  } else raiz.append(topo, obj, cima.el, meio, baixo.el);
   raiz.classList.toggle("sem-destaques", !opcoes().destaques);
   function faixa(jogador, emCima) {
     const f = el("div", `faixa ${emCima ? "cima" : "baixo"}`);
@@ -108,6 +113,11 @@ function iniciarPartida(raiz, cfg, ganchos) {
     const fp = cfg.modo === "2j" || cfg.cor === void 0 ? f : fase(e, cfg.cor);
     obj.textContent = e.fim ? t("mo.tut.objetivo") : `${t("mo.tut.objetivo")} ${t("mo.fase." + fp)}.`;
     obj.dataset.fase = fp;
+    if (faixaMP) {
+      const w = faixaMP.querySelector(".mp-espera");
+      w.textContent = e.fim ? "" : humano(e.vez) ? t("tab.async.e12.tua_vez") : t("tab.async.e12.espera");
+      w.dataset.estado = e.fim ? "fim" : humano(e.vez) ? "minha" : "espera";
+    }
     estadoTxt.textContent = e.fim ? "" : cfg.modo === "2j" ? t(`e3.fase.${f === "colocar" ? "colocar" : f === "voar" ? "voar" : "mover"}`) : `${t(humano(e.vez) ? "e3.vez.tua" : "e3.vez.adversario")} \xB7 ${t(`e3.fase.${f}`)}`;
     if (window.TABULEIRO_DEBUG) window.TABULEIRO_DEBUG.partida = { estado: e, historico: p.historico, bloqueado, sel };
   }
@@ -295,6 +305,18 @@ function iniciarPartida(raiz, cfg, ganchos) {
   emitir("partida:iniciada", { modo: cfg.modo, nivel: cfg.nivel, cor: cfg.cor, semente: cfg.semente, tema: cfg.tema || "madeira" });
   if (cfg.modo === "ia") aquecerIA(p.estado);
   pintar();
+  if (cfg.ultima) {
+    for (const pt of [cfg.ultima.de, cfg.ultima.para]) if (pt !== void 0) {
+      const [x, y] = pos(pt);
+      const c = document.createElementNS(ns, "circle");
+      c.setAttribute("cx", x);
+      c.setAttribute("cy", y);
+      c.setAttribute("r", 20);
+      c.setAttribute("class", "ult-anel");
+      tab.svg.append(c);
+      setTimeout(() => c.remove(), 1800);
+    }
+  }
   if (window.TABULEIRO_DEBUG) Object.assign(window.TABULEIRO_DEBUG, { tocar: (pt) => {
     tocar(pt, "down");
     tocar(pt, "up");

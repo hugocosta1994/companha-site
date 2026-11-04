@@ -3,6 +3,8 @@ const CONFIG = {
   ANIM_ABANAR_MS: 150,
   AVISO_ATRASO_MS: 400,
   ANIM_RESOLVIDO_MS: 1200,
+  FEEDBACK_FIM_MS: 500,
+  // T-1322 (S3-10): pulso/aviso de conclusão, nunca > 600 ms
   ANIM_REVELA_MS: 600,
   // T-565 (G-07d3): onda por diagonais que acende o motivo no fim do P1 e do P2
   ANIM_PISTA_MS: 1200,
@@ -32,6 +34,18 @@ const CONFIG = {
   // níveis por troço
   ASSENTAR_PRACA_MS: 3200,
   // T-426: quanto tempo a praça pequena fica por cima do tabuleiro depois de resolver
+  // anúncios com recompensa (GDD §14, T-1335): IDs de teste da Google em plataforma/anuncios.js
+  AD_PISTA_DIA: 3,
+  AD_LASCAS_BONUS: 5,
+  AD_SEM_ANUNCIO_PRIMEIRAS: 3,
+  ANUNCIOS: {
+    RELEASE: false,
+    // T-1342: true só no build de release (ferramentas/modo-anuncios.mjs); em dev usa sempre IDs de teste
+    IDS_REAIS: { appId: "ca-app-pub-7114748739096443~2118421430", recompensa: "ca-app-pub-7114748739096443/3958116716" },
+    UMP_TEMPO_MS: 3e3,
+    INTERSTICIAIS: false,
+    SLOTS: { AD1: "pista", AD2: "lascas_diario", AD3: "caminho_troco" }
+  },
   // tutorial (GDD §4.7, §5.3): pista grátis no P3 ao fim de N s sem tocar; pistas oferecidas no fim do tutorial
   TUTORIAL_AJUDA_S: 30,
   PISTAS_INICIAIS: 3,

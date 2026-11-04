@@ -43,12 +43,32 @@ const EVENTOS = Object.freeze([
   "amigo:atualizado",
   "recorde:novo",
   "codigo:gerado",
+  "desafio:codigo",
+  "desafio:recebido",
+  "desafio:resultado",
+  "desafio:erro",
   // 2.8 modo Caminho (contrato 1.4, T-1112; GDD §13)
   "caminho:nivel",
   "caminho:resolvido",
   "caminho:troco",
   "caminho:saltado",
   "caminho:teto",
+  // 2.9 retenção v3 (contrato 1.5, T-1321; contratos/retencao-v3.md)
+  "regresso:mostrado",
+  "regresso:aceite",
+  "regresso:dispensado",
+  "semana:resumo",
+  "lembrete:ativado",
+  "lembrete:desativado",
+  "lembrete:disparado",
+  // 2.10 coleção v3 (contrato 1.6, T-1322)
+  "colecao:aberta",
+  // 2.11 anúncios (contrato 1.7, T-1335; plataforma/anuncios.js)
+  "anuncio:pedido",
+  "anuncio:mostrado",
+  "anuncio:recompensa",
+  "anuncio:falhou",
+  "consentimento:mudou",
   "compras:estado",
   "compras:produtos",
   "compras:compra",
@@ -56,7 +76,7 @@ const EVENTOS = Object.freeze([
   "compras:restauro",
   "loja:troca"
 ]);
-const VERSAO_CONTRATO = "1.4";
+const VERSAO_CONTRATO = "1.7";
 const CONHECIDOS = new Set(EVENTOS);
 const ouvintes = [];
 const REGISTO_MAX = 200;

@@ -11,7 +11,19 @@ const EVENTOS = Object.freeze([
   "vez:mudou",
   "som:mudou",
   "puzzle:certo",
-  "puzzle:errado"
+  "puzzle:errado",
+  "async:convite",
+  "async:importado",
+  "async:jogada",
+  "async:enviado",
+  "async:erro",
+  "async:desistiu",
+  "async:fim",
+  "xp:ganho",
+  "nivel:subiu",
+  "conquista:ganha",
+  "desafio:iniciado",
+  "desafio:fim"
 ]);
 const ouvintes = /* @__PURE__ */ new Map();
 function ouvir(nome, f) {

@@ -119,6 +119,10 @@ function criarEcraLoja(dep) {
     if (a.categoria === "pista") {
       extra.push(criar("p", { class: "loja-info" }, t("loja.pistas_info")));
       extra.push(criar("p", { class: "loja-info", id: "loja-pistas" }, tn("comum.pistas", (_c = (_b = doc.inventario) == null ? void 0 : _b.pistas) != null ? _c : 0, { n: (_e = (_d = doc.inventario) == null ? void 0 : _d.pistas) != null ? _e : 0 })));
+      if (dep.extraPistas) {
+        const x = dep.extraPistas();
+        if (x) extra.push(x);
+      }
     }
     if (tem && !a.consumivel) {
       if (tipo) {

@@ -10,7 +10,7 @@ function equipadoDeEnsaio(artigo, eq = equipadoAtual()) {
   if (tipo === "moldura") return { ...eq, moldura: artigo.id };
   return { ...eq };
 }
-function criarExperimentar({ t, tocarSom }) {
+function criarExperimentar({ t, tocarSom, aplicar = null, tem = () => true, condicao = () => "" }) {
   const criar = (tag, attrs = {}, ...filhos) => {
     const e = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs)) {
@@ -26,7 +26,9 @@ function criarExperimentar({ t, tocarSom }) {
   const fim = criar("p", { id: "experimentar-fim", class: "forte", role: "status", "aria-live": "polite" });
   const cv = criar("canvas", { id: "experimentar-tabuleiro", class: "exp-tabuleiro", width: "288", height: "288" });
   const sair = criar("button", { id: "btn-experimentar-sair", type: "button", class: "ec-botao cheio grande" }, t("loja.experimentar_sair"));
-  raiz.append(aviso, cv, fim, sair);
+  const como = criar("p", { id: "experimentar-como", class: "of-suave", hidden: true });
+  const aplicarBt = criar("button", { id: "btn-experimentar-aplicar", type: "button", class: "ec-botao cheio grande", hidden: true }, t("colecao.aplicar"));
+  raiz.append(aviso, cv, fim, como, aplicarBt, sair);
   let estado = null;
   const L = cv.width / DEMO_N;
   function desenhar() {
@@ -66,6 +68,12 @@ function criarExperimentar({ t, tocarSom }) {
     api.assentar(i);
   });
   sair.addEventListener("click", () => api.fechar());
+  aplicarBt.addEventListener("click", async () => {
+    if (!estado || aplicarBt.disabled || !aplicar) return;
+    const id = estado.artigo.id;
+    await aplicar(id);
+    api.fechar();
+  });
   const api = {
     el: raiz,
     abrir(artigo, eq) {
@@ -73,6 +81,11 @@ function criarExperimentar({ t, tocarSom }) {
       fim.textContent = "";
       raiz.hidden = false;
       desenhar();
+      const livre = !!tem(artigo.id);
+      aplicarBt.hidden = !aplicar || artigo.categoria === "som";
+      aplicarBt.disabled = !livre;
+      como.hidden = livre;
+      como.textContent = livre ? "" : condicao(artigo) || "";
       if (artigo.categoria === "som" && tocarSom) {
         try {
           tocarSom(artigo.id);
@@ -99,7 +112,7 @@ function criarExperimentar({ t, tocarSom }) {
       estado = null;
     },
     aberta: () => !raiz.hidden,
-    estado: () => ({ aberta: !raiz.hidden, vazias: estado ? DEMO_VAZIAS.length - estado.feitas.size : 0, fim: fim.textContent })
+    estado: () => ({ aberta: !raiz.hidden, aplicarAtivo: !aplicarBt.hidden && !aplicarBt.disabled, como: como.textContent, vazias: estado ? DEMO_VAZIAS.length - estado.feitas.size : 0, fim: fim.textContent })
   };
   return api;
 }

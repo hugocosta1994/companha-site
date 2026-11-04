@@ -246,6 +246,15 @@
         tom(f, 1, "sine", 0.14, i * 0.15);
       });
     });
+    ouvir(bus, "nivel:subiu", function() {
+      [392, 494, 587, 784].forEach(function(f, i) {
+        tom(f, 0.7, "sine", 0.12, i * 0.1);
+      });
+    });
+    ouvir(bus, "conquista:ganha", function() {
+      tom(660, 0.25, "triangle", 0.1);
+      tom(880, 0.35, "sine", 0.09, 0.1);
+    });
     ouvir(bus, "app:pausa", pausa);
     ouvir(bus, "app:retoma", retoma);
     ouvir(bus, "som:mudou", function(e) {

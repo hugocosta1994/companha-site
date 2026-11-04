@@ -20,7 +20,7 @@ import { escrever as gravarDocumento } from "./plataforma/gravacao.js";
 import * as audio from "./audio/audio.js";
 import { PACOTES, COLUNAS_LARGO, estadoDoPacote, pacoteDoId, idCurado, estadoDoMes, mesVizinho } from "./meta/pacotes.js";
 import { loja, equipar, tipoDe } from "./meta/loja.js";
-import { comprar as comprarEur, produtos as produtosEur, restaurar as restaurarCompras } from "./plataforma/compras.js";
+import { comprar as comprarEur, produtos as produtosEur, restaurar as restaurarCompras, temDireito } from "./plataforma/compras.js";
 import { criarPraca, acenderMotivo, desenharMiniatura } from "./jogo/praca.js";
 import { mostrarAssentar, fecharAssentar, assentarVisivel } from "./jogo/assentar.js";
 import { criarEcraLoja, lojaVisivel } from "./jogo/ecraLoja.js";
@@ -30,6 +30,20 @@ import { oficioVista, objetivosVista, colecaoVista } from "./meta/vistaV2.js";
 import { definirEquipado } from "./jogo/cosmeticos.js";
 import * as tutorial from "./nucleo/tutorial.js";
 import { criarEcraCalceteiros } from "./jogo/ecraCalceteiros.js";
+import { aplicar as agendarLembrete, cancelar as cancelarLembrete } from "./plataforma/lembrete.js";
+import * as anuncios from "./plataforma/anuncios.js";
+import { elegivel as adElegivel, conceder as adConceder } from "./meta/anunciosJogo.js";
+import { criarOferta } from "./jogo/ecraAnuncios.js";
+import { criarFeedback } from "./jogo/feedbackFim.js";
+import { criarEcraColecao } from "./jogo/ecraColecao.js";
+import { colecao as colecaoV3, oQueFalta } from "./nucleo/colecao.js";
+import * as retorno from "./meta/retorno.js";
+import { cartaoRegresso, cartaoSemana, corpoSemana, linhaLembrete } from "./jogo/ecraRetorno.js";
+import { dicaPendente, marcarDica } from "./meta/dicas.js";
+import { criarEcraQuadro } from "./jogo/ecraQuadro.js";
+import { quadroDe } from "./nucleo/quadro.js";
+import * as desafio from "./nucleo/desafio.js";
+import { atualizarProgresso } from "./nucleo/objetivos.js";
 import * as amigos from "./nucleo/amigos.js";
 import { dificuldadeConfigurada } from "./nucleo/oficio.js";
 import * as caminho from "./meta/caminho.js";
@@ -141,9 +155,24 @@ const lojaUI = criarEcraLoja({
   caminho: () => abrirCaminho(),
   caminhoTeto: CONFIG.CAMINHO_TETO_DIA,
   // BS-5
+  extraPistas: () => {
+    setTimeout(() => ui.ad1.atualizar(), 0);
+    return ui.ad1.el;
+  },
+  // T-1338
   experimentar: (a) => experimentarUI.abrir(a)
 });
-const experimentarUI = criarExperimentar({ t, tocarSom: (id) => audio.previsualizarSom(id) });
+const experimentarUI = criarExperimentar({
+  t,
+  tocarSom: (id) => audio.previsualizarSom(id),
+  // T-1348 (S3-07): «Ver como fica» com Aplicar (só se já tens o item) e a condição por baixo quando está por ganhar.
+  aplicar: (id) => equipar(id, { catalogo: loja.catalogo() }),
+  tem: (id) => {
+    const it = itemDoCatalogo(id);
+    return !!(it && it.gratis) || temItem(documento(), id);
+  },
+  condicao: (a) => a.condicao_id ? t(a.condicao_id) : ""
+});
 document.getElementById("app").append(lojaUI.el, experimentarUI.el);
 new MutationObserver(() => atualizarNav()).observe(lojaUI.el, { attributes: true, attributeFilter: ["hidden"] });
 ui.loja = criar("button", { id: "btn-loja", type: "button" }, t("nav.loja"));
@@ -257,9 +286,17 @@ function abrirSub(nome, de = "menu") {
     ecras.sub.titulo.textContent = t("nav.praca");
     fecharAssentar();
     assentarPendente = null;
-    c.replaceChildren(ui.praca);
+    c.replaceChildren(ui.praca, ui.btnColecao);
     ui.praca.open = true;
     renderPraca();
+  } else if (nome === "colecao") {
+    ecras.sub.titulo.textContent = t("colecao.titulo");
+    c.replaceChildren(ecraColecaoV3.el);
+    ecraColecaoV3.abrir();
+    emitir("colecao:aberta", { separador: ecraColecaoV3.aba() });
+  } else if (nome === "semana") {
+    ecras.sub.titulo.textContent = t("resumo.titulo");
+    c.replaceChildren(corpoSemana({ t }, documento().semanas));
   } else if (nome === "comojogar") {
     ecras.sub.titulo.textContent = t("comojogar.titulo");
     c.replaceChildren(corpoComoJogar());
@@ -300,7 +337,7 @@ function aoVoltar() {
     lojaUI.fechar();
     return "loja";
   }
-  if (["puzzles", "praca", "opcoes", "comojogar", "oficio", "metas", "calceteiros"].includes(ecraAtual)) {
+  if (["puzzles", "praca", "opcoes", "comojogar", "semana", "colecao", "oficio", "metas", "calceteiros"].includes(ecraAtual)) {
     voltar();
     return "sub";
   }
@@ -362,6 +399,44 @@ function sairParaMenu() {
   ir("menu");
   renderDiario();
 }
+function codigoDesafio() {
+  const p = jogo.puzzle, ref = desafio.refDeId(p.id), faixa = desafio.faixaDe(p.dificuldade || "medio");
+  if (!ref || !faixa) return null;
+  const idLocal = amigos.garantirSocial(documento()).idLocal;
+  return desafio.gerarCodigo({ ref, faixa, tempoMs, semPista: !(jogo.pistasUsadas > 0), idLocal });
+}
+function resultadoDesafio(R) {
+  const cod = codigoDesafio();
+  R.desafiar.hidden = !cod;
+  R.desafio.textContent = "";
+  const a = desafioAtivo;
+  if (!a || a.id !== jogo.puzzle.id) return;
+  if (jogo.pistasUsadas > 0) {
+    R.desafio.textContent = t("desafio.com_pistas");
+    return;
+  }
+  if (!(a.tempoS > 0) || !(tempoMs > 0)) return;
+  const meu = Math.max(1, Math.round(tempoMs / 1e3)), res = desafio.compararTempos(meu, a.tempoS);
+  R.desafio.textContent = `${t(`desafio.${res}`)} \xB7 ${t("desafio.tempos", { dele: formatarTempoS(a.tempoS), meu: formatarTempoS(meu) })}`;
+  if (!a.registado) {
+    a.registado = true;
+    desafio.registarResultado(documento(), { ref: a.ref, de: a.nome, tempoDele: a.tempoS, meuTempo: meu, resultado: res, data: hoje() });
+    gravarSocial();
+    emitir("desafio:resultado", { ref: a.ref, resultado: res });
+  }
+}
+const formatarTempoS = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+function mostrarOfertasResultado(R, cam) {
+  if (!R.anuncios) {
+    R.anuncios = criar("div", { id: "res-anuncios", class: "res-anuncios" }, ui.ad2.el, ui.ad3.el);
+    R.lascas.after(R.anuncios);
+  }
+  const diario = cam == null && !!dataDoId(jogo.puzzle.id);
+  ui.ad2.el.hidden = true;
+  ui.ad3.el.hidden = true;
+  if (diario) ui.ad2.atualizar();
+  else if (cam != null && trocoGanho) ui.ad3.atualizar();
+}
 function mostrarResultado() {
   if (tut || !jogo || !jogo.resolvido) return;
   const R = ecras.resultado;
@@ -371,6 +446,8 @@ function mostrarResultado() {
   R.linha.textContent = cam != null ? linhaCaminho() : jogo.pistasUsadas > 0 ? t("resultado.com_pistas") : seq > 0 && dataDoId(id) ? tn("resultado.sequencia", seq) : "";
   R.lascas.textContent = ganhoLascas > 0 ? tn("resultado.lascas", ganhoLascas) : "";
   R.partilhar.hidden = !textoDaPartilha();
+  mostrarOfertasResultado(R, cam);
+  resultadoDesafio(R);
   R.seguinte.hidden = dataDoId(id) === hoje();
   ir("resultado");
   if (assentarUltimo && assentarUltimo.puzzleId === id) {
@@ -380,7 +457,15 @@ function mostrarResultado() {
 }
 let objetivosCat = [];
 const vistaOficio = () => oficioVista(documento());
-const vistaMetas = () => objetivosVista(documento(), objetivosCat, hoje());
+let puzzleInfo = () => null;
+const vistaMetas = () => {
+  try {
+    atualizarProgresso(documento(), objetivosCat, { hoje: hoje(), infoDe: puzzleInfo });
+  } catch (e) {
+    console.warn("[main] progresso das metas:", e);
+  }
+  return objetivosVista(documento(), objetivosCat, hoje());
+};
 const difDe = (id) => dificuldadeConfigurada() ? dificuldadeConfigurada()(id) : null;
 async function gravarSocial() {
   try {
@@ -429,7 +514,253 @@ const ecraCalc = criarEcraCalceteiros({ t, tn }, {
     partilhar(cod, { id: "codigo-amigo" }).catch((e) => console.warn("[main] partilha falhou:", e));
   }
 });
-const ecraOficio = criarEcraOficio({ t, tn }, { oficio: vistaOficio, metas: vistaMetas, calceteiros: ecraCalc });
+let desafioAtivo = null;
+const nomeDeIdLocal = (idLocal) => {
+  const a = idLocal && amigos.garantirSocial(documento()).amigos.find((x) => x.id === idLocal);
+  return a && a.nome || null;
+};
+const ecraQuadro = criarEcraQuadro({ t, tn }, {
+  quadro: () => quadroDe(documento(), puzzleInfo),
+  historico: () => Array.isArray(documento().desafios) ? documento().desafios : []
+}, {
+  ler: (txt) => {
+    const r = desafio.lerCodigo(txt);
+    if (!r.ok) {
+      emitir("desafio:erro", { erro: r.erro });
+      return r;
+    }
+    const id = desafio.idDeRef(r.ref), info = id ? puzzleInfo(id) : null;
+    emitir("desafio:recebido", { ref: r.ref });
+    return { ...r, id, nome: nomeDeIdLocal(r.idLocal), n: info && info.n || "?" };
+  },
+  jogar: (c) => {
+    const feito = desafio.respondido(documento(), c.ref, c.tempoS);
+    try {
+      if (!c.id) return "desconhecido";
+      const dia = dataDoId(c.id);
+      if (dia) {
+        if (dia > hoje()) return "desconhecido";
+        abrirDia(dia);
+      } else if (c.id.startsWith("CAM-") || !puzzleInfo(c.id)) return "desconhecido";
+      else abrir(c.id);
+    } catch (e) {
+      console.warn("[main] desafio:", e);
+      return "desconhecido";
+    }
+    desafioAtivo = { ref: c.ref, id: c.id, nome: c.nome, tempoS: c.tempoS, jaFeito: !!feito };
+    return "ok";
+  },
+  apagar: () => {
+    documento().desafios = [];
+    gravarSocial();
+  },
+  colar: async () => navigator.clipboard && navigator.clipboard.readText ? navigator.clipboard.readText() : ""
+});
+const ecraOficio = criarEcraOficio({ t, tn }, {
+  oficio: vistaOficio,
+  metas: vistaMetas,
+  calceteiros: ecraCalc,
+  quadro: ecraQuadro,
+  dicas: { pendente: (a) => dicaPendente(documento(), a), vista: (a) => {
+    if (marcarDica(documento(), a)) gravarSocial();
+  } }
+});
+let regressoVista = null, resumoNovo = null;
+ui.retorno = criar("div", { id: "menu-retorno", class: "mn-retorno" });
+const emitirTodos = (evs) => {
+  for (const [n, d] of evs || []) emitir(n, d);
+};
+const rotuloSugerido = (id) => {
+  const o = curados.find((x) => x.id === id);
+  return o ? `${t(`dif.${o.dificuldade}`)} ${o.n}x${o.n}` : "";
+};
+function sugerirRegresso(doc) {
+  const c = curados.find((o) => o.id.startsWith("PAC-ROSSIO") && o.dificuldade === "facil" && o.n <= 6 && !["resolvido", "resolvido_com_pistas"].includes(estadoDe(doc, o.id)));
+  return c ? c.id : null;
+}
+function iniciarRetorno() {
+  try {
+    const doc = documento(), h = hoje();
+    const r = retorno.avaliarRegresso(doc, h, { sugerir: sugerirRegresso });
+    regressoVista = { ...r, puzzleRotulo: r.sugerido ? rotuloSugerido(r.sugerido) : "", nivelOficio: t(`oficio.nivel.${doc.oficio && doc.oficio.nivel || 1}`) };
+    emitirTodos(r.eventos);
+    const g = retorno.gerarResumoSemanal(doc, h);
+    resumoNovo = g.resumo;
+    emitirTodos(g.eventos);
+    gravarSocial();
+    reagendarLembrete().catch((e) => console.warn("[main] lembrete:", e));
+  } catch (e) {
+    console.warn("[main] retorno:", e);
+  }
+}
+function renderRetorno() {
+  const doc = documento(), h = hoje();
+  const dispensado = !!regressoVista && retorno.regressoDe(doc).dispensadoEm === h;
+  const reg = regressoVista && regressoVista.nivel >= 2 && dispensado ? { ...regressoVista, mostrar: false } : regressoVista;
+  const acoesReg = {
+    jogar: () => {
+      const s = regressoVista.sugerido;
+      emitirTodos(retorno.aceitarRegresso(doc, h));
+      gravarSocial();
+      renderRetorno();
+      if (s) abrir(s);
+      else abrirDia(h);
+    },
+    recomecar: () => {
+      emitirTodos(retorno.aceitarRegresso(doc, h));
+      gravarSocial();
+      renderRetorno();
+      abrirDia(h);
+    },
+    aquecer: () => {
+      emitirTodos(retorno.aceitarRegresso(doc, h));
+      gravarSocial();
+      renderRetorno();
+      abrirCaminho();
+    },
+    dispensar: () => {
+      emitirTodos(retorno.dispensarRegresso(doc, h));
+      gravarSocial();
+      renderRetorno();
+    }
+  };
+  const filhos = [cartaoRegresso({ t }, reg, acoesReg), cartaoSemana({ t, tn }, resumoNovo, () => abrirSub("semana"))].filter(Boolean);
+  ui.retorno.replaceChildren(...filhos);
+  ui.retorno.hidden = !filhos.length || tutorial.tutorialPorFazer(doc);
+}
+const pluginLembrete = () => plugin("LocalNotifications");
+const textosLembrete = () => ({ titulo: t("jogo.nome"), texto: t("lembrete.texto") });
+async function mudarLembrete(ligado) {
+  const doc = documento(), LN = pluginLembrete();
+  if (!ligado) {
+    emitirTodos(retorno.desligarLembrete(doc, "jogador"));
+    gravarSocial();
+    await cancelarLembrete(LN);
+    return { ligado: false };
+  }
+  if (!LN) return { ligado: false, textoChave: "lembrete.indisponivel" };
+  let ok = false;
+  try {
+    ok = (await LN.requestPermissions()).display === "granted";
+  } catch {
+    ok = false;
+  }
+  const r = retorno.ligarLembrete(doc, retorno.HORA_LEMBRETE, ok);
+  emitirTodos(r.eventos);
+  gravarSocial();
+  if (r.ligado) await agendarLembrete(LN, doc, textosLembrete());
+  return { ligado: r.ligado, textoChave: r.ligado ? null : "lembrete.recusado" };
+}
+async function reagendarLembrete() {
+  const doc = documento(), LN = pluginLembrete();
+  if (!retorno.lembreteDe(doc).ligado) return;
+  const r = retorno.deveDisparar(doc, hoje(), "00:00");
+  if (r.eventos.length) {
+    emitirTodos(r.eventos);
+    gravarSocial();
+    if (ui.lembrete) ui.lembrete.atualizar();
+    await cancelarLembrete(LN);
+    return;
+  }
+  await agendarLembrete(LN, doc, textosLembrete());
+}
+{
+  const LN = pluginLembrete();
+  if (LN && LN.addListener) Promise.resolve(LN.addListener("localNotificationReceived", () => emitir("lembrete:disparado", {}))).catch(() => {
+  });
+}
+ui.lembrete = linhaLembrete({ t }, () => retorno.lembreteDe(documento()), { mudar: mudarLembrete });
+ui.minhaSemana = criar("button", { id: "btn-def-semana", type: "button", class: "def-restaurar" }, t("resumo.botao"));
+ui.minhaSemana.addEventListener("click", () => abrirSub("semana", "opcoes"));
+def.corpo.append(ui.lembrete.el, ui.minhaSemana);
+const itemDoCatalogo = (id) => loja.catalogo().find((i) => i.id === id) || null;
+const ecraColecaoV3 = criarEcraColecao({ t, tn }, {
+  colecao: () => {
+    const doc = documento(), eq = doc.inventario && doc.inventario.equipado || {};
+    return colecaoV3(loja.catalogo(), {
+      doc,
+      tem: (id) => temItem(doc, id),
+      aplicado: (id) => Object.values(eq).includes(id),
+      objetivos: Object.fromEntries(objetivosCat.map((o) => [o.id, o])),
+      hoje: hoje(),
+      infoDe: puzzleInfo,
+      hojeMes: hoje().slice(0, 7)
+    });
+  },
+  oQueFalta,
+  item: itemDoCatalogo,
+  lascasDe: (id) => {
+    var _a;
+    return (_a = (itemDoCatalogo(id) || {}).lascas) != null ? _a : 0;
+  }
+}, {
+  aplicar: (id) => equipar(id, { catalogo: loja.catalogo() }),
+  ver: (item) => experimentarUI.abrir(item),
+  aoAbrir: (sep) => emitir("colecao:aberta", { separador: sep })
+});
+const feedbackFim = criarFeedback({ app: appEl, criar, duracaoMs: CONFIG.FEEDBACK_FIM_MS, reduzir: () => !!(globalThis.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) });
+ui.btnColecao = criar("button", { id: "btn-colecao", type: "button", class: "ec-botao sec" }, t("colecao.abrir"));
+ui.btnColecao.addEventListener("click", () => abrirSub("colecao", "praca"));
+const semAnuncios = () => {
+  try {
+    return temItem(documento(), "SEM-ANUNCIOS") || temDireito("sem_anuncios");
+  } catch {
+    return false;
+  }
+};
+anuncios.configurar({ semAnuncios });
+async function concederAnuncio(slot, opcoes) {
+  const r = adConceder(documento(), slot, { hoje: hoje(), ...opcoes });
+  await gravarSocial();
+  emitirTodos(r.eventos);
+  return r.ganho;
+}
+const fabricaOferta = (id, slot, extra) => criarOferta({ t }, {
+  id,
+  slot,
+  semAnuncios,
+  elegivel: () => !tut && (!extra.cond || extra.cond()) && adElegivel(documento(), slot, { hoje: hoje(), emTutorial: !!tut || tutorial.tutorialPorFazer(documento()), ...extra.ctx ? extra.ctx() : {} }).ok,
+  preparar: () => anuncios.recompensa.preparar(slot),
+  mostrar: () => anuncios.recompensa.mostrar(slot),
+  ver: extra.ver,
+  receber: extra.receber,
+  params: extra.params,
+  aoGanhar: async () => {
+    const g = await concederAnuncio(slot, extra.ctx ? extra.ctx() : {});
+    return extra.confirmar(g);
+  }
+});
+ui.ad1 = fabricaOferta("ad-pista", "AD1", { cond: () => saldoPistas(documento()) <= 0, ver: "anuncio.ver_pista", receber: "anuncio.receber_pista", confirmar: () => t("anuncio.ganhou_pista") });
+ui.ad2 = fabricaOferta("ad-lascas", "AD2", { ver: "anuncio.ver_lascas", receber: "anuncio.receber_lascas", params: () => ({ n: CONFIG.AD_LASCAS_BONUS }), confirmar: (g) => t("anuncio.ganhou_lascas", { n: g.lascas || 0 }) });
+ui.ad3 = fabricaOferta("ad-troco", "AD3", {
+  ver: "anuncio.ver_troco",
+  receber: "anuncio.receber_troco",
+  ctx: () => ({ ref: jogo ? caminho.caminhoDoId(jogo.puzzle.id) : null, extra: trocoGanho ? trocoGanho.troco : 0 }),
+  confirmar: (g) => t("anuncio.ganhou_lascas", { n: g.lascas || 0 })
+});
+ui.privacidade = criar("button", { id: "btn-def-privacidade", type: "button", class: "def-restaurar" }, t("anuncio.privacidade"));
+ui.privacidade.addEventListener("click", () => {
+  anuncios.abrirPrivacidade().catch((e) => console.warn("[main] privacidade:", e));
+});
+ui.removerAnuncios = criar("button", { id: "btn-def-sem-anuncios", type: "button", class: "def-restaurar" }, t("anuncio.remover"));
+ui.removerAnunciosMsg = criar("p", { id: "def-sem-anuncios-msg", class: "of-suave", role: "status" });
+function renderSemAnuncios() {
+  ui.removerAnuncios.hidden = semAnuncios();
+  if (semAnuncios()) ui.removerAnunciosMsg.textContent = t("anuncio.removidos");
+}
+ui.removerAnuncios.addEventListener("click", async () => {
+  ui.removerAnuncios.disabled = true;
+  let r;
+  try {
+    r = await comprarEur("SEM-ANUNCIOS");
+  } catch {
+    r = { resultado: "erro" };
+  }
+  ui.removerAnunciosMsg.textContent = r.resultado === "erro" ? t("anuncio.remover_erro") : "";
+  ui.removerAnuncios.disabled = false;
+  renderSemAnuncios();
+});
+def.corpo.append(ui.privacidade, ui.removerAnuncios, ui.removerAnunciosMsg);
 ui.colecao = criar("div", { id: "colecao-host" });
 function renderColecao() {
   const atual = hoje().slice(0, 7), minimo = DIA_LANCAMENTO.slice(0, 7) < atual ? DIA_LANCAMENTO.slice(0, 7) : atual;
@@ -449,6 +780,7 @@ function renderOficio() {
 function renderMenu(est, linhaSeq, meta) {
   const M = ecras.menu;
   renderOficio();
+  renderRetorno();
   const doc = documento();
   const primeira = tutorial.tutorialPorFazer(doc);
   const num = t("inicio.numero", { num: numeroDe(hoje()) });
@@ -514,10 +846,17 @@ const ecras = criarEcras({ t, app: appEl, acoes: {
   partilhar: () => {
     aoPartilhar().catch((e) => console.warn("[main] partilha falhou:", e));
   },
+  desafiar: () => {
+    const cod = jogo && jogo.resolvido ? codigoDesafio() : null;
+    if (!cod) return;
+    emitir("desafio:codigo", { ref: desafio.refDeId(jogo.puzzle.id) });
+    partilhar(t("desafio.codigo_teu", { codigo: cod }), { id: "desafio-codigo" }).catch((e) => console.warn("[main] partilha falhou:", e));
+  },
   seguinte: () => el.seguinte.click(),
   sair: sairParaMenu,
   voltar
 } });
+ecras.menu.cartao.after(ui.retorno);
 {
   const A = plugin("App");
   if (A && typeof A.addListener === "function") Promise.resolve(A.addListener("backButton", () => aoVoltar())).catch((e) => console.warn("[main] backButton:", e));
@@ -1256,6 +1595,13 @@ ouvir((nome, dados) => {
   if (nome === "puzzle:resolvido" && tut && dados && dados.id === tutorial.puzzleAtual(tut) && /^p[123]/.test(tut.passo)) {
     aoResolverTutorial().catch((e) => console.warn("[main] tutorial:", e));
   }
+  if (nome === "puzzle:pedra" && !tut) retorno.marcarAberto(documento(), hoje());
+  if (nome === "puzzle:resolvido" && !tut) feedbackFim.disparar("puzzle");
+  if (nome === "meta:cumprida" && dados) {
+    const o = objetivosCat.find((x) => x.id === dados.id);
+    feedbackFim.disparar("meta", o && o.texto_id ? t(o.texto_id) : t("feedback.meta"));
+  }
+  if (nome === "app:retoma") reagendarLembrete().catch((e) => console.warn("[main] lembrete:", e));
   if (nome === "app:pausa") guardarAMeio();
   if (nome === "lascas:alteradas" && dados && dados.motivo === "puzzle") ganhoLascas = dados.delta;
   if (nome === "lascas:alteradas" && dados && (dados.motivo === "caminho" || dados.motivo === "caminho_troco")) ganhoLascas += dados.delta;
@@ -1389,6 +1735,7 @@ async function arrancar() {
       return null;
     }
   };
+  puzzleInfo = puzzlePorId;
   const meta = await iniciarMeta({ puzzlePorId, catalogoObjetivos: () => objetivosCat, jogoAtual: () => jogo ? estadoParaGravar(jogo) : null }).catch((e) => {
     console.warn("[main] meta n\xE3o arrancou:", e);
     return {};
@@ -1410,6 +1757,9 @@ async function arrancar() {
   audio.definirSom((_c = (_b = documento().inventario) == null ? void 0 : _b.equipado) == null ? void 0 : _c.som);
   renderOficio();
   painelPronto = true;
+  iniciarRetorno();
+  renderSemAnuncios();
+  anuncios.iniciar().catch((e) => console.warn("[main] an\xFAncios:", e));
   const pedido = params.get("p");
   if (params.get("data")) abrir(gerarDiario(params.get("data")).puzzle);
   else if (params.get("seed")) abrir(gerarDeParams(params.get("seed")));

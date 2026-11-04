@@ -27,7 +27,7 @@ const PERSONALIDADES = {
 };
 const PERSONALIDADE_PADRAO = "equilibrada";
 const PUZZLES = { dicasMax: 3, desbloqueioResolvidos: 2, tipos: ["P1", "P2", "P3", "P4"], porTipo: 3 };
-const MODOS_STATS = ["ia_aprendiz", "ia_facil", "ia_media", "ia_atenta", "ia_dificil", "ia_mestre", "dois", "alq_facil", "alq_media", "alq_dificil"];
+const MODOS_STATS = ["ia_aprendiz", "ia_facil", "ia_media", "ia_atenta", "ia_dificil", "ia_mestre", "dois", "codigo", "alq_facil", "alq_media", "alq_dificil"];
 export {
   AVALIACAO,
   IA_MAX_MS,

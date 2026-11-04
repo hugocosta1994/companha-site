@@ -4,18 +4,19 @@ import { ligarCicloDeVida } from "./plataforma/nativo.js";
 import { ler, escrever, CHAVE, CHAVE_STATS, CHAVE_PUZZLES, lerJSON, escreverJSON, apagar } from "./plataforma/gravacao.js";
 import { VERSAO, PERSONALIDADES, PERSONALIDADE_PADRAO, PUZZLES } from "./config.js";
 import { iniciarPartida } from "./jogo/controlo.js";
-import { criarTabuleiro, desenhar, marcarMoinho, limparMoinho } from "./jogo/vista.js";
+import { criarTabuleiro, desenhar, marcarMoinho, limparMoinho, iconePeca } from "./jogo/vista.js";
 import { fase, destinos, jogar as jogarRegra, aplicar } from "./nucleo/regras.js";
 import { novaPartida, jogarCompleta } from "./nucleo/partida.js";
 import { escolherJogada } from "./nucleo/ia.js";
 import { estadoDoPuzzle, avaliarJogada, moinhosEmUm } from "./nucleo/puzzles.js";
-import { registar, modoDe, total, mediaJogadas, validarStats, validarResolvidos, vitoriasIA, tipoAberto, resolvidosDoTipo, proximoPuzzle } from "./nucleo/estatisticas.js";
+import { registar, registarGlobais, taxaVitoria, vitoriasPorNivel, modoDe, total, mediaJogadas, validarStats, validarResolvidos, vitoriasIA, tipoAberto, resolvidosDoTipo, proximoPuzzle } from "./nucleo/estatisticas.js";
 import { contas } from "./contas/contas.js";
 import { ecraConta, ecraLogin } from "./contas/contas-ui.js";
 import { JOGO_ID, SCHEMA, lerProgresso, merge as mergeConta } from "./contas/progresso-conta.js";
 import { validarGravacao } from "./nucleo/gravacao.js";
-import { CHAVE_META, CONQUISTAS, TEMAS_ORDEM, validarMeta, rankDe, proximoRank, registarFim, temaAberto } from "./nucleo/meta.js";
-import { criarConvite, jogarNaPartida, importarCodigo, estadoDaPartida, corDe, lerCodigo, novoPerfil, gerarCartao, adicionarAmigo, ordenarTabela, sugerirNivel, SEMENTE_MAX } from "./nucleo/multijogador.js";
+import { CHAVE_META, CONQUISTAS, TEMAS_ORDEM, validarMeta, rankDe, proximoRank, hojeISO, registarFim, temaAberto, nivelDe, proximoNivel, patenteDeNivel, xpDoNivel, estadoDesafio, serieAtual, conquistaEvento } from "./nucleo/meta.js";
+import { criarConvite, jogarNaPartida, importarCodigo, estadoDaPartida, corDe, lerCodigo, novoPerfil, gerarCartao, adicionarAmigo, ordenarTabela, sugerirNivel, SEMENTE_MAX, posicaoDoDia, sementeDoDia, podeJogarDesafio } from "./nucleo/multijogador.js";
+import { normalizarEntrada, agrupar, estadoLista, contarMinhaVez, diasDesde, ultimaDoAdversario, resultadoFim, desistir, apagar as apagarPartida, carregarLista, guardarLista, textoPartilha } from "./nucleo/partidas.js";
 import { NIVEIS_ORDEM } from "./config.js";
 import { criarCompras, playIdDoTema } from "./plataforma/compras.js";
 const app = document.getElementById("app");
@@ -29,6 +30,7 @@ let origemOpcoes = null;
 let avisoGravacao = false;
 let stats = {}, resolvidos = {}, puzzles = [], meta = validarMeta(null), temas = {};
 let ocupadoConta = false;
+let partidas = [];
 const sincronizar = () => {
   try {
     contas.guardar(lerProgresso(meta, stats, resolvidos));
@@ -70,6 +72,15 @@ function carregar() {
   dados = r.dados;
   avisoGravacao = r.aviso;
   meta = validarMeta(lerJSON(CHAVE_META));
+  partidas = carregarLista(lerJSON);
+  if (!partidas.length && meta.partidas.length) {
+    partidas = meta.partidas.slice(0, 10);
+    guardarLista(lerJSON, escreverJSON, partidas);
+  }
+  if (meta.partidas.length) {
+    meta.partidas = [];
+    escreverJSON(CHAVE_META, meta);
+  }
   stats = validarStats(lerJSON(CHAVE_STATS));
   resolvidos = validarResolvidos(lerJSON(CHAVE_PUZZLES));
 }
@@ -85,7 +96,7 @@ function gravar() {
   escrever(dados);
 }
 function guardarPartida(p) {
-  dados.partida = p.estado.fim ? null : { modo: p.modo, nivel: p.nivel, personalidade: cfgAtual && cfgAtual.personalidade || PERSONALIDADE_PADRAO, cor: p.cor, semente: p.semente, posicao: p.estado.celas, vez: p.estado.vez, fase: fase(p.estado), historico: p.historico };
+  dados.partida = p.estado.fim ? null : { modo: p.modo, nivel: p.nivel, personalidade: cfgAtual && cfgAtual.personalidade || PERSONALIDADE_PADRAO, cor: p.cor, semente: p.semente, posicao: p.estado.celas, vez: p.estado.vez, fase: fase(p.estado), historico: p.historico, desafio: !!(cfgAtual && cfgAtual.desafio), desafioIni: cfgAtual && cfgAtual.desafioIni || 0 };
   gravar();
 }
 ouvir("som:mudou", ({ ligado }) => {
@@ -99,7 +110,7 @@ function btn(txt, f, cls = "") {
   b.addEventListener("click", f);
   return b;
 }
-const NAV_DE = { E1: "jogar", E2: "jogar", E9: "jogar", E13: "jogar", E14: "jogar", E11: "rank", E10: "rank", E12: "loja", E15: "perfil" };
+const NAV_DE = { E1: "jogar", E2: "jogar", E9: "jogar", E9P: "jogar", E10P: "jogar", E11P: "jogar", E13: "jogar", E14: "jogar", E11: "rank", E10: "rank", E12: "loja", E15: "perfil" };
 const NAV = [["jogar", "mo.nav.jogar", "\u25CB", () => menu()], ["rank", "mo.nav.rank", "\u2605", () => lugar()], ["loja", "mo.nav.loja", "\u25A3", () => loja()], ["perfil", "mo.nav.perfil", "\u263A", () => perfil()]];
 const REABRE = { E1: () => menu(), E11: () => lugar(), E12: () => {
   aplicarTema(meta.tema);
@@ -182,11 +193,8 @@ function menu() {
   marcarMoinho(mini, [0, 1, 2]);
   const rk = document.createElement("p");
   rk.className = "rank";
-  rk.textContent = `${t(`mo.rank.${rankDe(meta.pontos)}`)} \xB7 ${fmt("mo.rank.pontos", { n: meta.pontos })}`;
-  const prx = proximoRank(meta.pontos);
-  const falta = document.createElement("p");
-  falta.className = "rank-falta";
-  falta.textContent = prx ? fmt("mo.rank.faltam", { n: prx.faltam, rank: t(`mo.rank.${prx.rank}`) }) : t("mo.rank.maximo");
+  rk.textContent = textoNivel();
+  const falta = barraXP();
   const tut = btn(t("mo.menu.como"), () => tutorial(menu), "cartao-como");
   const niveis = document.createElement("div");
   niveis.className = "grupo atalhos";
@@ -194,10 +202,10 @@ function menu() {
   niveis.setAttribute("aria-label", t("mo.menu.nivel_rapido"));
   for (const id of ["facil", "media", "dificil"]) niveis.append(btn(t(`e2.nivel.${id}`), () => preparar(id), "atalho"));
   const ia = btn(t("mo.menu.jogar_ia"), () => preparar(), dados.partida ? "contorno" : "principal");
-  r.append(l, mini.svg, rk, falta);
+  r.append(l, mini.svg, rk, falta, cartaoDesafio());
   if (!meta.tutorialFeito) r.append(tut);
   if (dados.partida) r.append(btn(t("e1.continuar"), continuar, "principal"));
-  r.append(ia, niveis, btn(t("mo.menu.amigo"), mpMenu, "contorno alto"));
+  r.append(ia, niveis, comBadge(btn(t("mo.menu.amigo"), mpMenu, "contorno alto")));
   if (meta.tutorialFeito) r.append(tut);
   if (avisoGravacao) {
     avisoGravacao = false;
@@ -206,6 +214,68 @@ function menu() {
     a.textContent = t("e1.gravacao_reposta");
     app.append(a);
     setTimeout(() => a.remove(), 3e3);
+  }
+}
+const textoNivel = () => fmt("mo.xp.nivel", { n: nivelDe(meta.xp), patente: t(`mo.rank.${patenteDeNivel(nivelDe(meta.xp))}`) });
+function barraXP() {
+  const n = nivelDe(meta.xp), prx = proximoNivel(meta.xp);
+  const w = document.createElement("div");
+  w.className = "xp";
+  const b = document.createElement("div");
+  b.className = "xp-barra";
+  b.setAttribute("role", "progressbar");
+  b.setAttribute("aria-label", t("mo.xp.barra"));
+  const ini = xpDoNivel(n), fim2 = prx ? xpDoNivel(n + 1) : ini + 1, pc = prx ? Math.round(100 * (meta.xp - ini) / (fim2 - ini)) : 100;
+  b.setAttribute("aria-valuemin", "0");
+  b.setAttribute("aria-valuemax", "100");
+  b.setAttribute("aria-valuenow", String(pc));
+  const i = document.createElement("i");
+  i.style.width = `${pc}%`;
+  b.append(i);
+  const tx = document.createElement("p");
+  tx.className = "rank-falta";
+  tx.textContent = prx ? fmt("mo.xp.faltam", { n: prx.faltam, nivel: prx.nivel }) : t("mo.xp.maximo");
+  w.append(b, tx);
+  return w;
+}
+function cartaoDesafio() {
+  const hoje = hojeISO(), est = estadoDesafio(meta, hoje), d = meta.desafio;
+  const b = btn("", () => comecarDesafio(), "cartao-desafio contorno");
+  b.disabled = est !== "por_jogar";
+  b.setAttribute("data-estado", est);
+  const a = document.createElement("strong");
+  a.textContent = t(`mo.desafio.${est}`);
+  const s = document.createElement("span");
+  const sa = serieAtual(meta, hoje);
+  s.textContent = d.ultimoJogado && sa === 0 && est === "por_jogar" ? fmt("mo.desafio.recomeca", { n: d.melhor }) : `${fmt("mo.desafio.serie", { n: sa })} \xB7 ${fmt("mo.desafio.melhor", { n: d.melhor })}`;
+  b.append(a, s);
+  return b;
+}
+function comecarDesafio() {
+  const hoje = hojeISO();
+  if (!podeJogarDesafio(meta.ultimoDesafio, hoje) || estadoDesafio(meta, hoje) !== "por_jogar") return menu();
+  const p = posicaoDoDia(hoje);
+  cfgAtual = { tema: meta.tema, modo: "ia", nivel: "media", personalidade: PERSONALIDADE_PADRAO, cor: 1, semente: sementeDoDia(hoje), historico: p.historico, desafio: true, desafioIni: p.historico.length };
+  dados.partida = null;
+  emitir("desafio:iniciado", { dia: hoje });
+  jogar(cfgAtual);
+}
+function toast(txt) {
+  const f = document.createElement("div");
+  f.className = "toast-meta";
+  f.setAttribute("role", "status");
+  f.textContent = txt;
+  document.body.append(f);
+  setTimeout(() => f.remove(), 2e3);
+}
+function eventoMeta(id) {
+  const x = conquistaEvento(meta, id);
+  if (!x.novas.length) return;
+  meta = x.meta;
+  gravarMeta();
+  for (const k of x.novas) {
+    emitir("conquista:ganha", { id: k });
+    toast(fmt("mo.conq.toast", { nome: t(`mo.conq.${k}.nome`) }));
   }
 }
 function preparar(nivelInicial) {
@@ -317,7 +387,7 @@ function comecar(cfg) {
 function continuar() {
   const s = dados.partida;
   if (!s) return menu();
-  cfgAtual = { tema: meta.tema, modo: s.modo, nivel: s.nivel, personalidade: s.personalidade || PERSONALIDADE_PADRAO, cor: s.cor, semente: s.semente, historico: s.historico };
+  cfgAtual = { tema: meta.tema, modo: s.modo, nivel: s.nivel, personalidade: s.personalidade || PERSONALIDADE_PADRAO, cor: s.cor, semente: s.semente, historico: s.historico, desafio: !!s.desafio, desafioIni: s.desafioIni || 0 };
   jogar(cfgAtual);
 }
 function jogar(cfg) {
@@ -388,6 +458,22 @@ function fim(p) {
   c.textContent = fmt("fim.contagem", { brancas: cont(1), pretas: cont(2) });
   r.append(h, m, c);
   if (rm) {
+    if (rm.xp) {
+      const L = rm.xp.linhas, ln = [];
+      for (const k of ["base", "moinhos", "ia", "desafio"]) if (L[k]) ln.push(fmt(`mo.xp.linha.${k}`, { n: L[k] }));
+      const xp = document.createElement("p");
+      xp.className = "nota xp-linhas";
+      xp.textContent = rm.xp.total ? `${fmt("mo.xp.ganho", { n: rm.xp.total })} (${ln.join(" \xB7 ")})` : meta.xpHoje.n >= 400 ? t("mo.xp.teto") : "";
+      if (xp.textContent) r.append(xp);
+      if (rm.xp.total) emitir("xp:ganho", { total: rm.xp.total, linhas: L });
+    }
+    if (rm.subiu) {
+      const nv = document.createElement("p");
+      nv.className = "nota destaque faixa-nivel";
+      nv.textContent = fmt("mo.xp.subiu", { n: rm.nivelDepois });
+      r.append(nv);
+      emitir("nivel:subiu", { de: rm.nivelAntes, para: rm.nivelDepois });
+    }
     const gp = document.createElement("p");
     gp.className = "nota";
     gp.textContent = rm.ganhos ? fmt("mo.fim.ganhos", { n: rm.ganhos }) : p.modo === "ia" && meta.hoje >= 40 ? t("mo.fim.limite") : "";
@@ -403,7 +489,9 @@ function fim(p) {
       q.className = "nota destaque";
       q.textContent = fmt("mo.conq.novo", { nome: t(`mo.conq.${k}.nome`) });
       r.append(q);
+      emitir("conquista:ganha", { id: k });
     }
+    if (rm.desafioSerie !== void 0) emitir("desafio:fim", { ganhou: res === p.cor, serie: rm.desafioSerie });
   }
   const pers = cfgAtual && cfgAtual.personalidade;
   if (p.modo === "ia" && PERSONALIDADES[pers]) {
@@ -435,7 +523,7 @@ function registarMeta(p) {
   const tiradas = p.historico.filter((m) => m !== "X" && m.tirar !== void 0).length;
   const pers = cfgAtual && cfgAtual.personalidade;
   const meus = p.historico.filter((m, i) => m.tirar !== void 0 && (i % 2 === 0 ? 1 : 2) === eu).length;
-  const r = registarFim(meta, { modo: p.modo, nivel: p.nivel, resultado, jogadas: p.historico.length, pecasPerdidas: tiradas - meus, gata: pers === "mobilidade", moinhos: meus, fase3: chegouAVoar(p) }, ctxMeta());
+  const r = registarFim(meta, { modo: p.modo, nivel: p.nivel, resultado, jogadas: p.historico.length, pecasPerdidas: tiradas - meus, gata: pers === "mobilidade", iaMoinhos: p.modo === "ia" ? tiradas - meus : void 0, jogadasMinhas: Math.ceil((p.historico.length - (cfgAtual && cfgAtual.desafioIni || 0)) / (p.modo === "ia" ? 2 : 1)), moinhos: meus, fase3: chegouAVoar(p), desafio: !!(cfgAtual && cfgAtual.desafio) }, ctxMeta());
   meta = r.meta;
   gravarMeta();
   return r;
@@ -444,12 +532,39 @@ function registarPartida(p) {
   const res = p.estado.fim.resultado;
   const resultado = res === 0 ? "e" : p.modo === "2j" ? res === 1 ? "v" : "d" : res === p.cor ? "v" : "d";
   stats = registar(stats, modoDe(p.modo, p.nivel), { resultado, jogadas: p.historico.length, fase3: chegouAVoar(p) });
+  stats = registarGlobais(stats, { moinhos: p.historico.filter((m) => m.tirar !== void 0).length, resultado, dia: hojeISO() }, meta.contadores.melhorSerie);
   gravarStats();
 }
 function estatisticas() {
   const r = ecra("E10");
   r.append(topo(t("tab.stats.titulo"), perfil));
-  const modos = Object.keys(stats).filter((k) => stats[k].partidas > 0);
+  const modos = Object.keys(stats).filter((k) => k !== "_g" && stats[k].partidas > 0);
+  const g = stats._g || { moinhos: 0, melhorSerieGeral: 0 }, tg = total(stats), tx = taxaVitoria(stats);
+  r.append(par(textoNivel(), "sub"), barraXP());
+  const dl = document.createElement("dl");
+  dl.className = "linhas-stats";
+  for (const [k, v] of [["tab.stats.partidas", tg.partidas], ["tab.stats.vitorias", tg.v], ["tab.stats.taxa", tx === null ? t("tab.stats.sem_taxa") : `${tx} %`], ["tab.stats.serie_geral", Math.max(g.melhorSerieGeral, tg.melhorSerie)], ["tab.stats.moinhos", g.moinhos]]) {
+    const a = document.createElement("dt"), b = document.createElement("dd");
+    a.textContent = t(k);
+    b.textContent = String(v);
+    dl.append(a, b);
+  }
+  r.append(dl, par(t("tab.stats.por_nivel"), "sub"));
+  const vn = vitoriasPorNivel(stats, NIVEIS_ORDEM), mx = Math.max(1, ...vn.map((x) => x.v));
+  const ul = document.createElement("ul");
+  ul.className = "barras-nivel";
+  for (const x of vn) {
+    const li = document.createElement("li");
+    const nm = document.createElement("span");
+    nm.textContent = t(`tab.stats.modo.ia_${x.nivel}`).replace(/^Moinho, /, "");
+    const br = document.createElement("i");
+    br.style.width = `${Math.round(100 * x.v / mx)}%`;
+    const nu = document.createElement("b");
+    nu.textContent = String(x.v);
+    li.append(nm, br, nu);
+    ul.append(li);
+  }
+  r.append(ul);
   if (!modos.length) {
     const v = document.createElement("p");
     v.textContent = t("tab.stats.vazio");
@@ -487,10 +602,15 @@ function estatisticas() {
     const q = document.createElement("p");
     q.textContent = t("tab.stats.apagar.confirmar");
     conf.append(q, btn(t("tab.stats.apagar.sim"), () => {
-      stats = {};
-      apagar(CHAVE_STATS);
-      sincronizar();
-      estatisticas();
+      conf.replaceChildren();
+      const q2 = document.createElement("p");
+      q2.textContent = t("tab.stats.apagar.confirmar2");
+      conf.append(q2, btn(t("tab.stats.apagar.sim2"), () => {
+        stats = {};
+        apagar(CHAVE_STATS);
+        sincronizar();
+        estatisticas();
+      }), btn(t("tab.stats.apagar.nao"), () => conf.replaceChildren()));
     }), btn(t("tab.stats.apagar.nao"), () => conf.replaceChildren()));
   }), conf);
 }
@@ -585,6 +705,7 @@ function puzzle(pz, dicasUsadas = 0) {
     resolvidos[pz.id] = true;
     gravarResolvidos();
     emitir("puzzle:certo", { id: pz.id });
+    eventoMeta(Object.keys(resolvidos).length >= puzzles.length ? "puzzles_todos" : Object.keys(resolvidos).length >= 10 ? "puzzles" : "primeiro_puzzle");
     const prox = proximoPuzzle(resolvidos, puzzles);
     acoes.replaceChildren(...prox ? [btn(t("tab.puzzle.proximo"), () => puzzle(prox), "principal")] : [], btn(t("tab.puzzle.voltar"), finais));
   }
@@ -838,9 +959,27 @@ function tutorial(depois) {
   }
   pintar();
 }
+function contagemConq(k) {
+  const c = meta.contadores, f = (n, tot) => fmt("mo.conq.progresso", { n: Math.min(n, tot), total: tot });
+  const M = {
+    dez: f(c.partidas, 10),
+    cem: f(c.partidas, 100),
+    cinquenta: f(c.vitorias, 50),
+    serie3: f(c.melhorSerie, 3),
+    serie7: f(c.melhorSerie, 7),
+    tres_amigos: f(c.partidasCodigo, 3),
+    desafio3: f(meta.desafio.melhor, 3),
+    desafio30: f(c.desafioDias, 30),
+    puzzles: f(Object.keys(resolvidos).length, 10),
+    puzzles_todos: f(Object.keys(resolvidos).length, puzzles.length || 1),
+    nivel10: f(nivelDe(meta.xp), 10),
+    nivel20: f(nivelDe(meta.xp), 20)
+  };
+  return M[k] || "";
+}
 function lugar() {
   const r = ecra("E11");
-  const rk = rankDe(meta.pontos), prox = proximoRank(meta.pontos);
+  const rk = patenteDeNivel(nivelDe(meta.xp));
   r.append(topo(t("mo.rank.titulo")));
   const c = document.createElement("div");
   c.className = "cartao-lugar";
@@ -850,10 +989,9 @@ function lugar() {
   const c2 = document.createElement("strong");
   c2.textContent = t(`mo.rank.${rk}`);
   const c3 = document.createElement("span");
-  c3.textContent = fmt("mo.rank.pontos", { n: meta.pontos });
+  c3.textContent = textoNivel();
   c.append(c1, c2, c3);
-  r.append(c);
-  if (prox) r.append(par(`${fmt("mo.rank.proximo", { rank: t(`mo.rank.${prox.rank}`) })} \xB7 ${fmt("mo.rank.pontos", { n: prox.faltam })}`));
+  r.append(c, barraXP());
   const ab = CONQUISTAS.filter((k) => meta.conquistas[k]);
   r.append(par(`${t("mo.conq.titulo")}: ${fmt("mo.conq.n_de", { n: ab.length, total: CONQUISTAS.length })}`, "sub"));
   const lista = document.createElement("ul");
@@ -862,7 +1000,8 @@ function lugar() {
     const li = document.createElement("li");
     const on = !!meta.conquistas[k];
     li.className = on ? "on" : "";
-    li.textContent = on ? `${t(`mo.conq.${k}.nome`)} \u2014 ${t(`mo.conq.${k}.desc`)}` : `${t("mo.conq.por_abrir")}: ${t(`mo.conq.${k}.desc`)}`;
+    const cn = contagemConq(k);
+    li.textContent = on ? `${t(`mo.conq.${k}.nome`)} \u2014 ${t(`mo.conq.${k}.desc`)}` : `${t("mo.conq.por_abrir")}: ${t(`mo.conq.${k}.desc`)}${cn ? ` (${cn})` : ""}`;
     lista.append(li);
   }
   r.append(lista, btn(t("mo.menu.amigos_rank"), () => amigos()));
@@ -972,7 +1111,7 @@ function mpMenu() {
     topo(t("mo.mp.titulo"), menu),
     btn(t("mo.mp.local"), () => comecar({ modo: "2j", nivel: "media", cor: 1 })),
     par(t("mo.mp.local.desc")),
-    btn(t("mo.mp.codigo"), () => mpCodigos(), "principal"),
+    comBadge(btn(t("mo.mp.codigo"), () => ecraPartidas(), "principal")),
     par(t("mo.mp.codigo.desc")),
     btn(t("mo.mp.amigos"), () => amigos())
   );
@@ -993,105 +1132,346 @@ async function copiar(texto, aviso) {
   }
 }
 const gravarPartidas = (lista) => {
-  meta.partidas = lista;
-  gravarMeta();
+  partidas = lista;
+  guardarLista(lerJSON, escreverJSON, lista);
 };
-function mpCodigos(msgInicial = "") {
-  const r = ecra("E13");
-  r.append(topo(t("mo.mp.codigo"), mpMenu), btn(t("mo.mp.criar"), () => {
-    const c = criarConvite(meta.partidas, Math.floor(Math.random() * SEMENTE_MAX) + 1);
-    if (!c.ok) return mpCodigos(t(`mo.mp.erro.${c.erro}`));
-    gravarPartidas(c.lista);
-    mpPartida(c.partida);
+const ERRO_TXT = { invalido: "invalido", versao: "invalido", crc: "invalido", ilegal: "invalido", limite: "invalido", antigo: "antigo", alterada: "alterada", cheia: "cheia" };
+function comBadge(b) {
+  const n = contarMinhaVez(partidas);
+  if (n > 0) {
+    const s = document.createElement("span");
+    s.className = "badge";
+    s.textContent = String(n);
+    s.setAttribute("aria-label", fmt("tab.async.menu.pendentes", { n }));
+    b.append(s);
+  }
+  return b;
+}
+function confirmar(texto, simTxt, aoSim, naoTxt = t("tab.async.desistir.nao")) {
+  const r = document.createElement("div");
+  r.className = "sobreposicao e5";
+  r.append(btn(naoTxt, () => r.remove(), "voltar"), par(texto, "nota"), btn(simTxt, () => {
+    r.remove();
+    aoSim();
   }, "principal"));
-  const campo = document.createElement("input");
-  campo.type = "text";
-  campo.className = "campo";
-  campo.placeholder = t("mo.mp.codigo.campo");
-  campo.setAttribute("aria-label", t("mo.mp.codigo.campo"));
-  const msg = par(msgInicial, "msg");
-  msg.setAttribute("role", "status");
-  r.append(campo, btn(t("mo.mp.entrar"), () => {
-    const x = importarCodigo(meta.partidas, campo.value, { euSou: "B" });
-    if (!x.ok) {
-      msg.textContent = ["cheia", "antigo", "alterada"].includes(x.erro) ? t(`mo.mp.erro.${x.erro}`) : t(x.erro === "ilegal" ? "mo.mp.jogada.invalida" : "mo.mp.codigo.invalido");
-      return;
+  app.append(r);
+  r.querySelector("button").focus();
+}
+function faixaErro(chave, aoOk) {
+  const f = document.createElement("div");
+  f.className = "erro-faixa";
+  f.setAttribute("role", "alert");
+  const p = document.createElement("p");
+  p.textContent = t(chave);
+  p.style.margin = "0";
+  f.append(p, btn(t("tab.async.ok"), aoOk));
+  return f;
+}
+function ecraPartidas(erroChave = "") {
+  const r = ecra("E9P");
+  const g = agrupar(partidas);
+  let aviso = erroChave;
+  if (g.invalida.length) {
+    gravarPartidas(partidas.filter((x) => !g.invalida.includes(x)));
+    g.invalida = [];
+    aviso = aviso || "tab.async.corrompida";
+  }
+  r.append(topo(t("tab.async.titulo"), mpMenu));
+  const ac = document.createElement("div");
+  ac.className = "acoes";
+  ac.append(btn(t("tab.async.convidar"), convidar, "principal"), btn(t("tab.async.colar"), () => ecraColar(), "contorno"));
+  r.append(ac, par(fmt("tab.async.contador", { n: partidas.length }), "nota contador"));
+  if (aviso) r.append(faixaErro(aviso, () => ecraPartidas()));
+  if (!partidas.length) r.append(par(t("tab.async.vazio")));
+  const secao = (chave, lista, apagavel, desistivel) => {
+    if (!lista.length) return;
+    const h = document.createElement("h3");
+    h.textContent = t(chave);
+    r.append(h);
+    for (const x of lista) {
+      const est = estadoLista(x);
+      const li = document.createElement("div");
+      li.className = "linha-l";
+      li.dataset.estado = est;
+      const b = document.createElement("button");
+      b.className = "linha-p contorno";
+      const ic = iconePeca(corDe(x));
+      ic.classList.add("ic");
+      const dias = diasDesde(x);
+      const quando = dias === 0 ? t("tab.async.dias.0") : dias === 1 ? t("tab.async.dias.1") : fmt("tab.async.dias.n", { n: dias });
+      const tx = document.createElement("span");
+      tx.className = "txt";
+      const l1 = document.createElement("span");
+      l1.textContent = fmt("tab.async.linha", { semente: x.codigo.split("-")[1] });
+      const l2 = document.createElement("span");
+      l2.className = "sub";
+      l2.textContent = `${fmt("tab.async.jogadas", { n: x.jogadas })} \xB7 ${quando}`;
+      tx.append(l1, l2);
+      const e = document.createElement("span");
+      e.className = "est";
+      e.textContent = t(`tab.async.estado.${est}`);
+      b.append(ic, tx, e);
+      b.addEventListener("click", () => abrirPartida(x));
+      li.append(b);
+      if (desistivel) li.append(btn(t("tab.async.desistir"), () => confirmar(t("tab.async.desistir.confirma"), t("tab.async.desistir.sim"), () => fazerDesistir(x)), "apagar"));
+      if (apagavel) li.append(btn(t("tab.async.apagar"), () => confirmar(t("tab.async.apagar.confirma"), t("tab.async.apagar.sim"), () => {
+        const o = apagarPartida(partidas, x.semente);
+        if (o.ok) gravarPartidas(o.lista);
+        ecraPartidas();
+      }), "apagar"));
+      r.append(li);
     }
-    gravarPartidas(x.lista);
-    mpPartida(x.partida);
-  }), msg, par(t("mo.mp.minhas"), "sub"));
-  if (!meta.partidas.length) r.append(par(t("mo.mp.vazio")));
-  for (const g of meta.partidas) {
-    const est = estadoDaPartida(g);
-    r.append(btn(`${t("mo.mp.abrir")} \xB7 ${t(`mo.mp.estado.${est}`)} \xB7 ${g.codigo.split("-")[1]}`, () => mpPartida(g)));
+  };
+  secao("tab.async.sec.minha_vez", g.minha_vez, false, true);
+  secao("tab.async.sec.a_espera", g.a_espera, false, true);
+  secao("tab.async.sec.terminadas", g.terminada, true, false);
+  secao("tab.async.sec.esquecidas", g.esquecida, true, false);
+}
+function convidar() {
+  const c = criarConvite(partidas, Math.floor(Math.random() * SEMENTE_MAX) + 1);
+  if (!c.ok) {
+    emitir("async:erro", { erro: c.erro });
+    return ecraPartidas("tab.async.erro.cheia");
+  }
+  gravarPartidas(c.lista);
+  emitir("async:convite", { semente: c.partida.semente });
+  ecraEnviar(c.partida, { convite: true });
+  eventoMeta("primeiro_convite");
+}
+function abrirPartida(g) {
+  const est = estadoLista(g);
+  if (est === "terminada") return ecraFimMP(g);
+  if (!g.jogadas && g.euSou === "A") return ecraEnviar(g, { convite: true });
+  ecraPartida(g);
+}
+function fazerDesistir(g) {
+  const o = desistir(partidas, g.semente);
+  if (!o.ok) return ecraPartidas("tab.async.erro.invalido");
+  gravarPartidas(o.lista);
+  emitir("async:desistiu", { semente: g.semente, quem: "eu" });
+  if (o.codigo) {
+    emitir("async:fim", { semente: g.semente, resultado: "desistiu" });
+    return ecraEnviar(o.partida);
+  }
+  ecraPartidas();
+}
+async function partilharCodigo(g, aviso, via) {
+  const texto = textoPartilha(t("tab.async.frase"), g.codigo);
+  if (via === "partilha") {
+    try {
+      if (navigator.share) {
+        await navigator.share({ text: texto });
+        emitir("async:enviado", { semente: g.semente, via });
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(via === "copiar" ? g.codigo : texto);
+    aviso.textContent = t("tab.async.copiado");
+    emitir("async:enviado", { semente: g.semente, via: "copiar" });
+    return true;
+  } catch {
+    aviso.textContent = g.codigo;
+    return false;
   }
 }
-function mpPartida(g) {
-  const est = estadoDaPartida(g);
-  if (est === "minha_vez") {
-    const lr = lerCodigo(g.codigo);
-    cfgAtual = { tema: meta.tema, modo: "mp", nivel: "media", cor: corDe(g), semente: g.semente, historico: lr.ok ? lr.jogadas.filter((m) => m !== "X") : [] };
-    const r2 = ecra("E3");
-    jogoAtual = iniciarPartida(r2, cfgAtual, {
-      opcoes: () => dados.opcoes,
-      guardar: () => {
-      },
-      aoPausar: (retomar) => pausa(retomar),
-      aoFim: () => {
-      },
-      aoJogadaMP: (p, m) => {
-        const x = jogarNaPartida(meta.partidas, g.semente, m);
-        if (x.ok) {
-          gravarPartidas(x.lista);
-          mpPartida(x.partida);
-        } else mpCodigos(t("mo.mp.jogada.invalida"));
-      }
-    });
-    return;
-  }
-  const r = ecra("E13");
-  r.append(topo(t("mo.mp.titulo"), () => mpCodigos()), par(t(corDe(g) === 1 ? "mo.mp.cor.brancas" : "mo.mp.cor.pretas"), "sub"));
-  const aviso = par("", "msg");
-  aviso.setAttribute("role", "status");
-  if (est === "terminada") r.append(par(t("mo.mp.terminada")));
-  else r.append(par(t("mo.mp.espera")), par(t("mo.mp.codigo.enviar")));
+function ecraEnviar(g, opts = {}) {
+  const r = ecra("E10P");
+  const fimR = resultadoFim(g);
+  r.append(topo(t(opts.convite ? "tab.async.convite.titulo" : "tab.async.enviar.titulo"), () => ecraPartidas()));
+  r.append(par(t(corDe(g) === 1 ? "tab.async.cor.brancas" : "tab.async.cor.pretas"), "sub"));
+  if (fimR) r.append(par(t(fimR.vencedor === 0 ? "tab.async.fim.empate" : fimR.motivo === "desistiu" ? "tab.async.fim.desisti" : fimR.vencedor === corDe(g) ? "tab.async.fim.ganhaste" : "tab.async.fim.perdeste"), "sub"));
+  r.append(par(t(opts.convite ? "tab.async.convite.ajuda" : "tab.async.enviar.ajuda"), "nota"));
   const cod = document.createElement("p");
   cod.className = "codigo";
   cod.textContent = g.codigo;
-  r.append(
-    par(t("mo.mp.codigo.teu"), "sub"),
-    cod,
-    btn(t("mo.mp.codigo.partilhar"), () => copiar(g.codigo, aviso), "principal"),
-    btn(t("mo.mp.copiar"), async () => {
-      try {
-        await navigator.clipboard.writeText(g.codigo);
-        aviso.textContent = t("mo.mp.codigo.copiado");
-      } catch {
-        aviso.textContent = g.codigo;
+  const aviso = par("", "msg");
+  aviso.setAttribute("role", "status");
+  let desf = null;
+  const enviado = async (via) => {
+    const ok = await partilharCodigo(g, aviso, via);
+    if (ok && desf) {
+      desf.remove();
+      desf = null;
+    }
+  };
+  r.append(cod, btn(t("tab.async.partilhar"), () => enviado("partilha"), "principal"), btn(t("tab.async.copiar"), () => enviado("copiar"), "contorno"), aviso);
+  if (opts.prev && opts.gAnt) {
+    desf = btn(t("tab.async.enviar.desfazer"), () => {
+      gravarPartidas(opts.prev);
+      ecraPartida(opts.gAnt);
+    }, "contorno");
+    r.append(desf);
+  }
+  if (fimR) r.append(btn(t("tab.async.fim.nova"), convidar), btn(t("tab.async.fim.partidas"), () => ecraPartidas()));
+  else r.append(btn(t("tab.async.enviar.mais_tarde"), () => ecraPartidas()));
+}
+function importar(texto) {
+  const c = normalizarEntrada(texto);
+  const x = importarCodigo(partidas, c, { euSou: "B" });
+  if (!x.ok) {
+    emitir("async:erro", { erro: x.erro });
+    return `tab.async.erro.${ERRO_TXT[x.erro] || "invalido"}`;
+  }
+  gravarPartidas(x.lista);
+  emitir("async:importado", { semente: x.partida.semente, nova: x.nova });
+  if (resultadoFim(x.partida)) emitir("async:fim", { semente: x.partida.semente, resultado: "fim" });
+  abrirPartida(x.partida);
+  return "";
+}
+function ecraColar(msgChave = "") {
+  const r = ecra("E11P");
+  r.append(topo(t("tab.async.colar.titulo"), () => ecraPartidas()));
+  const slot = document.createElement("div");
+  const campo = document.createElement("textarea");
+  campo.className = "campo-area";
+  campo.placeholder = t("tab.async.colar.campo");
+  campo.setAttribute("aria-label", t("tab.async.colar.campo"));
+  campo.rows = 4;
+  const msg = document.createElement("div");
+  const mostrar = (chave) => {
+    msg.replaceChildren();
+    if (chave) msg.append(faixaErro(chave, () => msg.replaceChildren()));
+  };
+  r.append(slot, campo, btn(t("tab.async.colar.da_area"), async () => {
+    try {
+      campo.value = await navigator.clipboard.readText();
+      mostrar("");
+    } catch {
+      mostrar("tab.async.colar.sem_area");
+    }
+  }, "contorno"), btn(t("tab.async.colar.continuar"), () => mostrar(importar(campo.value)), "principal"), msg);
+  mostrar(msgChave);
+  (async () => {
+    try {
+      const tx = await navigator.clipboard.readText();
+      if (ecraAtual === "E11P" && lerCodigo(normalizarEntrada(tx)).ok) slot.append(btn(t("tab.async.colar.usar"), () => {
+        campo.value = tx;
+        mostrar(importar(tx));
+      }, "principal"));
+    } catch {
+    }
+  })();
+}
+function ecraPartida(g) {
+  const lr = lerCodigo(g.codigo);
+  if (!lr.ok) {
+    gravarPartidas(partidas.filter((x) => x.semente !== g.semente));
+    return ecraPartidas("tab.async.corrompida");
+  }
+  cfgAtual = {
+    tema: meta.tema,
+    modo: "mp",
+    nivel: "media",
+    cor: corDe(g),
+    semente: g.semente,
+    historico: lr.jogadas.filter((m) => m !== "X"),
+    titulo: fmt("tab.async.e12.titulo", { semente: g.codigo.split("-")[1] }),
+    corTexto: t(corDe(g) === 1 ? "tab.async.cor.brancas" : "tab.async.cor.pretas"),
+    ultima: ultimaDoAdversario(g)
+  };
+  const r = ecra("E12P");
+  jogoAtual = iniciarPartida(r, cfgAtual, {
+    opcoes: () => dados.opcoes,
+    guardar: () => {
+    },
+    aoPausar: (retomar) => pausaMP(g, retomar),
+    aoFim: () => {
+    },
+    aoJogadaMP: (p, m) => {
+      const prev = partidas;
+      const x = jogarNaPartida(partidas, g.semente, m);
+      if (!x.ok) {
+        emitir("async:erro", { erro: x.erro });
+        return ecraPartidas("tab.async.erro.invalido");
       }
+      gravarPartidas(x.lista);
+      emitir("async:jogada", { semente: g.semente, jogada: m });
+      if (resultadoFim(x.partida)) emitir("async:fim", { semente: g.semente, resultado: "fim" });
+      ecraEnviar(x.partida, { prev, gAnt: g });
+    }
+  });
+}
+function pausaMP(g, retomar) {
+  const r = document.createElement("div");
+  r.className = "sobreposicao e5";
+  const fechar = () => r.remove();
+  const h = document.createElement("h2");
+  h.textContent = t("e5.titulo");
+  r.append(h);
+  r.append(btn(t("e5.continuar"), () => {
+    fechar();
+    retomar();
+  }, "principal"));
+  if (g.jogadas) r.append(btn(t("tab.async.enviar.titulo"), () => {
+    fechar();
+    ecraEnviar(g);
+  }, "contorno"));
+  r.append(
+    btn(t("tab.async.desistir"), () => {
+      fechar();
+      confirmar(t("tab.async.desistir.confirma"), t("tab.async.desistir.sim"), () => fazerDesistir(g));
+    }, "contorno"),
+    btn(t("e5.sair"), () => {
+      fechar();
+      ecraPartidas();
     })
   );
-  const campo = document.createElement("input");
-  campo.type = "text";
-  campo.className = "campo";
-  campo.placeholder = t("mo.mp.jogada.recebida");
-  campo.setAttribute("aria-label", t("mo.mp.jogada.recebida"));
-  if (est !== "terminada") r.append(campo, btn(t("mo.mp.jogada.recebida"), () => {
-    const x = importarCodigo(meta.partidas, campo.value, { euSou: g.euSou });
-    if (!x.ok || x.partida.semente !== g.semente) {
-      aviso.textContent = t(x.ok ? "mo.mp.jogada.invalida" : ["antigo", "alterada"].includes(x.erro) ? `mo.mp.erro.${x.erro}` : "mo.mp.jogada.invalida");
-      return;
-    }
-    gravarPartidas(x.lista);
-    mpPartida(x.partida);
-  }));
-  const conf = document.createElement("div");
-  r.append(aviso, btn(t("mo.mp.deixar"), () => {
-    conf.replaceChildren(par(t("mo.mp.desistir.confirmar")), btn(t("e5.recomecar.sim"), () => {
-      gravarPartidas(meta.partidas.filter((x) => x.semente !== g.semente));
-      mpCodigos();
-    }), btn(t("e5.recomecar.nao"), () => conf.replaceChildren()));
-  }), conf);
+  app.append(r);
+  r.querySelector("button").focus();
+}
+function contarPartidaCodigo(g, f) {
+  if (!f) return;
+  let cont = [];
+  try {
+    const c = lerJSON("moinho_contadas");
+    if (Array.isArray(c)) cont = c;
+  } catch {
+  }
+  if (cont.includes(g.semente)) return;
+  const eu = corDe(g), lr = lerCodigo(g.codigo), js = lr.ok ? lr.jogadas.filter((m) => m !== "X") : [];
+  const resultado = f.vencedor === 0 ? "e" : f.vencedor === eu ? "v" : "d";
+  let moinhos = 0, q = null, fase3 = false;
+  try {
+    q = novaPartida({ modo: "mp", nivel: "media", cor: eu, semente: g.semente });
+    js.forEach((m, i) => {
+      q = jogarCompleta(q, m);
+      if (m.tirar !== void 0 && (i % 2 === 0 ? 1 : 2) === eu) moinhos++;
+      if (fase(q.estado, 1) === "voar" || fase(q.estado, 2) === "voar") fase3 = true;
+    });
+  } catch {
+  }
+  const minhas = js.filter((_, i) => (i % 2 === 0 ? 1 : 2) === eu).length;
+  stats = registar(stats, "codigo", { resultado, jogadas: js.length, fase3 });
+  stats = registarGlobais(stats, { moinhos, resultado, dia: hojeISO() }, meta.contadores.melhorSerie);
+  gravarStats();
+  const rf = registarFim(meta, { modo: "codigo", resultado, jogadas: js.length, jogadasMinhas: minhas, moinhos, desistencia: !!f.adversarioDesistiu, fase3 }, ctxMeta());
+  meta = rf.meta;
+  gravarMeta();
+  cont.push(g.semente);
+  escreverJSON("moinho_contadas", cont.slice(-100));
+  if (rf.xp.total) emitir("xp:ganho", { total: rf.xp.total, linhas: rf.xp.linhas });
+  if (rf.subiu) {
+    emitir("nivel:subiu", { de: rf.nivelAntes, para: rf.nivelDepois });
+    toast(fmt("mo.xp.subiu", { n: rf.nivelDepois }));
+  }
+  for (const k of rf.novas) {
+    emitir("conquista:ganha", { id: k });
+    toast(fmt("mo.conq.toast", { nome: t(`mo.conq.${k}.nome`) }));
+  }
+}
+function ecraFimMP(g) {
+  const r = ecra("E6");
+  const f = resultadoFim(g);
+  contarPartidaCodigo(g, f);
+  const chave = !f || f.vencedor === 0 ? "tab.async.fim.empate" : f.adversarioDesistiu ? "tab.async.fim.amigo_desistiu" : f.euDesisti ? "tab.async.fim.desisti" : f.vencedor === corDe(g) ? "tab.async.fim.ganhaste" : "tab.async.fim.perdeste";
+  const h = document.createElement("h2");
+  h.textContent = t(chave);
+  r.append(h);
+  r.append(par(fmt("tab.async.linha", { semente: g.codigo.split("-")[1] }), "nota"), btn(t("tab.async.fim.nova"), convidar, "principal"), btn(t("tab.async.fim.partidas"), () => ecraPartidas(), "contorno"));
 }
 function amigos(msgInicial = "") {
   const r = ecra("E14");
@@ -1113,6 +1493,7 @@ function amigos(msgInicial = "") {
       }
       meta.perfil = x.perfil;
       gravarMeta();
+      eventoMeta("perfil");
       amigos();
     }, "principal"), msg);
     return;
@@ -1135,6 +1516,7 @@ function amigos(msgInicial = "") {
     }
     meta.amigos = x.tabela;
     gravarMeta();
+    eventoMeta("amigo");
     amigos(t("mo.mp.cartao.adicionado"));
   }), msg);
   const tabela = ordenarTabela([{ alcunha: meta.perfil.alcunha, pontos: meta.pontos, id: meta.perfil.id }, ...meta.amigos]);
@@ -1154,6 +1536,10 @@ function voltar() {
   if (sob) {
     const b = sob.querySelector(".voltar") || sob.querySelector("button");
     b.click();
+    return;
+  }
+  if (ecraAtual === "E12P") {
+    ecraPartidas();
     return;
   }
   if (ecraAtual === "E3") {

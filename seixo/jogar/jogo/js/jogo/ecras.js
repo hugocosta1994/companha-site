@@ -145,6 +145,8 @@ function criarEcras({ t, app, acoes }) {
     linha: criar("p", { id: "res-linha", class: "ec-centro" }),
     host: criar("div", { id: "res-host", class: "res-host" }),
     lascas: criar("p", { id: "res-lascas", class: "ec-centro forte" }),
+    desafio: criar("p", { id: "res-desafio", class: "ec-centro forte", role: "status" }),
+    desafiar: botao("res-desafiar", "sec", t("desafio.partilhar"), () => acoes.desafiar()),
     partilhar: botao("res-partilhar", "cheio grande", t("resultado.partilhar"), () => acoes.partilhar()),
     seguinte: botao("res-seguinte", "", t("botao.seguinte"), () => acoes.seguinte()),
     menu: botao("res-menu", "sec", t("resultado.menu"), () => acoes.sair())
@@ -156,8 +158,10 @@ function criarEcras({ t, app, acoes }) {
     r.linha,
     r.host,
     r.lascas,
+    r.desafio,
     criar("div", { class: "ec-mola" }),
     r.partilhar,
+    r.desafiar,
     r.seguinte,
     r.menu
   );

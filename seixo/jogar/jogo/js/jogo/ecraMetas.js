@@ -107,7 +107,21 @@ function criarEcraOficio({ t, tn }, fontes) {
   };
   abas.append(btn("oficio", t("oficio.aba")), btn("metas", t("objetivos.titulo")));
   if (fontes.calceteiros) abas.append(btn("calceteiros", t("rank.titulo")));
+  if (fontes.quadro) abas.append(btn("quadro", t("quadro.aba")));
   raiz.append(abas, corpo);
+  const comDica = (aba_, el) => {
+    const chave = fontes.dicas && fontes.dicas.pendente(aba_);
+    if (!chave) return el;
+    const ok = criar("button", { id: "dica-ok", type: "button", class: "ec-botao sec" }, t("dica.percebi"));
+    ok.addEventListener("click", () => {
+      fontes.dicas.vista(aba_);
+      render();
+    });
+    const raizDica = criar("div", { class: "ec-cartao of-cartao", id: "dica-v3", role: "status" }, criar("p", {}, t(chave)), ok);
+    const c = criar("div", { class: "of-corpo" });
+    c.append(raizDica, el);
+    return c;
+  };
   function render() {
     for (const b of abas.children) b.setAttribute("aria-selected", String(b.id === `of-aba-${aba}`));
     if (aba === "calceteiros" && fontes.calceteiros) {
@@ -115,7 +129,12 @@ function criarEcraOficio({ t, tn }, fontes) {
       corpo.replaceChildren(fontes.calceteiros.el);
       return;
     }
-    corpo.replaceChildren(aba === "oficio" ? corpoOficio(fontes.oficio(), { t, tn }) : corpoMetas(fontes.metas(), { t, tn }));
+    if (aba === "quadro" && fontes.quadro) {
+      fontes.quadro.render();
+      corpo.replaceChildren(comDica("quadro", fontes.quadro.el));
+      return;
+    }
+    corpo.replaceChildren(aba === "oficio" ? corpoOficio(fontes.oficio(), { t, tn }) : comDica("metas", corpoMetas(fontes.metas(), { t, tn })));
   }
   return { el: raiz, render, abrir(a = "oficio") {
     aba = a;

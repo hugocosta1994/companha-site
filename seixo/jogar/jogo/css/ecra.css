@@ -380,3 +380,19 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
   .assentar-q, .exp-tabuleiro { height: auto; } /* canvas quadrados: proporção pelos atributos width/height */
   .exp-tabuleiro { width: 100%; max-width: 360px; }
 }
+
+/* T-1322 (S3-08): coleção com sentido — 2 colunas, cartões >= 96 dp, estado em texto + ícone */
+.col-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
+.colecao-v3 .of-abas { flex-wrap: wrap; }
+.colecao-v3 .of-aba { flex: 1 1 30%; }
+.col-grelha { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.col-cartao { min-height: 96px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--botao-borda); border-radius: 12px; background: var(--botao); color: var(--tinta); font-size: 16px; overflow-wrap: anywhere; }
+.col-cartao.aplicado { border-width: 2px; }
+.col-cartao .col-estado { font-size: 16px; font-weight: 600; }
+.col-cartao .ec-botao { min-height: 48px; }
+.col-prog { display: flex; flex-direction: column; gap: 4px; }
+/* T-1322 (S3-10): feedback de conclusão <= 600 ms; sem animação com «reduzir movimento» */
+.feedback-fim { position: fixed; left: 16px; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); margin: 0; padding: 12px 16px; text-align: center; border-radius: 12px; background: var(--botao); color: var(--tinta); border: 1px solid var(--botao-borda); z-index: 50; pointer-events: none; }
+@keyframes fb-pulso { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+#app.fb-puzzle canvas, #app.fb-meta .feedback-fim { animation: fb-pulso .5s ease-out 1; }
+@media (prefers-reduced-motion: reduce) { #app.fb-puzzle canvas, #app.fb-meta .feedback-fim { animation: none; } }

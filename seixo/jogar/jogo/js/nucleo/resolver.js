@@ -19,6 +19,11 @@ function prepararResolvedor(p) {
 }
 function quebra(R, g, i, v) {
   const n = R.n, l = i / n | 0, c = i % n;
+  if (R.orla && (l === 0 || c === 0 || l === n - 1 || c === n - 1)) {
+    let cont = 1;
+    for (const k of R.orla) if (k !== i && g[k] === v) cont++;
+    if (cont > R.orla.length / 2) return REGRA.ORLA;
+  }
   for (let eixo = 0; eixo < 2; eixo++) {
     const pos = eixo ? l : c;
     const at = eixo ? (t) => t * n + c : (t) => l * n + t;
@@ -39,11 +44,6 @@ function quebra(R, g, i, v) {
   if (R.espelho) {
     const m = l * n + (n - 1 - c);
     if (g[m] === v) return REGRA.ESPELHO;
-  }
-  if (R.orla && (l === 0 || c === 0 || l === n - 1 || c === n - 1)) {
-    let cont = 1;
-    for (const k of R.orla) if (k !== i && g[k] === v) cont++;
-    if (cont > R.orla.length / 2) return REGRA.ORLA;
   }
   return null;
 }

@@ -2,13 +2,76 @@ import { NIVEIS_ORDEM } from "../config.js";
 import { pontosPartida } from "./multijogador.js";
 const CHAVE_META = "moinho_meta";
 const RANKS = [0, 12, 35, 80, 160, 320];
-const CONQUISTAS = ["primeiro_moinho", "primeira_vitoria", "voar", "virada", "duplo", "sem_perder", "serie3", "mestre", "gata", "puzzles", "alquerque", "amigo", "dez"];
+const CONQUISTAS = [
+  "primeiro_moinho",
+  "primeira_vitoria",
+  "voar",
+  "virada",
+  "duplo",
+  "sem_perder",
+  "primeiro_puzzle",
+  "primeira_por_codigo",
+  "primeiro_convite",
+  "perfil",
+  "serie3",
+  "gata",
+  "puzzles",
+  "alquerque",
+  "amigo",
+  "desafio3",
+  "desafio_vitoria",
+  "dez",
+  "atenta",
+  "tres_amigos",
+  "mestre",
+  "serie7",
+  "cem",
+  "cinquenta",
+  "desafio30",
+  "puzzles_todos",
+  "nivel10",
+  "nivel20"
+];
+const NIVEL_MAX = 20;
+const xpDoNivel = (n) => 10 * (n - 1) * (n + 4);
+const nivelDe = (xp) => {
+  let n = 1;
+  for (let i = 2; i <= NIVEL_MAX; i++) if (xp >= xpDoNivel(i)) n = i;
+  return n;
+};
+const proximoNivel = (xp) => {
+  const n = nivelDe(xp);
+  return n < NIVEL_MAX ? { nivel: n + 1, faltam: xpDoNivel(n + 1) - xp } : null;
+};
+const PATENTE_NIVEIS = [1, 4, 8, 12, 16, 20];
+const patenteDeNivel = (nivel) => {
+  let r = 1;
+  PATENTE_NIVEIS.forEach((m, i) => {
+    if (nivel >= m) r = i + 1;
+  });
+  return r;
+};
+const XP = { v: 30, e: 15, d: 10, porMoinho: 2, maxMoinhos: 10, bonusIA: [0, 4, 8, 12, 16, 20], desafio: 20, tetoDia: 400, minJogadas: 6, minJogadasDesist: 10 };
+function xpPartida(info) {
+  var _a, _b, _c;
+  const jm = (_b = (_a = info.jogadasMinhas) != null ? _a : info.jogadas) != null ? _b : 99;
+  if (jm < XP.minJogadas) return { total: 0, linhas: { base: 0, moinhos: 0, ia: 0, desafio: 0 } };
+  let r = info.resultado;
+  if (r === "v" && info.desistencia && ((_c = info.jogadas) != null ? _c : 99) < XP.minJogadasDesist) r = "d";
+  const base = XP[r] || 0;
+  const moinhos = XP.porMoinho * Math.min(XP.maxMoinhos, info.moinhos || 0);
+  const idx = info.modo === "ia" ? NIVEIS_ORDEM.indexOf(info.nivel) : -1;
+  const ia = r === "v" && idx >= 0 ? XP.bonusIA[Math.min(idx, 5)] : 0;
+  const desafio = r === "v" && info.desafio ? XP.desafio : 0;
+  return { total: base + moinhos + ia + desafio, linhas: { base, moinhos, ia, desafio } };
+}
+const CONTADORES_EXTRA = ["desafioDias", "partidasCodigo", "convites", "vitorias"];
 const TEMAS_ORDEM = ["madeira", "ardosia", "papel", "noite", "ceramica", "lareira", "granito", "alvorada"];
-const metaVazia = () => ({ pontos: 0, dia: "", hoje: 0, conquistas: {}, tema: "madeira", pagos: {}, perfil: null, amigos: [], partidas: [], ultimosResultados: [], ultimoDesafio: "", tutorialFeito: false, contadores: { partidas: 0, serie: 0, melhorSerie: 0, amigo: 0 } });
+const metaVazia = () => ({ pontos: 0, dia: "", hoje: 0, conquistas: {}, tema: "madeira", pagos: {}, perfil: null, amigos: [], partidas: [], ultimosResultados: [], ultimoDesafio: "", tutorialFeito: false, xp: 0, xpHoje: { dia: "", n: 0 }, desafio: { serie: 0, melhor: 0, ultimoJogado: "", ganhou: false }, contadores: { partidas: 0, serie: 0, melhorSerie: 0, amigo: 0, desafioDias: 0, partidasCodigo: 0, convites: 0, vitorias: 0 } });
 function validarMeta(x) {
   const b = metaVazia();
   if (!x || typeof x !== "object" || Array.isArray(x)) return b;
-  const n = (v, d = 0) => Number.isFinite(v) && v >= 0 ? Math.floor(v) : d;
+  const n = (v, d2 = 0) => Number.isFinite(v) && v >= 0 ? Math.floor(v) : d2;
   const o = { ...b };
   o.pontos = n(x.pontos);
   o.hoje = n(x.hoje);
@@ -25,6 +88,13 @@ function validarMeta(x) {
   o.tutorialFeito = x.tutorialFeito === true;
   const c = x.contadores || {};
   o.contadores = { partidas: n(c.partidas), serie: n(c.serie), melhorSerie: n(c.melhorSerie), amigo: n(c.amigo) };
+  for (const k of CONTADORES_EXTRA) o.contadores[k] = n(c[k]);
+  o.xp = x.xp === void 0 ? Math.min(1500, o.pontos * 3) : n(x.xp);
+  const xh = x.xpHoje || {};
+  o.xpHoje = { dia: typeof xh.dia === "string" ? xh.dia : "", n: n(xh.n) };
+  const d = x.desafio || {};
+  const dia = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : "";
+  o.desafio = { serie: n(d.serie), melhor: Math.max(n(d.melhor), n(d.serie)), ultimoJogado: dia(d.ultimoJogado), ganhou: d.ganhou === true };
   return o;
 }
 const rankDe = (pontos) => {
@@ -57,6 +127,7 @@ function registarFim(meta, info, ctx = {}, agora = Date.now()) {
     m.hoje = 0;
   }
   const rankAntes = rankDe(m.pontos);
+  const nivelAntes = nivelDe(m.xp);
   let ganhos = 0;
   if (info.modo === "ia") {
     const r = pontosPartida(info.nivel, info.resultado, { semPerder: info.resultado === "v" && info.pecasPerdidas === 0, jogadas: info.jogadas, desafio: !!info.desafio }, m.hoje);
@@ -66,6 +137,17 @@ function registarFim(meta, info, ctx = {}, agora = Date.now()) {
   }
   const c = m.contadores;
   c.partidas++;
+  if (info.resultado === "v") c.vitorias++;
+  const porCodigo = info.modo === "mp" || info.modo === "codigo";
+  if (porCodigo) c.partidasCodigo++;
+  const xr = xpPartida({ ...info, modo: porCodigo ? "codigo" : info.modo });
+  if (m.xpHoje.dia !== hoje) m.xpHoje = { dia: hoje, n: 0 };
+  const xpGanho = Math.max(0, Math.min(xr.total, XP.tetoDia - m.xpHoje.n));
+  m.xpHoje.n += xpGanho;
+  m.xp += xpGanho;
+  const nivelDepois = nivelDe(m.xp);
+  let desafioSerie;
+  if (info.desafio) desafioSerie = registarDesafio(m, hoje, info.resultado === "v");
   if (info.resultado === "v") {
     c.serie++;
     c.melhorSerie = Math.max(c.melhorSerie, c.serie);
@@ -82,10 +164,24 @@ function registarFim(meta, info, ctx = {}, agora = Date.now()) {
     sem_perder: ganhou && info.pecasPerdidas === 0 && info.modo === "ia",
     serie3: c.melhorSerie >= 3,
     mestre: ganhou && info.modo === "ia" && info.nivel === "mestre",
-    gata: ganhou && info.modo === "ia" && !!info.gata,
-    puzzles: (ctx.puzzlesResolvidos || 0) >= 12,
+    gata: ganhou && info.modo === "ia" && (info.iaMoinhos !== void 0 ? info.iaMoinhos === 0 : !!info.gata),
+    puzzles: (ctx.puzzlesResolvidos || 0) >= 10,
+    primeiro_puzzle: (ctx.puzzlesResolvidos || 0) >= 1,
+    puzzles_todos: ctx.puzzlesTotal > 0 && (ctx.puzzlesResolvidos || 0) >= ctx.puzzlesTotal,
+    primeira_por_codigo: porCodigo && (info.jogadas || 0) > 0,
+    tres_amigos: c.partidasCodigo >= 3,
+    desafio3: m.desafio.melhor >= 3,
+    desafio_vitoria: !!info.desafio && ganhou,
+    desafio30: c.desafioDias >= 30,
+    atenta: ganhou && info.modo === "ia" && info.nivel === "atenta",
+    serie7: c.melhorSerie >= 7,
+    cem: c.partidas >= 100,
+    cinquenta: c.vitorias >= 50,
+    nivel10: nivelDepois >= 10,
+    nivel20: nivelDepois >= 20,
     alquerque: info.motor === "alquerque",
-    amigo: info.modo !== "ia" && info.modo !== void 0 && info.motor !== "alquerque",
+    amigo: info.modo === "2j" && info.motor !== "alquerque",
+    // 2 jogadores; o cartão colado usa conquistaEvento('amigo')
     dez: c.partidas >= 10
   };
   const novas = [];
@@ -93,19 +189,56 @@ function registarFim(meta, info, ctx = {}, agora = Date.now()) {
     m.conquistas[k] = true;
     novas.push(k);
   }
-  return { meta: m, ganhos, rankAntes, rankDepois: rankDe(m.pontos), novas };
+  return { meta: m, ganhos, rankAntes, rankDepois: rankDe(m.pontos), novas, xp: { total: xpGanho, linhas: xr.linhas }, nivelAntes, nivelDepois, subiu: nivelDepois > nivelAntes, desafioSerie };
+}
+const diaAnterior = (iso) => new Date(Date.parse(iso) - 864e5).toISOString().slice(0, 10);
+function registarDesafio(m, hoje, ganhou) {
+  const d = m.desafio;
+  if (d.ultimoJogado > hoje) {
+    m.ultimoDesafio = d.ultimoJogado;
+    return d.serie;
+  }
+  if (d.ultimoJogado === hoje) return d.serie;
+  d.serie = d.ultimoJogado === diaAnterior(hoje) ? d.serie + 1 : 1;
+  d.melhor = Math.max(d.melhor, d.serie);
+  d.ultimoJogado = hoje;
+  d.ganhou = ganhou;
+  m.ultimoDesafio = hoje;
+  m.contadores.desafioDias++;
+  return d.serie;
+}
+const serieAtual = (m, hoje) => m.desafio.ultimoJogado === hoje || m.desafio.ultimoJogado === diaAnterior(hoje) ? m.desafio.serie : 0;
+const estadoDesafio = (m, hoje) => m.desafio.ultimoJogado >= hoje ? m.desafio.ganhou ? "feito_ganhou" : "feito_perdeu" : "por_jogar";
+function conquistaEvento(meta, id) {
+  const m = validarMeta(JSON.parse(JSON.stringify(meta)));
+  if (!CONQUISTAS.includes(id) || m.conquistas[id]) return { meta: m, novas: [] };
+  if (id === "primeiro_convite") m.contadores.convites++;
+  m.conquistas[id] = true;
+  return { meta: m, novas: [id] };
 }
 export {
   CHAVE_META,
   CONQUISTAS,
   NIVEIS_ORDEM,
+  NIVEL_MAX,
+  PATENTE_NIVEIS,
   RANKS,
   TEMAS_ORDEM,
+  XP,
+  conquistaEvento,
+  estadoDesafio,
   hojeISO,
   metaVazia,
+  nivelDe,
+  patenteDeNivel,
+  proximoNivel,
   proximoRank,
   rankDe,
+  registarDesafio,
   registarFim,
+  serieAtual,
   temaAberto,
-  validarMeta
+  validarMeta,
+  xpDoNivel,
+  xpPartida
 };
