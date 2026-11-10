@@ -294,9 +294,16 @@ class Tabuleiro {
     const agora = performance.now();
     let continuar = false, soGuia = false;
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = C.argamassa;
-    arredondado(ctx, gx0 - borda, gy0 - borda, grelha + 2 * borda, grelha + 2 * borda, 10);
-    ctx.fill();
+    if (!this.desenharFundo(ctx, C, n, s)) {
+      ctx.fillStyle = C.argamassa;
+      arredondado(ctx, gx0 - borda, gy0 - borda, grelha + 2 * borda, grelha + 2 * borda, 10);
+      ctx.fill();
+      for (let l = 0; l < n; l++) for (let c = 0; c < n; c++) {
+        ctx.fillStyle = C.casa;
+        arredondado(ctx, gx0 + c * s + 1.5, gy0 + l * s + 1.5, s - 3, s - 3, s * 0.12);
+        ctx.fill();
+      }
+    }
     const mostrarAvisos = this.avisosVisiveis();
     const T = cfg.ANIM_RESOLVIDO_MS;
     const tRes = this.resolvidoT0 === null ? -1 : agora - this.resolvidoT0;
@@ -304,9 +311,6 @@ class Tabuleiro {
       for (let c = 0; c < n; c++) {
         const i = l * n + c;
         const x = gx0 + c * s, y = gy0 + l * s;
-        ctx.fillStyle = C.casa;
-        arredondado(ctx, x + 1.5, y + 1.5, s - 3, s - 3, s * 0.12);
-        ctx.fill();
         const v = g[i];
         if (v === VAZIA) continue;
         let escala = 1, dx = 0, afundar = 0, piscar = false;
@@ -399,6 +403,41 @@ class Tabuleiro {
     }
     if (continuar) this.pedirDesenho();
     else if (soGuia) this.pedirDesenhoGuia();
+  }
+  // Camada estática em cache (chave: geometria, passo, n e cores). Devolve false se não há canvas fora do ecrã.
+  desenharFundo(ctx, C, n, s) {
+    const { gx0, gy0, borda, w, h } = this.geo;
+    const dpr = Math.max(1, Math.min(3, globalThis.devicePixelRatio || 1));
+    const chave = `${w}|${h}|${gx0}|${gy0}|${borda}|${s}|${n}|${dpr}|${C.argamassa}|${C.casa}`;
+    if (this.fundoChave !== chave) {
+      this.fundo = null;
+      this.fundoChave = chave;
+      try {
+        const cv = typeof OffscreenCanvas === "function" ? new OffscreenCanvas(Math.round(w * dpr), Math.round(h * dpr)) : document.createElement("canvas");
+        cv.width = Math.round(w * dpr);
+        cv.height = Math.round(h * dpr);
+        const g = cv.getContext("2d");
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const grelha = n * s;
+        g.fillStyle = C.argamassa;
+        arredondado(g, gx0 - borda, gy0 - borda, grelha + 2 * borda, grelha + 2 * borda, 10);
+        g.fill();
+        g.fillStyle = C.casa;
+        for (let l = 0; l < n; l++) for (let c = 0; c < n; c++) {
+          arredondado(g, gx0 + c * s + 1.5, gy0 + l * s + 1.5, s - 3, s - 3, s * 0.12);
+          g.fill();
+        }
+        this.fundo = cv;
+      } catch (e) {
+        this.fundo = null;
+      }
+    }
+    if (!this.fundo) return false;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(this.fundo, 0, 0);
+    ctx.restore();
+    return true;
   }
   // T-437: a pulsação da guia limita-se a ~25 fps (setTimeout + rAF) em vez de redesenhar o tabuleiro a cada frame.
   pedirDesenhoGuia() {

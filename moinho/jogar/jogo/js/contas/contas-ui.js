@@ -34,8 +34,10 @@ function ecraConta(contas, h) {
   };
   const corpo = document.createElement("div");
   r.append(corpo, msg);
+  const reenvio = botaoReenvio(contas, msg, h, () => (corpo.querySelector("input[type=email]") || {}).value);
   const erro = (res) => {
     msg.textContent = res.ok ? "" : t(`mo.conta.erro.${res.erro.codigo}`);
+    reenvio(!res.ok && res.erro.codigo === "email_nao_confirmado");
     return res.ok;
   };
   function pintar() {
@@ -101,6 +103,27 @@ function ecraConta(contas, h) {
   pintar();
   return { pintar };
 }
+function botaoReenvio(contas, msg, h, emailDe) {
+  let b = null;
+  const mostrar = (v) => {
+    if (!v) {
+      if (b) {
+        b.remove();
+        b = null;
+      }
+      return;
+    }
+    if (b) return;
+    b = h.btn(h.t("mo.conta.reenviar"), async () => {
+      const email = String(emailDe() || "").trim();
+      const x = await contas.reenviarConfirmacao(email);
+      msg.textContent = x.ok ? h.t("mo.conta.reenviado").replace("{email}", email) : h.t(`mo.conta.erro.${x.erro.codigo}`);
+      if (x.ok) mostrar(false);
+    });
+    msg.after(b);
+  };
+  return mostrar;
+}
 function ecraLogin(contas, h, aoEntrar) {
   const { ecra, btn, par, t } = h;
   const r = ecra("E17");
@@ -120,11 +143,14 @@ function ecraLogin(contas, h, aoEntrar) {
     return [l, i];
   };
   const [le, ie] = campo("email", "mo.conta.email", "email"), [lp, ip] = campo("password", "mo.conta.password", "current-password");
+  const reenvio = botaoReenvio(contas, msg, h, () => ie.value);
   const ir = async (f) => {
     msg.textContent = t("mo.conta.a_ligar");
     const res = await f();
+    reenvio(false);
     if (!res.ok) {
       msg.textContent = t(`mo.conta.erro.${res.erro.codigo}`);
+      reenvio(res.erro.codigo === "email_nao_confirmado");
       return;
     }
     if (res.precisaConfirmar) {

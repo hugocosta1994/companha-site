@@ -13,7 +13,7 @@ import {
   reconciliar
 } from "./sync.js";
 const VERSAO = "1.0.0";
-const CODIGOS = ["rede", "credenciais", "email_existe", "email_invalido", "password_fraca", "cancelado", "google_indisponivel", "google_sem_conta", "google_falhou", "sem_sessao", "conflito", "limite", "desconhecido"];
+const CODIGOS = ["rede", "credenciais", "email_existe", "email_invalido", "password_fraca", "cancelado", "google_indisponivel", "google_sem_conta", "google_falhou", "sem_sessao", "conflito", "limite", "muitos_pedidos", "email_nao_confirmado", "desconhecido"];
 const err = (e) => ({ ok: false, erro: { codigo: CODIGOS.includes(e && e.codigo) ? e.codigo : "desconhecido" } });
 function armazemLocal() {
   try {
@@ -95,6 +95,10 @@ function criarContas() {
       emitir();
       return { ok: true, ativo: !!adaptador };
     },
+    // Cliente Supabase único (só com fornecedor supabase); null nos restantes casos. N-39.
+    clienteSupabase() {
+      return adaptador && adaptador.cliente ? adaptador.cliente() : Promise.resolve(null);
+    },
     estado() {
       return { ...est };
     },
@@ -131,6 +135,15 @@ function criarContas() {
           emitir();
           await self.sincronizar();
         }
+        return { ok: true };
+      } catch (e) {
+        return err(e);
+      }
+    },
+    async reenviarConfirmacao(email) {
+      if (!tem() || !adaptador.reenviar) return err({ codigo: "desconhecido" });
+      try {
+        await adaptador.reenviar(email);
         return { ok: true };
       } catch (e) {
         return err(e);

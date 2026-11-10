@@ -1,4 +1,4 @@
-import { AVALIACAO, NIVEIS, IA_MAX_MS, PERSONALIDADES, PERSONALIDADE_PADRAO } from "../config.js";
+import { AVALIACAO, NIVEIS, IA_MAX_MS, PERSONALIDADES, PERSONALIDADE_PADRAO, ABERTURA, PECAS } from "../config.js";
 import { ADJ, MOINHOS, N } from "./tabuleiro.js";
 import { aplicar, fase, filhosCompletos, jogadasCompletas, jogadasSimples, jogar, noTabuleiro, outro, totalPecas } from "./regras.js";
 const VITORIA = 1e5;
@@ -34,9 +34,9 @@ class Tempo extends Error {
 }
 function pesquisa(e, prof, alfa, beta, raiz, ctx) {
   const W = ctx.W;
+  if ((++ctx.nos & 7) === 0 && ctx.limite && Date.now() > ctx.limite) throw new Tempo();
   if (e.fim) return e.fim.resultado === 0 ? 0 : e.fim.resultado === raiz ? VITORIA + prof : -VITORIA - prof;
   if (prof === 0) return avaliar(e, raiz, W);
-  if ((++ctx.nos & 3) === 0 && ctx.limite && Date.now() > ctx.limite) throw new Tempo();
   const fs = filhosCompletos(e);
   fs.sort((x, y) => (y.m.tirar !== void 0) - (x.m.tirar !== void 0));
   if (e.vez === raiz) {
@@ -72,7 +72,30 @@ const METRICAS = {
   quase: (n, j) => lado(n, j).quase,
   destinos: (n, j) => lado(n, j).mob
 };
-function escolherJogada(e, { nivel = "media", rng = Math.random, semLimite = false, profundidade, personalidade = PERSONALIDADE_PADRAO, info = null } = {}) {
+const meiasJogadas = (e) => 2 * PECAS - e.porColocar[1] - e.porColocar[2];
+function variarAbertura(e, ms, P, margem, rng, ctx) {
+  let vals = null;
+  for (let d = 1; d <= P; d++) {
+    const v = new Array(ms.length);
+    let melhor = -Infinity;
+    try {
+      for (let k = 0; k < ms.length; k++) {
+        if (ctx.limite && Date.now() > ctx.limite) throw new Tempo();
+        v[k] = pesquisa(aplicar(e, ms[k]), d - 1, melhor === -Infinity ? -Infinity : melhor - margem - 1, Infinity, e.vez, ctx);
+        if (v[k] > melhor) melhor = v[k];
+      }
+    } catch (x) {
+      if (x instanceof Tempo) break;
+      throw x;
+    }
+    vals = { v, melhor, d };
+  }
+  if (!vals) return null;
+  const cand = ms.filter((_, k) => vals.v[k] >= vals.melhor - margem);
+  return { m: cand[Math.floor(rng() * cand.length)], d: vals.d };
+}
+function escolherJogada(e, { nivel = "media", rng = Math.random, semLimite = false, profundidade, personalidade = PERSONALIDADE_PADRAO, info = null, variar = true } = {}) {
+  const t0 = Date.now();
   const cfg = NIVEIS[nivel];
   const pers = PERSONALIDADES[personalidade] || PERSONALIDADES[PERSONALIDADE_PADRAO];
   const W = { ...AVALIACAO, ...pers.pesos };
@@ -85,7 +108,18 @@ function escolherJogada(e, { nivel = "media", rng = Math.random, semLimite = fal
   const livre = !cfg.acasoSeguro || fase(e) !== "voar" && !momentoCritico(e, ms);
   if (cfg.acaso && livre && rng() < cfg.acaso) return ms[Math.floor(rng() * ms.length)];
   const D = profundidade || cfg.profundidadeMax || cfg.profundidade;
-  const ctx = { W, nos: 0, limite: semLimite ? 0 : Date.now() + Math.round((cfg.limiteMs || IA_MAX_MS) * 0.65) };
+  const ctx = { W, nos: 0, limite: semLimite ? 0 : t0 + Math.round((cfg.limiteMs || IA_MAX_MS) * 0.65) };
+  if (cfg.abertura && variar && meiasJogadas(e) < ABERTURA.meias && !momentoCritico(e, ms)) {
+    const r = variarAbertura(e, ms.slice(), Math.min(cfg.profundidade, ABERTURA.profMax), cfg.abertura.margem, rng, ctx);
+    if (r) {
+      if (info) {
+        info.profundidade = r.d;
+        info.degradou = r.d < Math.min(cfg.profundidade, ABERTURA.profMax);
+        info.abertura = true;
+      }
+      return r.m;
+    }
+  }
   let escolhida = ms[0];
   let melhorFinal = -Infinity, dFeito = 0;
   for (let d = 1; d <= D; d++) {
@@ -143,5 +177,6 @@ function escolherJogada(e, { nivel = "media", rng = Math.random, semLimite = fal
 }
 export {
   avaliar,
-  escolherJogada
+  escolherJogada,
+  meiasJogadas
 };

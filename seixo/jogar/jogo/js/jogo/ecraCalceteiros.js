@@ -89,8 +89,8 @@ function criarEcraCalceteiros({ t, tn }, fonte, acoes) {
       );
       if (!l.proprio) {
         const rm = criar("button", { type: "button", id: `calc-rm-${l.id}`, class: "ec-botao sec calc-rm", "aria-label": `${t("rank.remover")} ${l.nome}` }, "\xD7");
-        rm.addEventListener("click", () => {
-          if (confirm(t("calc.remover_confirmar"))) {
+        rm.addEventListener("click", async () => {
+          if (await acoes.confirmar(t("calc.remover_confirmar"))) {
             acoes.remover(l.id);
             render();
           }

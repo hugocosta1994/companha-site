@@ -1,7 +1,7 @@
 import { MODOS_STATS, PUZZLES } from "../config.js";
 const modoVazio = () => ({ v: 0, d: 0, e: 0, serie: 0, melhorSerie: 0, partidas: 0, jogadasTotais: 0, fase3: 0 });
 const statsVazias = () => ({});
-const modoDe = (modo, nivel, motor = "moinho") => modo === "2j" ? "dois" : modo === "mp" || modo === "codigo" ? "codigo" : `${motor === "alquerque" ? "alq" : "ia"}_${nivel}`;
+const modoDe = (modo, nivel) => modo === "2j" ? "dois" : modo === "mp" || modo === "codigo" ? "codigo" : `ia_${nivel}`;
 function registar(stats, modo, { resultado, jogadas = 0, fase3 = false }) {
   if (!MODOS_STATS.includes(modo) || !["v", "d", "e"].includes(resultado)) return stats;
   const m = { ...modoVazio(), ...stats[modo] || {} };
@@ -65,16 +65,27 @@ function tipoAberto(res, tipo, todos) {
   return i <= 0 || resolvidosDoTipo(res, PUZZLES.tipos[i - 1], todos) >= PUZZLES.desbloqueioResolvidos;
 }
 const validarResolvidos = (x) => x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).filter(([k, v]) => /^p[1-4]-[1-3]$/.test(k) && v === true)) : {};
+const ehObjeto = (x) => !!x && typeof x === "object" && !Array.isArray(x);
+function comDesconhecidos(validado, bruto, conhecido) {
+  if (!ehObjeto(bruto)) return validado;
+  const extra = Object.fromEntries(Object.entries(bruto).filter(([k]) => !conhecido(k) && !(k in validado)));
+  return { ...extra, ...validado };
+}
+const statsParaGravar = (stats, bruto) => comDesconhecidos(stats, bruto, (k) => k === "_g" || MODOS_STATS.includes(k));
+const puzzlesParaGravar = (res, bruto) => comDesconhecidos(res, bruto, (k) => /^p[1-4]-[1-3]$/.test(k));
 const proximoPuzzle = (res, todos) => todos.find((p) => !res[p.id] && tipoAberto(res, p.tipo, todos)) || null;
 export {
+  comDesconhecidos,
   globaisVazios,
   mediaJogadas,
   modoDe,
   modoVazio,
   proximoPuzzle,
+  puzzlesParaGravar,
   registar,
   registarGlobais,
   resolvidosDoTipo,
+  statsParaGravar,
   statsVazias,
   taxaVitoria,
   tipoAberto,

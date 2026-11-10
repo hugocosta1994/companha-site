@@ -33,14 +33,14 @@ function textoParaSemente(t) {
 const SEMENTE_MAX = 2 ** 30 - 1;
 const corInicialA = (semente) => Math.floor(semente / 8) % 2 + 1;
 function codificarJogada(m, noColocar) {
-  if (m === "X") return "X";
+  if (m === "X" || m === "W") return m;
   return (noColocar ? "" : b32(m.de)) + b32(m.para) + (m.tirar === void 0 ? "-" : b32(m.tirar));
 }
 function gerarCodigo(semente, corA, jogadas) {
   let p = novaPartida({ modo: "2j", semente }), t = "";
   for (const m of jogadas) {
-    t += codificarJogada(m, m !== "X" && fase(p.estado) === "colocar");
-    if (m !== "X") p = jogarCompleta(p, m);
+    t += codificarJogada(m, m !== "X" && m !== "W" && fase(p.estado) === "colocar");
+    if (m !== "X" && m !== "W") p = jogarCompleta(p, m);
   }
   const base = `${VERSAO_CODIGO}-${sementeParaTexto(semente)}-${corA}-${t}`;
   return `${base}-${crc16(base)}`;
@@ -81,6 +81,12 @@ function lerCodigo(texto) {
       i++;
       continue;
     }
+    if (corpo[i] === "W") {
+      desistiu = 3 - p.estado.vez;
+      jogadas.push("W");
+      i++;
+      continue;
+    }
     const colocar = fase(p.estado) === "colocar";
     const tam = colocar ? 2 : 3;
     if (i + tam > corpo.length) return erro("invalido");
@@ -97,7 +103,7 @@ function lerCodigo(texto) {
     p = q;
     jogadas.push(m);
   }
-  if (jogadas.filter((m) => m !== "X").length > MULTI.maxJogadas) return erro("limite");
+  if (jogadas.filter((m) => m !== "X" && m !== "W").length > MULTI.maxJogadas) return erro("limite");
   return { ok: true, semente, corA, jogadas, partida: p, desistiu };
 }
 function situacao(r) {
@@ -115,7 +121,7 @@ function estadoDaPartida(g, agora = Date.now()) {
   if (agora - g.atualizada > MULTI.esquecidaDias * 864e5) return "esquecida";
   return s.vez === corDe(g) ? "minha_vez" : "a_espera";
 }
-const igualJogada = (a, b) => a === "X" || b === "X" ? a === b : a.de === b.de && a.para === b.para && a.tirar === b.tirar;
+const igualJogada = (a, b) => typeof a === "string" || typeof b === "string" ? a === b : a.de === b.de && a.para === b.para && a.tirar === b.tirar;
 function importarCodigo(lista, texto, { agora = Date.now(), euSou = "B" } = {}) {
   const r = lerCodigo(texto);
   if (!r.ok) return r;
@@ -147,7 +153,9 @@ function jogarNaPartida(lista, semente, jogada, { agora = Date.now() } = {}) {
   const i = lista.findIndex((g2) => g2.semente === semente);
   if (i < 0) return erro("invalido");
   const g = lista[i], r = lerCodigo(g.codigo);
-  if (!r.ok || situacao(r).fim || r.partida.estado.vez !== corDe(g)) return erro("ilegal");
+  if (!r.ok || situacao(r).fim) return erro("ilegal");
+  const minhaVez = r.partida.estado.vez === corDe(g);
+  if (minhaVez === (jogada === "W")) return erro("ilegal");
   const codigo = gerarCodigo(semente, g.corA, [...r.jogadas, jogada]);
   const v = lerCodigo(codigo);
   if (!v.ok) return erro("ilegal");

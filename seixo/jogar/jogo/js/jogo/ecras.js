@@ -51,7 +51,8 @@ function criarEcras({ t, app, acoes }) {
     rotulo: criar("p", { class: "ec-suave" }, t("inicio.puzzle_do_dia")),
     nome: criar("p", { id: "menu-nome", class: "ec-nome" }),
     estado: criar("p", { id: "menu-estado", class: "ec-suave" }),
-    objetivo: criar("p", { id: "menu-objetivo", class: "mn-objetivo", hidden: true }),
+    objetivo: criar("div", { id: "menu-objetivo", class: "mn-objetivo", hidden: true }),
+    // T-1816: contém a fita do rumo
     jogar: botao("menu-jogar", "cheio grande mn-jogar", t("inicio.jogar"), () => acoes.jogar()),
     semana: criar("div", { id: "menu-semana", class: "mn-semana", role: "list" }),
     semanaSerie: criar("span", { id: "menu-semana-serie", class: "ec-suave" }),
@@ -196,6 +197,11 @@ function criarEcras({ t, app, acoes }) {
     const cobre = nome === "menu" || nome === "sub" || nome === "pausa";
     for (const n of app.children) {
       if (n === nav.el || Object.values(todos).includes(n)) continue;
+      if (n.hasAttribute("data-sem-inert")) {
+        n.removeAttribute("inert");
+        n.removeAttribute("aria-hidden");
+        continue;
+      }
       if (cobre) {
         n.setAttribute("inert", "");
         n.setAttribute("aria-hidden", "true");

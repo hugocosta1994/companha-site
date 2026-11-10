@@ -21,6 +21,9 @@ button[disabled] { opacity: .35; }
 .lema, .nota { text-align: center; opacity: .8; margin: 0 0 16px; font-size: 16px; }
 .grupo { display: flex; gap: 8px; margin: 4px 0 12px; }
 .grupo button { flex: 1; padding: 0 8px; }
+/* T-1847 (auditoria-v11 §5): feitios em grelha 2x2 — «Dona Olinda», «Zé da Praça» não quebram nem encostam ao bordo a 360 */
+.grupo.grupo-feitios { display: grid; grid-template-columns: 1fr 1fr; }
+.grupo-feitios button { padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sub { font-size: 16px; margin: 8px 0 0; font-weight: 600; }
 .pagina { text-align: center; }
 .pagina svg.tab { width: min(100%, 260px); margin: 0 auto; display: block; }
@@ -39,15 +42,18 @@ button[disabled] { opacity: .35; }
 .tab .toque { fill: transparent; }
 .p-b { fill: var(--peca-b, var(--superficie)); stroke: var(--tinta); stroke-width: 3; }
 .p-p { fill: var(--peca-p, var(--tinta)); stroke: var(--tinta); stroke-width: 3; }
+.p-furo { fill: var(--superficie); stroke: var(--tinta); stroke-width: 2; }
+.p-ponto { fill: var(--superficie); }
 .p-traco { stroke: var(--superficie); stroke-width: 3; stroke-linecap: round; }
 .peca, .marca { pointer-events: none; }
 .peca .anel { fill: none; stroke: var(--ferrugem); stroke-width: 4; }
 .peca .cruz, .icone .cruz { stroke: var(--ferrugem); stroke-width: 4; stroke-linecap: round; }
 .peca.sel .p-corpo { stroke: var(--ouro); stroke-width: 5; }
-.peca.baca { opacity: .45; }
+.peca.baca { opacity: .6; } /* T-1772: só peças do adversário que não se podem tirar */
 .peca.moinho .p-corpo { stroke: var(--ouro); stroke-width: 4; }
 .peca.moinho { animation: pulso 200ms ease-in-out 2; transform-box: fill-box; transform-origin: center; }
-.escuro .linhas, .escuro .ponto, .escuro .peca:not(.moinho) { filter: brightness(.6); }
+.escuro .linhas, .escuro .ponto { filter: brightness(.6); }
+.escuro .peca:not(.moinho) { filter: brightness(.9); }
 .peca.sai { animation: sai 250ms ease-in forwards; transform-box: fill-box; transform-origin: center; }
 .peca.vermelha .p-corpo { stroke: var(--ferrugem); stroke-width: 5; }
 .peca.rem { cursor: pointer; }
@@ -101,11 +107,11 @@ button[disabled] { opacity: .35; }
 #app > .e3-wrap, .e3, .e5 { }
 #app.e3, #app.e6, #app.e7, #app.e8, #app.e16, #app.e17 { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 .nav { flex: none; display: flex; gap: 4px; height: 64px; padding: 6px max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left)); background: var(--superficie); border-top: 2px solid rgba(58,47,34,.25); }
-.nav-b { flex: 1; min-width: 0; min-height: 52px; margin: 0; padding: 0 4px; border: 0; border-radius: var(--r3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; font-size: 16px; line-height: 1.15; color: var(--tinta); }
+.nav-b { flex: 1; min-width: 0; min-height: 48px; margin: 0; padding: 0 4px; border: 0; border-radius: var(--r3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; font-size: 16px; line-height: 1.15; color: var(--tinta); }
 .nav-b .nav-ic { font-size: 20px; line-height: 1; }
 .nav-b.ativo { background: var(--acento); color: #fff; font-weight: 700; }
 .topo2 { display: flex; align-items: center; min-height: 56px; margin-top: 4px; }
-.topo2 h2 { flex: 1; margin: 0; text-align: center; font-size: 26px; }
+.topo2 h2 { flex: 1; min-width: 0; margin: 0; text-align: center; font-size: clamp(18px, 5.2vw, 26px); line-height: 1.15; overflow-wrap: anywhere; } /* T-1847: «Jogar com outra pessoa» numa linha a 360 */
 .topo-lado { width: 48px; flex: none; display: flex; }
 .icone-b { width: 48px; min-width: 48px; height: 48px; padding: 0; margin: 0; border: 0; font-size: 28px; line-height: 1; }
 .engrenagem { font-size: 26px; }
@@ -124,11 +130,18 @@ button[disabled] { opacity: .35; }
 .cartao-lugar strong { font-family: Georgia, serif; font-size: 26px; }
 .cartao-lugar .c-pequeno { font-size: 16px; }
 .perfil-cab { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 8px 0 12px; font-size: 22px; }
-.avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--musgo); color: #fff; font: 700 34px/72px Georgia, serif; text-align: center; }
+.com-moldura .perfil-cab .avatar, .avatar.av-m { outline: calc(var(--moldura-l, 3px) * 2) solid var(--moldura, transparent); outline-offset: 3px; }
+.avatar.peq { width: 36px; height: 36px; font: 700 18px/36px Georgia, serif; }
+.avatar.med { width: 56px; height: 56px; font: 700 26px/56px Georgia, serif; }
+.avatar.grd { width: 96px; height: 96px; font: 700 46px/96px Georgia, serif; }
+.av-cmp { display: flex; gap: 32px; justify-content: center; margin: 12px 0; } .av-cmp figure { margin: 0; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 12px; }
+.av-cartao, .av-fim { display: flex; justify-content: center; padding: 12px 0; }
+.avatar { position: relative; width: 72px; height: 72px; border-radius: 50%; background: var(--musgo); color: #fff; font: 700 34px/72px Georgia, serif; text-align: center; }
 .linhas-stats { margin: 0 0 12px; }
 .linhas-stats div { display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 16px; margin: 4px 0; background: var(--superficie); border-radius: 12px; font-size: 18px; }
 .linhas-stats dt { font-weight: 600; } .linhas-stats dd { margin: 0; font-weight: 700; font-size: 20px; }
-.loja.grelha { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.loja-cartoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.loja-secao { display: block; }
 .cartao-tema { flex-direction: column; align-items: stretch; margin: 0; padding: 8px; background: var(--superficie); }
 .cartao-tema .nome { flex: none; text-align: center; font-size: 16px; }
 .cartao-tema svg.mini-tema { width: 100%; max-width: 120px; height: auto; margin: 0 auto; background: var(--fundo); border-radius: 8px; pointer-events: none; }
@@ -183,7 +196,7 @@ button[disabled] { opacity: .35; }
 .cartao-desafio { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 56px; width: 100%; gap: 2px; font-size: 16px; }
 .cartao-desafio[disabled] { opacity: .85; }
 .cartao-desafio span { font-size: 16px; font-weight: 400; }
-.toast-meta { position: fixed; left: 16px; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 50; padding: 12px 16px; border-radius: 12px; background: var(--tinta, #2b1d10); color: #fff; font-size: 16px; text-align: center; pointer-events: none; }
+.toast-meta { position: fixed; left: 16px; right: 16px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); z-index: 50; padding: 12px 16px; border-radius: 12px; background: var(--tinta, #2b1d10); color: #fff; font-size: 16px; text-align: center; pointer-events: none; }
 .faixa-nivel { font-size: 20px; animation: sobe-nivel .5s ease-out; }
 @media (prefers-reduced-motion: reduce) { .faixa-nivel { animation: none; } }
 @keyframes sobe-nivel { from { transform: scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -191,3 +204,84 @@ button[disabled] { opacity: .35; }
 .barras-nivel li { display: grid; grid-template-columns: 96px 1fr 32px; align-items: center; gap: 8px; min-height: 32px; font-size: 16px; }
 .barras-nivel i { display: block; height: 10px; border-radius: 5px; background: var(--ferrugem-texto, #8a3b12); min-width: 2px; }
 .barras-nivel b { text-align: right; }
+/* Aparência (M2-07): separadores, pré-visualização, moldura */
+.abas { display: flex; gap: 8px; margin: 8px 0; }
+.abas button { flex: 1; min-height: 48px; margin: 0; font-size: 16px; }
+.cartao-tema { min-height: 96px; }
+.cartao-tema .ver { margin: 6px 0 0; }
+.previa { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px calc(16px + env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)); background: var(--fundo); color: var(--tinta); }
+.previa svg.mini-tema { width: min(70vw, 280px); height: auto; box-sizing: border-box; background: var(--fundo); border: 10px solid var(--superficie); border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.18); } /* T-1848: como no cartão (superfície à volta do tabuleiro) */
+.previa .acoes { display: flex; gap: 8px; width: 100%; max-width: 360px; }
+.previa .acoes button { flex: 1; min-height: 48px; }
+.com-moldura svg.mini-tema, .com-moldura svg.tab { outline: var(--moldura-l, 0px) solid var(--moldura, transparent); outline-offset: 3px; border-radius: 8px; }
+.com-moldura svg.tab { margin: 6px; }
+.e3 .topo .avatar { margin-right: 8px; flex: none; }
+
+/* Anúncios com recompensa (T-1339): botão secundário discreto, alvo >= 48 dp, afastado dos botões principais */
+.anuncio { margin-top: 28px; text-align: center; }
+.anuncio-btn { min-height: 48px; min-width: 48px; font-size: 16px; opacity: .9; }
+
+/* M2-06: cartão de jogador e tabela de amigos (tom neutro, sem alerta) */
+.avatares { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 6px 0 12px; }
+.avatar-b { min-height: 48px; font-size: 24px; border: 2px solid var(--suave); border-radius: 12px; background: var(--superficie); }
+.avatar-b.sel { border-color: var(--tinta); }
+.tabela-amigos { list-style: none; padding: 0; margin: 4px 0 12px; font-size: 16px; }
+.tabela-amigos li { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 4px 12px; margin: 4px 0; background: var(--superficie); border-radius: 12px; }
+.tabela-amigos li.eu { border: 2px solid var(--tinta); font-weight: 600; }
+.tabela-amigos .nome { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.tabela-amigos .etiqueta { font-size: 16px; opacity: .75; }
+.tabela-amigos .remover { min-width: 48px; min-height: 48px; }
+/* T-1392: o toast fica acima da barra inferior (64 px + folga). */
+
+/* T-1540: tutorial, maquetas e dica automática */
+.tut-maqueta { margin: 8px 0; }
+.tut-exemplo { font-size: 16px; font-style: italic; }
+.tut-codigo { display: block; font-size: 18px; padding: 12px; border: 1px dashed currentColor; border-radius: 8px; margin: 8px 0; }
+.tut-maqueta button, .acoes button { min-height: 48px; }
+.tut-alvo { animation: tut-pulso 1.2s ease-in-out infinite; }
+@keyframes tut-pulso { 0%,100% { box-shadow: 0 0 0 0 rgba(200,120,40,0); } 50% { box-shadow: 0 0 0 6px rgba(200,120,40,.45); } }
+@media (prefers-reduced-motion: reduce) { .tut-alvo { animation: none; outline: 3px solid rgba(200,120,40,.7); } }
+
+.avatar .guirlanda { position: absolute; left: -19%; top: -19%; width: 139%; height: 139%; pointer-events: none; }
+.perfil-titulo { font: italic 600 16px Georgia, serif; color: var(--tinta); }
+/* T-1592 loja compra vs jogo: selos com ícone + texto + forma */
+.loja h2.secao { margin: 20px 0 4px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--tinta) 25%, transparent); font-size: 20px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.loja-secao:first-child h2.secao { margin-top: 8px; border-top: 0; padding-top: 0; }
+.loja h2.secao .secao-contagem { font-size: 16px; font-weight: 600; opacity: .8; }
+.loja-secao > .nota, .loja-secao > .msg { margin: 0 0 8px; }
+.selo { margin: 0; min-height: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4px 10px; font-size: 16px; line-height: 1.2; font-weight: 700; color: var(--tinta); text-align: center; overflow-wrap: anywhere; }
+.selo small { font-size: 16px; font-weight: 400; } /* M2-12: texto >= 16 sp também nos selos */
+.selo-circulo-cheio { border: 2px solid var(--tinta); border-radius: 24px; background: color-mix(in srgb, var(--tinta) 12%, transparent); }
+.selo-circulo-vazio { border: 2px solid var(--tinta); border-radius: 24px; }
+.selo-tracejado { border: 2px dashed var(--tinta); border-radius: 10px; }
+.selo-losango { border: 2px solid var(--tinta); border-radius: 4px 16px 4px 16px; background: color-mix(in srgb, var(--tinta) 12%, transparent); }
+.selo-coracao { border: 2px solid var(--tinta); border-radius: 24px 24px 12px 12px; }
+.cartao-apoio .nota-tema { min-height: 0; }
+/* §10.8 A (T-1763, T-1804): bloco «O que ganhaste» no resultado, sempre inteiro e sem scroll interno; o E6 compacta-se (.com-ganhos) para caber a 360x800 com notch. */
+.ganhos-fim { width: 100%; max-width: 420px; margin: 8px auto; padding: 8px 12px; border: 2px solid rgba(58,47,34,.25); border-radius: 12px; background: var(--superficie); flex: none; }
+.ganhos-fim h3 { margin: 0 0 4px; font: 700 18px/1.3 Georgia, serif; text-align: center; }
+.ganhos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.ganhos-lista li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 1px 0; font-size: 16px; line-height: 1.3; flex-shrink: 0; }
+.ganhos-lista li.destaque { font-weight: 700; }
+.ganhos-lista li .ganho-tx { flex: 1 1 140px; }
+.ganhos-lista li .xp { flex: 1 1 100%; margin: 0; }
+.ganhos-lista li .xp .rank-falta { margin: 2px 0 0; font-weight: 400; }
+.ganho-mini { flex: none; width: 48px; height: 48px; border-radius: 8px; border: 4px solid var(--tinta); background: var(--fundo); position: relative; }
+.ganho-mini.mini-peca::after, .ganho-mini.mini-tema::after { content: ''; position: absolute; inset: 12px; border-radius: 50%; background: currentColor; }
+.ganho-mini.mini-moldura { border-radius: 50%; border-width: 6px; background: var(--musgo); }
+.ganho-mini.mini-titulo { border-style: dashed; }
+.ganhos-lista .usar { flex: none; min-height: 48px; min-width: 96px; margin: 0; padding: 0 12px; }
+/* §10.8 B: selo «Vencido» (forma + texto, não só cor) e sugestão de nível tocável. */
+.cartao-nivel .selo-vencido { display: inline-block; margin-top: 4px; padding: 0 8px; border: 2px solid currentColor; border-radius: 4px 12px 4px 12px; font-size: 16px; font-weight: 700; }
+.cartao-nivel .selo-vencido::before { content: '✔ '; }
+.sugestao-nivel { margin-top: 8px; }
+/* T-1763: resultado centrado sem cortar o topo quando não cabe (justify-content: center corta; «safe center» não existe no WebView 69). */
+#app.e6 { justify-content: flex-start; overflow-y: auto; }
+#app.e6 > :first-child { margin-top: auto; }
+#app.e6 > :last-child { margin-bottom: auto; }
+/* T-1804: com o bloco de ganhos, o resto do E6 encolhe margens para o bloco caber inteiro (sem scroll interno nem cortes). */
+#app.e6.com-ganhos h2 { margin: 4px 0; font-size: 26px; }
+#app.e6.com-ganhos > p { margin: 0 0 4px; }
+#app.e6.com-ganhos .ganhos-fim { margin: 4px auto 6px; padding: 4px 12px 6px; }
+#app.e6.com-ganhos .av-fim { padding: 4px 0; }
+#app.e6.com-ganhos button { margin: 4px 0; }

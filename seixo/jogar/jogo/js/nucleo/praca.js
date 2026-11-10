@@ -1,15 +1,17 @@
 import { diaDaSemana } from "./dia.js";
-import { CONFIG } from "../config.js";
 const QUADRADOS_PACOTE = 20;
 const COLUNAS_MES = 7;
 const COLUNAS_PACOTE = 5;
-const LASCAS_PRACA = CONFIG.LASCAS_PRACA;
+const LASCAS_PRACA = 50;
 const RE_DIA = /^D-(\d{4}-\d{2})-(\d{2})$/;
-const RE_CURADO = /^(PAC-[A-Z]+(?:-[A-Z]+)*)-(\d{2})$/;
+const PACOTE = "PAC-(?:SAZ-\\d{4}-Q[1-4]|[A-Z]+(?:-[A-Z]+)*)";
+const RE_CURADO = new RegExp(`^(${PACOTE})-(\\d{2})$`);
+const RE_PACOTE = new RegExp(`^${PACOTE}$`);
 const RE_MES = /^\d{4}-(0[1-9]|1[0-2])$/;
 const eResolvido = (reg) => !!reg && (reg.estado === "resolvido" || reg.estado === "resolvido_com_pistas");
 const eMes = (praca) => RE_MES.test(praca || "");
-const ePacote = (praca) => /^PAC-[A-Z]+(?:-[A-Z]+)*$/.test(praca || "");
+const ePacote = (praca) => RE_PACOTE.test(praca || "");
+const eSazonal = (praca) => /^PAC-SAZ-\d{4}-Q[1-4]$/.test(praca || "");
 function diasDoMes(mes) {
   const [a, m] = mes.split("-").map(Number);
   return new Date(Date.UTC(a, m, 0)).getUTCDate();
@@ -112,7 +114,8 @@ function pracasComAlgo(doc, pacotes = ["PAC-ROSSIO", "PAC-CHIADO", "PAC-RIBEIRA"
     const qd = quadradoDe(id);
     if (qd) (eMes(qd.praca) ? meses : pacs).add(qd.praca);
   }
-  return [...[...meses].sort().reverse(), ...pacotes.filter((p) => pacs.has(p))];
+  const sazonais = [...pacs].filter((p) => eSazonal(p) && !pacotes.includes(p)).sort();
+  return [...[...meses].sort().reverse(), ...pacotes.filter((p) => pacs.has(p)), ...sazonais];
 }
 export {
   COLUNAS_MES,

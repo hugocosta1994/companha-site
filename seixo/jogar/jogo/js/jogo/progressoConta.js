@@ -33,6 +33,18 @@ function fundirDocumentos(local, remoto) {
   const seqNova = ((_a = sl.ultimoDiaMantido) != null ? _a : "") >= ((_b = sr.ultimoDiaMantido) != null ? _b : "") ? sl : sr;
   out.sequencia = { ...seqNova, recorde: Math.max(sl.recorde || 0, sr.recorde || 0), diaMaisAltoVisto: maxData(sl.diaMaisAltoVisto, sr.diaMaisAltoVisto) };
   out.lascas = { ...novo.lascas || {}, ganhasTotal: Math.max(((_c = L.lascas) == null ? void 0 : _c.ganhasTotal) || 0, ((_d = R.lascas) == null ? void 0 : _d.ganhasTotal) || 0) };
+  const ll = L.lascas || {}, lr = R.lascas || {};
+  const mapa = /* @__PURE__ */ new Map();
+  for (const o of [...ll.ordens || [], ...lr.ordens || []]) if (o && o.id && !mapa.has(o.id)) mapa.set(o.id, o);
+  if (mapa.size || ll.compradasTotal || lr.compradasTotal) {
+    out.lascas.ordens = [...mapa.values()].sort((a, b) => String(a.t).localeCompare(String(b.t))).slice(-100);
+    out.lascas.compradasTotal = Math.max(ll.compradasTotal || 0, lr.compradasTotal || 0, [...mapa.values()].reduce((n, o) => n + (o.qtd || 0), 0));
+    out.lascas.gastasTotal = Math.max(ll.gastasTotal || 0, lr.gastasTotal || 0);
+    const nv = novo === R ? lr : ll, nvOrd = nv.ordens || [], conhecidas = new Set(nvOrd.map((o) => o.id));
+    const corte = nvOrd.length >= 100 ? nvOrd.map((o) => String(o.t)).sort()[0] : null;
+    const nova = (o) => !conhecidas.has(o.id) && !(corte !== null && String(o.t) < corte);
+    out.lascas.saldo = (nv.saldo || 0) + [...mapa.values()].filter(nova).reduce((n, o) => n + (o.qtd || 0), 0);
+  }
   out.pracas = {};
   for (const k of /* @__PURE__ */ new Set([...Object.keys(L.pracas || {}), ...Object.keys(R.pracas || {})])) {
     const a = (L.pracas || {})[k], b = (R.pracas || {})[k];

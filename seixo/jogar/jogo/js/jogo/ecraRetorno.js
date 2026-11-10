@@ -13,19 +13,24 @@ const botao = (id, classe, texto, fn) => {
   b.addEventListener("click", fn);
   return b;
 };
-function cartaoRegresso({ t }, vista, acoes) {
+function cartaoRegresso({ t, tn }, vista, acoes) {
+  var _a;
   if (!vista || vista.nivel < 1) return null;
-  if (vista.nivel === 1) return criar("p", { id: "regresso-linha", class: "ec-suave", role: "status" }, t("regresso.1"));
+  if (vista.nivel === 1) {
+    const texto = criar("p", { id: "regresso-linha-texto", class: "ec-suave" }, t("retorno.hoje"));
+    const jogar = vista.sugerido && vista.puzzleRotulo && !vista.aceite ? [botao("regresso-linha-jogar", "sec", t("regresso.sugestao", { puzzle: vista.puzzleRotulo }), () => acoes.jogar())] : [];
+    return criar("div", { id: "regresso-linha", class: "mn-retorno-linha", role: "status" }, texto, ...jogar);
+  }
   if (!vista.mostrar) return null;
-  const partes = [criar("h3", {}, t("regresso.titulo")), criar("p", {}, t(vista.nivel >= 3 ? "regresso.longo" : "regresso.2"))];
-  if (vista.recorde > 0) partes.push(criar("p", { id: "regresso-serie", class: "ec-suave" }, t("regresso.melhor_serie", { n: vista.recorde })));
-  if (vista.sugerido && vista.puzzleRotulo) partes.push(criar("p", { id: "regresso-sugestao", class: "ec-suave" }, t("regresso.sugestao", { puzzle: vista.puzzleRotulo })));
+  const partes = [criar("h3", {}, t("retorno.titulo")), criar("p", {}, t(vista.nivel >= 3 ? "retorno.30" : "retorno.7"))];
+  if (((_a = vista.mostrarSerie) != null ? _a : vista.recorde > 0) && vista.recorde > 0) partes.push(criar("p", { id: "regresso-serie", class: "ec-suave" }, tn ? tn("retorno.melhor_serie", vista.recorde, { n: vista.recorde }) : t("retorno.melhor_serie", { n: vista.recorde }), " ", t("retorno.serie_nota")));
+  if (vista.sugerido && vista.puzzleRotulo) partes.push(criar("p", { id: "regresso-sugestao", class: "ec-suave" }, `${t("retorno.sugestao")} (${vista.puzzleRotulo})`));
   if (vista.nivel >= 3) partes.push(criar("p", { id: "regresso-tens-ca", class: "ec-suave" }, t("regresso.tens_ca", { nivel: vista.nivelOficio })));
   const bts = [
-    botao("regresso-jogar", "cheio", t(vista.sugerido ? "regresso.jogar" : "regresso.recomecar"), () => acoes.jogar()),
-    ...vista.sugerido ? [botao("regresso-recomecar", "sec", t("regresso.recomecar"), () => acoes.recomecar())] : [],
+    botao("regresso-jogar", "cheio", t(vista.sugerido ? "retorno.sugestao_jogar" : "retorno.recomecar"), () => acoes.jogar()),
+    ...vista.sugerido && vista.recomecar !== false ? [botao("regresso-recomecar", "sec", t("retorno.recomecar"), () => acoes.recomecar())] : [],
     ...vista.aquecer ? [botao("regresso-aquecer", "sec", t("regresso.aquecer"), () => acoes.aquecer())] : [],
-    botao("regresso-agora-nao", "sec", t("regresso.agora_nao"), () => acoes.dispensar())
+    botao("regresso-agora-nao", "sec", t("retorno.sugestao_depois"), () => acoes.dispensar())
   ];
   return criar("div", { id: "regresso-cartao", class: "ec-cartao of-cartao", role: "status" }, ...partes, ...bts);
 }

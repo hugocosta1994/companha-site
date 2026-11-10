@@ -1,11 +1,17 @@
 /* SEIXO — ecrã de puzzle do protótipo (retrato 360×640) */
 :root {
+  /* T-1528/T-1529: fallback para WebView sem max() (Chrome < 79): valores fixos; o @supports abaixo repõe os dinâmicos */
+  --seg-topo: 32px; --seg-fundo: 16px; --seg-esq: 0px; --seg-dir: 0px;
   /* cores: ver css/tokens.css (T-1078) */
   /* T-453: safe areas = o maior de env(), da variável injetada pelo Capacitor e do fallback mínimo (WebView com env()=0). */
+}
+@supports (padding: max(1px, 2px)) {
+  :root {
   --seg-topo: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px), 32px); /* T-454: fallback 24→32 dp: aparelhos com notch/furo têm status bar de 28–48 dp e o WebView pode dar env()=0; custa 8 dp em baixo de 640 */
   --seg-fundo: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px), 16px);
   --seg-esq: max(env(safe-area-inset-left, 0px), var(--safe-area-inset-left, 0px));
   --seg-dir: max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
+  }
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tinta);
@@ -85,13 +91,13 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
 .praca-q:disabled { opacity: .6; }
 .praca-motivo { margin: 8px 0 0; display: flex; justify-content: center; }
 .praca-motivo-desenho { width: 128px; height: 128px; border-radius: 6px; opacity: .45; filter: saturate(.4); transition: opacity .3s, filter .3s; }
-.praca-motivo.acesa .praca-motivo-desenho { opacity: 1; filter: none; box-shadow: 0 0 10px color-mix(in srgb, var(--ok) 45%, transparent); }
+.praca-motivo.acesa .praca-motivo-desenho { opacity: 1; filter: none; box-shadow: 0 0 10px var(--ok); box-shadow: 0 0 10px color-mix(in srgb, var(--ok) 45%, transparent); }
 .praca-motivo.acender { animation: acender-motivo 1.2s ease-out 1; }
 @keyframes acender-motivo { 0% { transform: scale(1); opacity: .4; } 40% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1); } }
 
 /* Loja (T-395; GDD §6.6, CA-20). Ecrã por cima do jogo; o topo (Restaurar compras incluído) não rola. */
 #app { position: relative; }
-.loja { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; background: var(--fundo);
+.loja { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 10; display: flex; flex-direction: column; background: var(--fundo);
   padding: 12px 16px; padding-top: calc(12px + var(--seg-topo)); padding-bottom: calc(12px + var(--seg-fundo)); padding-left: calc(16px + var(--seg-esq)); padding-right: calc(16px + var(--seg-dir)); overflow-y: auto; font-size: 16px; color: var(--tinta); }
 .loja[hidden] { display: none; }
 .loja button { font: inherit; min-height: 48px; padding: 0 12px; border-radius: 10px;
@@ -144,7 +150,9 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
 @keyframes assentar-brilho { 0% { box-shadow: 0 0 0 3px var(--ok); } 100% { box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { .assentar, .assentar-q.novo { animation: none; } }
 /* T-427: amostra visual de cada cosmético na Loja (ecraLoja.js desenharAmostra) */
+.loja-cab-saz { display: block; width: 160px; max-width: 100%; height: auto; margin: 0 auto 8px; border-radius: 8px; }
 .loja-amostra { width: 48px; height: 48px; flex: none; border-radius: 6px; align-self: center; }
+.loja-amostra-pac { width: 80px; height: 50px; }
 
 .aviso-gravacao { width: 100%; margin: 0 0 4px; padding: 6px 8px; font-size: 16px; line-height: 1.25; text-align: center; color: var(--aviso); border: 1px solid var(--aviso); border-radius: 8px; cursor: pointer; }
 .aviso-gravacao[hidden] { display: none; }
@@ -156,7 +164,7 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
   border: 0; background: none; color: var(--tinta); white-space: nowrap; }
 .btn-pausa .icone { font-size: 22px; margin-right: 2px; }
 .topo { min-height: 48px; }
-.ecra { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--fundo); color: var(--tinta); font-size: 16px;
+.ecra { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; background: var(--fundo); color: var(--tinta); font-size: 16px;
   padding: 8px 16px; padding-top: calc(8px + var(--seg-topo)); padding-bottom: calc(16px + var(--seg-fundo));
   padding-left: calc(16px + var(--seg-esq)); padding-right: calc(16px + var(--seg-dir)); overflow-y: auto; }
 .ecra[hidden] { display: none; }
@@ -218,7 +226,7 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
 .ec-sub-corpo #arquivo-dias, .ec-sub-corpo #praca-corpo .praca-grelha { gap: 0; }
 .ec-sub-corpo #arquivo-dias, .ec-sub-corpo .praca-grelha { padding: 0 1px 1px 0; } /* T-1121 (B-17): compensa a margem -1 px da última coluna, senão a margem direita é 15 dp */
 .ec-sub-corpo .arquivo-dias .dia-arq, .ec-sub-corpo .praca-q { position: relative; aspect-ratio: auto; min-height: 48px; min-width: 0; margin: 0 -1px -1px 0; }
-.ec-sub-corpo .arquivo-dias .dia-arq::after, .ec-sub-corpo .praca-q::after { content: ''; position: absolute; inset: 0 -0.6px; }
+.ec-sub-corpo .arquivo-dias .dia-arq::after, .ec-sub-corpo .praca-q::after { content: ''; position: absolute; top: 0; bottom: 0; left: -0.6px; right: -0.6px; }
 .ecra [hidden] { display: none !important; }
 
 /* T-460: tempo no ecrã (E2) e E9 Como jogar */
@@ -233,7 +241,7 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
 .comojogar .ec-botao { margin-top: 4px; }
 
 /* T-471: id do build no menu (texto pequeno, 12 sp, contraste da tinta suave) */
-.ec-build { margin: 4px 0 0; font-size: 12px; line-height: 16px; text-align: center; color: var(--tinta-suave); }
+.ec-build { margin: 4px 0 0; font-size: 16px; line-height: 20px; /* T-1765 */ text-align: center; color: var(--tinta-suave); }
 .ec-build[hidden] { display: none; }
 
 /* T-792 (v2): ofício, metas e coleção. Alvos >= 48 dp, sem scroll horizontal, texto >= 16 sp */
@@ -244,7 +252,7 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
 .of-barra span { display: block; height: 100%; background: var(--tinta); }
 .of-raiz, .of-corpo { display: flex; flex-direction: column; gap: 12px; }
 .of-abas { display: flex; gap: 8px; }
-.of-aba { flex: 1; min-height: 48px; font: inherit; border-radius: 10px; border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); }
+.of-aba { flex: 1; min-width: 0; padding: 0 4px; min-height: 48px; font: inherit; border-radius: 10px; border: 1px solid var(--botao-borda); background: var(--botao); color: var(--tinta); }
 .of-aba[aria-selected="true"] { background: var(--tinta); color: var(--botao); }
 .of-conteudo { display: flex; flex-direction: column; }
 .of-cartao { margin-top: 0; }
@@ -259,12 +267,12 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
 .meta-premio { flex: none; font-weight: 600; font-size: 16px; }
 .colecao { margin-top: 12px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.experimentar { position: absolute; inset: 0; z-index: 11; display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--fundo); color: var(--tinta);
+.previsualizacao { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 13; display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--fundo); color: var(--tinta);
   padding: 12px 16px; padding-top: calc(12px + var(--seg-topo)); padding-bottom: calc(12px + var(--seg-fundo)); padding-left: calc(16px + var(--seg-esq)); padding-right: calc(16px + var(--seg-dir)); overflow-y: auto; font-size: 16px; }
-.experimentar[hidden] { display: none; }
-.exp-tabuleiro { width: min(100%, 360px); aspect-ratio: 1; border-radius: 12px; touch-action: manipulation; }
-.experimentar .ec-botao { width: 100%; }
-.loja .loja-experimentar { min-width: 48px; }
+.previsualizacao[hidden] { display: none; }
+.prev-amostra { width: min(100%, 296px); aspect-ratio: 1; border-radius: 12px; touch-action: manipulation; }
+.previsualizacao .ec-botao { width: 100%; }
+.loja .loja-ver { min-width: 48px; }
 
 /* T-990: selos e ícones (img/), forma distingue o estado, não só a cor */
 .of-cartao { align-items: stretch; }
@@ -284,7 +292,7 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
 
 /* T-1048 — calceteiros, objetivo visível, saltar tutorial */
 .ec-larga { grid-column: 1 / -1; }
-.objetivo-hoje { margin: 0 16px 4px; font-size: 16px; line-height: 22px; color: var(--tinta-suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.objetivo-hoje { align-self: stretch; min-width: 0; max-width: calc(100% - 32px); box-sizing: border-box; margin: 0 16px 4px; font-size: 16px; line-height: 22px; color: var(--tinta-suave); text-align: center; text-wrap: balance; overflow-wrap: anywhere; }
 @media (max-height: 620px) { .objetivo-hoje { display: none; } }
 .calc .calc-campo { width: 100%; min-height: 48px; box-sizing: border-box; font-size: 16px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--linha-suave); background: var(--fundo, #fff); color: var(--tinta); margin: 4px 0 8px; }
 .calc .ec-botao { margin: 4px 0; min-height: 48px; width: 100%; }
@@ -341,10 +349,10 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
 .nav-inferior[hidden] { display: none; }
 .nv-sep { font: inherit; flex: 1; min-width: 0; min-height: 72px; padding: 6px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   border: 0; background: none; color: var(--tinta-suave); }
-.nv-rot { font-size: 13px; line-height: 16px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nv-rot { font-size: 16px; line-height: 20px; /* T-1765: texto >= 16 sp (S3-09) */ max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nv-sep .mn-ico { padding: 4px 16px; box-sizing: content-box; width: 24px; height: 24px; border-radius: 16px; margin: -4px 0; }
 .nv-sep.ativo { color: var(--tinta); font-weight: 700; }
-.nv-sep.ativo .mn-ico { background: color-mix(in srgb, var(--acento) 18%, transparent); color: var(--acento); fill: currentColor; }
+.nv-sep.ativo .mn-ico { background: var(--botao); background: color-mix(in srgb, var(--acento) 18%, transparent); color: var(--acento); fill: currentColor; }
 .nv-sep.ativo .mn-ico path { fill: currentColor; fill-opacity: .25; }
 #app.com-nav .ecra, #app.com-nav .loja { padding-bottom: calc(72px + var(--seg-fundo) + 8px); }
 
@@ -396,3 +404,85 @@ html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--tin
 @keyframes fb-pulso { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
 #app.fb-puzzle canvas, #app.fb-meta .feedback-fim { animation: fb-pulso .5s ease-out 1; }
 @media (prefers-reduced-motion: reduce) { #app.fb-puzzle canvas, #app.fb-meta .feedback-fim { animation: none; } }
+
+/* T-1493: cartão «Sem anúncios» no topo da Loja e versão discreta no fundo */
+.loja-sa { display: flex; align-items: center; gap: 8px; padding: 8px; margin: 0 0 8px; border: 2px solid var(--tinta); border-radius: 10px; }
+.loja-sa-texto { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.loja-sa button { flex: none; min-width: 96px; }
+.loja-versao { flex: none; margin: 6px 0 0; font-size: 16px; /* T-1765 */ text-align: center; color: var(--tinta-suave); }
+
+/* T-1508 (T-1507, 360 dp): sem overflow horizontal nos sub-ecrãs, abas da Praça que encolhem, painéis Pausa/Resultado com título em fluxo */
+.ecra { max-width: 100%; overflow-x: hidden; }
+.ecra > * { min-width: 0; max-width: 100%; }
+.ec-sub-corpo, .ec-sub-corpo > *, .ec-sub-corpo .pacotes, .ec-sub-corpo .pacotes-corpo, .ec-sub-corpo .praca-grelha { min-width: 0; max-width: 100%; }
+/* T-1766: o corpo tem margin-inline -14 / padding-inline 14 (sangria do foco); com max-width 100% ficava com 300 px de
+   conteúdo a 360 (margem direita 44 px). Volta aos 328 px (16 px de margem) */
+.ecra > .ec-sub-corpo, .ec-sub-corpo { max-width: calc(100% + 28px); }
+/* T-1766 (S3-09): 7 colunas de 48 dp precisam de 336 px; abaixo de 368 px de largura o calendário (arquivo e praça)
+   sangra 4 px para cada lado (margem de 12 px só nesta grelha) para os dias terem 48x48 dp. */
+@media (max-width: 367.98px) {
+  .ec-sub-corpo #arquivo-dias, .ec-sub-corpo #praca-corpo .praca-grelha, .ec-sub-corpo .praca-grelha { margin-inline: -4px; max-width: none; width: calc(100% + 8px); box-sizing: border-box; }
+}
+/* T-1844/T-1843/T-1854 (UI móvel §10): as 7 abas não cabem a 360 dp. Faixa com scroll horizontal próprio (a página não
+   rola), cada aba >= 96x48 dp, até 2 linhas e só quebra entre palavras («Outono / de 2026», nunca «Cal/ça/da»). */
+.pacotes-abas { position: relative; flex-wrap: nowrap; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
+  scrollbar-width: none; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.pacotes-abas::-webkit-scrollbar { display: none; }
+.pacotes-abas .pacote-aba, .ec-sub-corpo .pacotes-abas .pacote-aba { flex: 0 0 auto; min-width: 96px; max-width: 132px; min-height: 48px; padding: 4px 10px;
+  overflow-wrap: normal; word-break: normal; hyphens: none; white-space: normal; line-height: 1.2; scroll-snap-align: start; }
+.ecra-pausa, .ecra-resultado { justify-content: flex-start; }
+.ecra-pausa .ec-titulo, .ecra-resultado .ec-titulo, .ecra-pausa .ec-sub, .ecra-resultado .ec-sub { position: static; overflow-wrap: anywhere; }
+
+/* T-1572: ecrã neutro até decidir tutorial vs login (sem flash do tutorial). */
+.arranque-neutro { position: fixed; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: var(--fundo); }
+.arranque-neutro[hidden] { display: none; }
+
+/* T-1577: folha de baixo «Saltar o tutorial?» (spec T-1573) */
+.folha-fundo { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.55); padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 16px); }
+.folha { width: 100%; max-width: 480px; box-sizing: border-box; background: var(--superficie); color: var(--texto); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px; animation: folha-sobe .15s ease-out; }
+.folha-titulo { margin: 0; font-size: 20px; font-weight: 600; }
+.folha-corpo { margin: 0 0 12px; font-size: 16px; color: var(--texto); }
+.folha-btn-prim, .folha-btn-sec { width: 100%; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+.folha-btn-prim { min-height: 56px; background: var(--acento); color: var(--texto-acento); border: 2px solid var(--acento); }
+.folha-btn-sec { min-height: 48px; background: transparent; color: var(--acento); border: 2px solid var(--acento); }
+#btn-tutorial-sair { min-height: 48px; }
+@keyframes folha-sobe { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .folha { animation: none; } }
+
+/* T-1700 (S3-02): o menu rola por baixo da barra inferior (72 dp + borda + safe area): folga para «Agora não» nunca ficar tapado em 360x800. */
+.ecra-menu { padding-bottom: calc(96px + var(--seg-fundo)); }
+/* Cartões do tutorial v3 (T-1700): coluna sobre o menu, dentro das safe areas, alvos >= 48 dp, nunca sobre a grelha. */
+.tutorial-cartoes { z-index: 20; justify-content: center; gap: 12px; }
+.tutorial-cartoes[hidden] { display: none; }
+.tutorial-cartoes h2 { margin: 0 0 4px; font-size: 22px; }
+.tutorial-cartoes p { margin: 0 0 8px; }
+.tutorial-cartoes .ec-botao { margin-top: 8px; }
+.tutorial-cartoes .ec-botao.texto { border-color: transparent; min-height: 48px; font-weight: 500; color: var(--tinta-suave); }
+
+/* T-1811 (GDD §15.1): linha de regresso de 3-6 dias com o Fácil sugerido (botão secundário, >= 48 dp, largura toda). */
+.mn-retorno-linha { display: flex; flex-direction: column; gap: 8px; margin: 0 16px; box-sizing: border-box; } /* T-1863: margem de 16 px como os cartões */
+.mn-retorno-linha .ec-botao { width: 100%; }
+/* T-1811: com a «Melhor série» a linha da série cresce; o cabeçalho quebra em vez de espremer «Esta semana». */
+.mn-diario-cab { flex-wrap: wrap; column-gap: 8px; }
+.mn-diario-cab .mn-sub { white-space: nowrap; }
+
+/* T-1816 (contratos/tutorial-v3.md §9.2): fita do rumo — uma linha (trunca, não quebra), por cima da grelha no
+   tutorial e no cartão do dia do E1; chip da meta à direita (botão >= 48 dp no E1, só texto no tutorial). */
+.fita-caixa { margin: 0 16px 4px; align-self: stretch; min-width: 0; max-width: calc(100% - 32px); box-sizing: border-box; } /* #app centra os filhos: sem stretch a fita media o conteúdo e saía do ecrã com texto a 130 % */
+.fita-caixa[hidden] { display: none; }
+.fita-rumo { display: flex; align-items: center; gap: 8px; min-height: 44px; width: 100%; box-sizing: border-box; font-size: 16px; line-height: 1.25; }
+.fita-esq { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tinta); font-weight: 600; }
+.fita-passo { color: var(--tinta-suave); font-variant-numeric: tabular-nums; }
+.fita-chip { flex: 0 0 auto; min-width: 0; max-width: 50%; display: inline-flex; align-items: center; padding: 0 12px; min-height: 36px; border-radius: 999px;
+  border: 1px solid var(--linha-suave); color: var(--acento); font: inherit; font-weight: 700; background: transparent; }
+.fita-chip-in { display: inline-flex; min-width: 0; align-items: center; }
+.fita-chip-txt { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fita-chip-num { flex: none; white-space: pre; font-variant-numeric: tabular-nums; }
+.fita-chip.navegavel { min-height: 48px; min-width: 48px; cursor: pointer; }
+.fita-chip.pulso { animation: fita-pulso 800ms ease-out 1; }
+@keyframes fita-pulso { 0% { transform: scale(1); } 35% { transform: scale(1.12); box-shadow: 0 0 0 4px var(--linha-suave); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .fita-chip.pulso { animation: none; outline: 2px solid var(--acento); } }
+.mn-objetivo .fita-rumo { min-height: 48px; }
+/* Cartão B: exemplo de código não copiável (CA-TUT3-10). */
+.tut3-exemplo { margin: 8px 0; }
+.tut3-codigo { display: inline-block; font-size: 16px; color: var(--tinta-suave); opacity: .75; user-select: none; -webkit-user-select: none; pointer-events: none; word-break: break-all; }

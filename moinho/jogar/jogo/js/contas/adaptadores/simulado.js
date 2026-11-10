@@ -88,6 +88,10 @@ function criarSimulado({ servidor = armazemMemoria(), sessao: ses = servidor, re
     async sair() {
       ses.remove(KS);
     },
+    async reenviar(email) {
+      await porta();
+      if (!EMAIL.test(email || "")) throw falha("email_invalido");
+    },
     async recuperar(email) {
       await porta();
       if (!EMAIL.test(email || "")) throw falha("email_invalido");

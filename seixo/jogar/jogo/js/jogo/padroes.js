@@ -89,10 +89,51 @@ function desenharMotivo(canvas, motivo, cores) {
   g.restore();
   return true;
 }
+const RE_MOLD_MES = /^MOLD-(\d{4})-(\d{2})$/;
+const COR_ANO = Object.freeze(["#1f4e8c", "#8b3a62", "#3f5a3a", "#7a4512"]);
+const corDoAno = (ano) => COR_ANO[(Number(ano) % 4 + 4) % 4];
+const caminhoMotivoMes = (mm) => `img/meses/mot-${String(mm).padStart(2, "0")}.svg`;
+const motivosMes = /* @__PURE__ */ new Map();
+function definirMotivoMes(mm, img) {
+  motivosMes.set(String(mm).padStart(2, "0"), img);
+}
+const motivoMesPronto = (mm) => motivosMes.has(String(mm).padStart(2, "0"));
+function carregarMotivosMes(Img = globalThis.Image) {
+  if (typeof Img !== "function") return Promise.resolve(0);
+  return Promise.all(Array.from({ length: 12 }, (_, i) => new Promise((res) => {
+    const mm = String(i + 1).padStart(2, "0");
+    if (motivoMesPronto(mm)) {
+      res(1);
+      return;
+    }
+    const img = new Img();
+    img.onload = () => {
+      definirMotivoMes(mm, img);
+      res(1);
+    };
+    img.onerror = () => res(0);
+    img.src = caminhoMotivoMes(mm);
+  }))).then((r) => r.reduce((s, x) => s + x, 0));
+}
+function motivoPintado(mm, ano, lado, doc = globalThis.document) {
+  const img = motivosMes.get(mm);
+  if (!img || !doc || !doc.createElement) return null;
+  const cv = doc.createElement("canvas");
+  cv.width = Math.max(1, Math.round(lado));
+  cv.height = cv.width;
+  const g = cv.getContext && cv.getContext("2d");
+  if (!g) return null;
+  g.drawImage(img, 0, 0, cv.width, cv.height);
+  g.globalCompositeOperation = "source-in";
+  g.fillStyle = corDoAno(ano);
+  g.fillRect(0, 0, cv.width, cv.height);
+  return cv;
+}
 function desenharMoldura(canvas, id, cores) {
   const g = canvas && canvas.getContext && canvas.getContext("2d");
   if (!g || !id) return false;
   const px = canvas.width, c = px / 12;
+  const mes = RE_MOLD_MES.exec(id);
   g.fillStyle = cores.junta;
   g.fillRect(0, 0, px, px);
   const escura = (l, m) => {
@@ -103,6 +144,11 @@ function desenharMoldura(canvas, id, cores) {
     if (id === "MOLD-ONDAS") return b === Math.round(1.5 + 1.5 * Math.sin(ao * Math.PI / 4));
     if (id === "MOLD-CORDA") return (ao + b) % 4 < 2;
     if (id === "MOLD-FLOR") return (b === 1 || b === 2) && (ao % 4 === 1 || ao % 4 === 2) || b === 0;
+    if (id === "MOLD-CENTO") return b === 0 || b === 3 || ao % 4 < 2 && b === 1;
+    if (id === "MOLD-TRIMESTRE") return b === 0 || b === 3 || ao % 3 === 0 && b === 2;
+    if (id === "MOLD-ANO") return (ao + b) % 3 === 0 || b === 0;
+    if (id === "MOLD-PINHAL") return (b === 1 || b === 2) && ao % 2 === 0 || b === 3;
+    if (mes) return b === 0 || b === 3;
     return b === 0 || b === 3 || (b + ao) % 2 === 0;
   };
   const f = c * 0.1;
@@ -111,6 +157,14 @@ function desenharMoldura(canvas, id, cores) {
     if (e == null) continue;
     g.fillStyle = e ? cores.preta : cores.branca;
     g.fillRect(m * c + f, l * c + f, c - 2 * f, c - 2 * f);
+  }
+  if (mes) {
+    const lado = 4 * c, mot = motivoPintado(mes[2], mes[1], lado - 2 * f, canvas.ownerDocument || globalThis.document);
+    if (mot) for (const [x, y] of [[0, 0], [px - lado, 0], [0, px - lado], [px - lado, px - lado]]) {
+      g.fillStyle = cores.branca;
+      g.fillRect(x + f, y + f, lado - 2 * f, lado - 2 * f);
+      g.drawImage(mot, x + f, y + f, lado - 2 * f, lado - 2 * f);
+    }
   }
   return true;
 }
@@ -127,10 +181,16 @@ function molduraCss(id, cores, doc = globalThis.document) {
   }
 }
 export {
+  COR_ANO,
   MASCARAS,
   MOTIVOS,
+  caminhoMotivoMes,
+  carregarMotivosMes,
+  corDoAno,
   corridasDe,
+  definirMotivoMes,
   desenharMoldura,
   desenharMotivo,
-  molduraCss
+  molduraCss,
+  motivoMesPronto
 };

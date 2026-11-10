@@ -39,7 +39,7 @@ function criarPlay(cdv = globalThis.CdvPurchase) {
     const c = erro == null ? void 0 : erro.code;
     if (c === E.PAYMENT_CANCELLED) return "cancelada";
     if (c === E.NETWORK_ERROR || c === E.SERVICE_DISCONNECTED || c === E.SERVICE_UNAVAILABLE) return "sem_rede";
-    if (c === E.PRODUCT_NOT_AVAILABLE || c === E.INVALID_PRODUCT) return "produto_desconhecido";
+    if (c === E.PRODUCT_NOT_AVAILABLE || c === E.INVALID_PRODUCT_ID) return "produto_desconhecido";
     return "desconhecido";
   }
   function aprovada(t) {
@@ -154,11 +154,15 @@ const inst = () => instancia || (instancia = criarPlay());
 const tipo = "play";
 const ligar = (p) => inst().ligar(p);
 const comprasConhecidas = async () => {
+  let confirmada = true;
   try {
     await inst().restaurarNaPlay();
   } catch {
+    confirmada = false;
   }
-  return inst().comprasConhecidas();
+  const l = await inst().comprasConhecidas();
+  l.confirmada = confirmada;
+  return l;
 };
 const encomendar = (id) => inst().encomendar(id);
 const reconhecer = (id) => inst().reconhecer(id);

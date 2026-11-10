@@ -4,18 +4,48 @@ const PALETAS = {
   "PAL-DALTONISMO": { preta: "#202327", branca: "#ffffff", junta: "#5e5850" },
   "PAL-ANIL": { preta: "#1b2a4a", branca: "#ffffff", junta: "#4e5d78" },
   "PAL-OCRE": { preta: "#33261c", branca: "#fff8ec", junta: "#6b5236" },
-  "PAL-NOITE": { preta: "#0b0d11", branca: "#e8e4da", junta: "#9aa3ae" }
+  "PAL-NOITE": { preta: "#0b0d11", branca: "#e8e4da", junta: "#9aa3ae" },
+  // T-1701 (S3-07, ganhas a jogar): contraste preta/branca >= 12:1 (registado em catalogo.json).
+  "PAL-ESTUARIO": { preta: "#14304d", branca: "#f2f7fa", junta: "#4d6a85" },
+  "PAL-OLIVAL": { preta: "#2b3318", branca: "#f6f5e6", junta: "#5f6a3c" }
 };
 const PEDRAS = {
   "PEDRA-CALCARIO-ROSA": { branca: "#f3d9d2" },
   "PEDRA-MARMORE": { branca: "#fbfbf7" },
   "PEDRA-AZULEJO": { preta: "#1f4e8c" },
-  "PEDRA-SEIXO-RIO": { preta: "#3b3f3a", branca: "#e6e1d3" }
+  "PEDRA-SEIXO-RIO": { preta: "#3b3f3a", branca: "#e6e1d3" },
+  "PEDRA-XISTO": { preta: "#33414f", branca: "#e9edf0" },
+  "PEDRA-CORTICA": { preta: "#3d2b1c", branca: "#e8d3b0", junta: "#5a4630" },
+  // T-1762: junta própria, clara/junta 3,9 → 6,1:1
+  "PEDRA-AREIA": { preta: "#2f3236", branca: "#efe2c4" }
 };
+const TONS_ESTACOES = Object.freeze([
+  Object.freeze({ preta: "#2e4a66", branca: "#e6eef5" }),
+  Object.freeze({ preta: "#3e5c2e", branca: "#eef2dc" }),
+  Object.freeze({ preta: "#7a4512", branca: "#fcefcf" }),
+  Object.freeze({ preta: "#6e2f1a", branca: "#f9e8dc" })
+]);
+const estacaoDoMes = (m) => Math.floor((m + 1) % 12 / 3);
+function pedraDe(id, data = /* @__PURE__ */ new Date()) {
+  if (id === "PEDRA-ESTACOES") return { ...TONS_ESTACOES[estacaoDoMes(data.getMonth())] };
+  return PEDRAS[id] || null;
+}
 const MOLDURAS = {
   "MOLD-ONDAS": "4px double #2d2a26",
   "MOLD-CORDA": "4px dashed #6b5638",
-  "MOLD-FLOR": "4px dotted #8b3a62"
+  "MOLD-FLOR": "4px dotted #8b3a62",
+  // T-1399: molduras de objetivo (arte/molduras): cento, trimestre, ano, pinhal.
+  "MOLD-CENTO": "4px solid #8a6d3b",
+  "MOLD-TRIMESTRE": "4px double #3f5a3a",
+  "MOLD-ANO": "4px ridge #6b5638",
+  "MOLD-PINHAL": "4px groove #3f5a3a"
+};
+const IMG_SELOS = { "SELO-100": "img/selos/selo-100.svg", "SELO-AMIGOS": "img/selos/selo-amigos.svg" };
+const IMG_MOLDURAS = { "MOLD-CENTO": "img/molduras/mold-cento.svg", "MOLD-TRIMESTRE": "img/molduras/mold-trimestre.svg", "MOLD-ANO": "img/molduras/mold-ano.svg", "MOLD-PINHAL": "img/molduras/mold-pinhal.svg" };
+const imagemCosmetico = (id) => IMG_SELOS[id] || IMG_MOLDURAS[id] || (/^SELO-[1-5]$/.test(id || "") ? `img/selos/nivel-${id.slice(5)}.svg` : null);
+const imagemPacote = (id) => {
+  const m = /^PAC-SAZ-\d{4}-Q([1-4])$/.exec(id || "");
+  return m ? `img/pacotes/pac-saz-${m[1]}.svg` : null;
 };
 const LEGADO = { preta: "#24282d", branca: "#fbf8f1", junta: "#6e655a" };
 const hex = (c) => {
@@ -58,9 +88,17 @@ function lerTokens() {
   tokens = t;
   return t;
 }
+let cacheCores = null;
 function coresTabuleiro(base, eq = equipado) {
   const t = lerTokens();
   if (!t) return base;
+  const k = `${eq.pedra}|${eq.paleta}`;
+  if (cacheCores && cacheCores.t === t && cacheCores.base === base && cacheCores.k === k) return cacheCores.C;
+  const C = calcularCores(base, eq, t);
+  cacheCores = { t, base, k, C };
+  return C;
+}
+function calcularCores(base, eq, t) {
   const C = {
     ...base,
     argamassa: misturar(t.leito, t.junta, 0.22),
@@ -79,9 +117,11 @@ function coresTabuleiro(base, eq = equipado) {
   if (hex(t.aviso)) C.aviso = t.aviso;
   const { cores } = aspeto(eq);
   if (eq.paleta && eq.paleta !== "PAL-LISBOA") Object.assign(C, { preta: cores.preta, branca: cores.branca, junta: cores.junta, juntaFundo: cores.branca, brancaContorno: cores.junta });
-  else if (eq.pedra && PEDRAS[eq.pedra]) {
-    if (PEDRAS[eq.pedra].preta) C.preta = cores.preta;
-    if (PEDRAS[eq.pedra].branca) C.branca = cores.branca;
+  else if (eq.pedra && pedraDe(eq.pedra)) {
+    const p = pedraDe(eq.pedra);
+    if (p.preta) C.preta = cores.preta;
+    if (p.branca) C.branca = cores.branca;
+    if (p.junta) Object.assign(C, { junta: p.junta, brancaContorno: p.junta });
   }
   return C;
 }
@@ -95,17 +135,22 @@ function equipadoAtual() {
 function aspeto(eq = equipado) {
   const t = !eq.paleta || eq.paleta === "PAL-LISBOA" ? lerTokens() : null;
   const base = t ? { preta: t.escura, branca: t.clara, junta: t.junta } : PALETAS[eq.paleta] || PALETAS["PAL-LISBOA"];
-  const cores = { ...base, ...PEDRAS[eq.pedra] || {} };
+  const cores = { ...base, ...pedraDe(eq.pedra) || {} };
   let moldura = null;
   if (eq.moldura) moldura = MOLDURAS[eq.moldura] || "4px solid #8a6d3b";
   return { cores, moldura, molduraId: eq.moldura || null };
 }
 export {
+  TONS_ESTACOES,
   aspeto,
   coresTabuleiro,
   definirEquipado,
   equipadoAtual,
+  estacaoDoMes,
+  imagemCosmetico,
+  imagemPacote,
   lerTokens,
   misturar,
+  pedraDe,
   recarregarTokens
 };

@@ -30,6 +30,10 @@ function iniciarPartida(raiz, cfg, ganchos) {
   bPausa.setAttribute("aria-label", t("e3.pausa"));
   const estadoTxt = el("div", "estado");
   topo.append(bPausa, estadoTxt);
+  {
+    const av = cfg.avatar && cfg.avatar();
+    if (av) topo.append(av);
+  }
   const cima = faixa(cfg.modo === "2j" ? 2 : outro(cfg.cor), true);
   const baixo = faixa(cfg.modo === "2j" ? 1 : cfg.cor, false);
   const meio = el("div", "meio");
@@ -184,7 +188,8 @@ function iniciarPartida(raiz, cfg, ganchos) {
     } else recusar(ponto);
   }
   function vibrar() {
-    if (opcoes().vibrar && navigator.vibrate) {
+    var _a;
+    if (opcoes().vibrar && navigator.vibrate && ((_a = navigator.userActivation) == null ? void 0 : _a.hasBeenActive) !== false) {
       try {
         navigator.vibrate(VIBRACAO_MS);
       } catch {
@@ -287,7 +292,7 @@ function iniciarPartida(raiz, cfg, ganchos) {
     const t0 = Date.now();
     await dormir(20);
     if (!await livre()) return;
-    const m = await escolherJogadaAsync(e, { nivel: cfg.nivel, semente, personalidade: cfg.personalidade });
+    const m = await escolherJogadaAsync(e, { nivel: cfg.nivel, semente, personalidade: cfg.personalidade, variar: !cfg.desafio });
     const resto = alvoMs - (Date.now() - t0);
     if (resto > 0 && !await espera(resto)) return;
     if (!await livre()) return;

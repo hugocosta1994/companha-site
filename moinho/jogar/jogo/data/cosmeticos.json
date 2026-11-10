@@ -1,0 +1,82 @@
+[
+  {
+    "id": "peca_pedra",
+    "tipo": "peca",
+    "n": "Seixos",
+    "desb": "nivel 3",
+    "formaPreta": "anel",
+    "branca": "#F2EEE6",
+    "preta": "#2B2B2B",
+    "aneis": 1,
+    "sup": "#F4F0E6",
+    "linha": "#1B1B1B",
+    "contraste": {
+      "branca/sup": 15.14,
+      "preta/sup": 15.14,
+      "branca/preta": 12.24
+    }
+  },
+  {
+    "id": "peca_bolota",
+    "tipo": "peca",
+    "n": "Bolotas",
+    "desb": "conq serie3",
+    "formaPreta": "losango",
+    "branca": "#FBF3E0",
+    "preta": "#4A2E14",
+    "sup": "#F4F0E6",
+    "linha": "#1B1B1B",
+    "contraste": {
+      "branca/sup": 15.14,
+      "preta/sup": 15.14,
+      "branca/preta": 11.23
+    }
+  },
+  {
+    "id": "peca_azul",
+    "tipo": "peca",
+    "n": "Cobalto e Marfim",
+    "desb": "nivel 9",
+    "formaPreta": "ponto",
+    "branca": "#FFF7E6",
+    "preta": "#1F3F8F",
+    "sup": "#F4F0E6",
+    "linha": "#1B1B1B",
+    "contraste": {
+      "branca/sup": 15.14,
+      "preta/sup": 15.14,
+      "branca/preta": 9.1
+    }
+  },
+  {
+    "id": "moldura_pinhal",
+    "tipo": "moldura",
+    "n": "Pinhal",
+    "desb": "conq sem_perder",
+    "cor": "#2F5D3A",
+    "largura": 3
+  },
+  {
+    "id": "moldura_sardinha",
+    "tipo": "moldura",
+    "n": "Sardinha",
+    "desb": "conq desafio3",
+    "cor": "#C2452D",
+    "guirlanda": true,
+    "largura": 3
+  },
+  {
+    "id": "moldura_ouro",
+    "tipo": "moldura",
+    "n": "Ouro velho",
+    "desb": "nivel 20",
+    "cor": "#B08A2E",
+    "largura": 4
+  },
+  {
+    "id": "titulo_mestre",
+    "tipo": "titulo",
+    "n": "Mestre do Moinho",
+    "desb": "conq mestre"
+  }
+]

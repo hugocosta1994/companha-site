@@ -4,7 +4,7 @@
 .btn-google{--gb:#fff;--gbd:#747775;--gt:#1f1f1f;--gh:rgba(31,31,31,.08);
   display:flex;align-items:center;justify-content:center;gap:12px;width:100%;
   min-height:48px;padding:0 16px;box-sizing:border-box;background:var(--gb);color:var(--gt);
-  border:1px solid var(--gbd);border-radius:24px;font:500 15px/20px Roboto,"Segoe UI",system-ui,sans-serif;
+  border:1px solid var(--gbd);border-radius:24px;font:500 16px/20px Roboto,"Segoe UI",system-ui,sans-serif;
   cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .btn-google--escuro{--gb:#131314;--gbd:#8e918f;--gt:#e3e3e3;--gh:rgba(227,227,227,.1)}
 .btn-google__g{flex:none;width:24px;height:24px;background:url(google-g-claro.svg) center/contain no-repeat}

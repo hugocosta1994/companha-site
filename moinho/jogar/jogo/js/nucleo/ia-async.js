@@ -36,7 +36,7 @@ function criar() {
   return null;
 }
 function escolherJogadaAsync(e, opcoes) {
-  const sinc = () => escolherJogada(e, { nivel: opcoes.nivel, personalidade: opcoes.personalidade, rng: rngApos1(opcoes.semente) });
+  const sinc = () => escolherJogada(e, { nivel: opcoes.nivel, personalidade: opcoes.personalidade, variar: opcoes.variar !== false, rng: rngApos1(opcoes.semente) });
   if (falhou) return Promise.resolve(sinc());
   if (!w) w = criar();
   if (!w) {

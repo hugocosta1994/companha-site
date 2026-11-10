@@ -1,6 +1,7 @@
 import { diaDaSemana, somarDias, paraUtc } from "./dia.js";
 import { quadradoDe } from "./praca.js";
 import { nivelDePo } from "./oficio.js";
+import { ehPuzzleTutorial, contaTutorialL19 } from "./tutorial.js";
 const OBJ_HOJE_LASCAS = 2, OBJ_SEMANA_LASCAS = 10, OBJ_SEMANA_N = 3;
 const POOL_HOJE = Object.freeze(["OBJ-H1", "OBJ-H2", "OBJ-H3", "OBJ-H4", "OBJ-H5", "OBJ-H6"]);
 const POOL_SEMANA = Object.freeze(["OBJ-S1", "OBJ-S2", "OBJ-S3", "OBJ-S4", "OBJ-S5", "OBJ-S6", "OBJ-S7", "OBJ-S8"]);
@@ -161,7 +162,8 @@ function progressoDe(obj, doc, { hoje, infoDe } = {}) {
       return res(sp.filter((x) => rank(x.info.classificacao && x.info.classificacao.nivelMax) >= rank(al.nivelMax)).length, al.n);
     }
     case "sem_pista_total":
-      return res(rs.filter((x) => x.semPista).length, al.n);
+      return res(rs.filter((x) => x.semPista && !ehPuzzleTutorial(x.id)).length + contaTutorialL19(doc), al.n);
+    // T-1860: só o P3 sem pista conta
     case "meses_seguidos":
       return res(melhorSequenciaMeses(doc), al.n);
     case "estacao_completa":
@@ -208,6 +210,25 @@ function listarAtivos(doc, catalogo, ctx) {
   const ids = [o.hoje.id, ...o.semana.ids, ...catalogo.filter((x) => x.horizonte === "longo").map((x) => x.id)];
   return ids.map((id) => por.get(id)).filter(Boolean).map((obj) => ({ obj, ...progressoDe(obj, doc, ctx), feito: jaCumprido(doc, obj, ctx.hoje) }));
 }
+const itensDoPremio = (premio) => [premio && premio.item, ...premio && premio.extra || []].filter(Boolean);
+function darItemObjetivo(doc, id, eventos) {
+  if (doc.inventario.itens.includes(id)) return false;
+  doc.inventario.itens.push(id);
+  eventos.push(["item:obtido", { id, via: "objetivo" }]);
+  return true;
+}
+const ITEM_DO_NIVEL = Object.freeze({ 3: "PEDRA-XISTO" });
+function concederRetroativos(doc, catalogo, eventos) {
+  const lista = Array.isArray(catalogo) ? catalogo : catalogo && catalogo.objetivos || [];
+  const cumpridos = doc.objetivos && doc.objetivos.cumpridos || {};
+  let mudou = false;
+  for (const o of lista) if (cumpridos[o.id]) {
+    for (const id of itensDoPremio(o.premio)) if (darItemObjetivo(doc, id, eventos)) mudou = true;
+  }
+  const nivel = doc.oficio && doc.oficio.nivel || 1;
+  for (const [n, id] of Object.entries(ITEM_DO_NIVEL)) if (nivel >= Number(n) && darItemObjetivo(doc, id, eventos)) mudou = true;
+  return mudou;
+}
 function verificar(doc, catalogo, ctx) {
   const eventos = [];
   let mudou = ativar(doc, ctx.hoje, { infoDe: ctx.infoDe });
@@ -223,16 +244,15 @@ function verificar(doc, catalogo, ctx) {
       doc.lascas.ganhasTotal += premio.lascas;
       eventos.push(["lascas:alteradas", { delta: premio.lascas, saldo: doc.lascas.saldo, motivo: "objetivo" }]);
     }
-    if (premio.item && !doc.inventario.itens.includes(premio.item)) {
-      doc.inventario.itens.push(premio.item);
-      eventos.push(["item:obtido", { id: premio.item, via: "objetivo" }]);
-    }
+    for (const id of itensDoPremio(premio)) darItemObjetivo(doc, id, eventos);
     eventos.push(["objetivo:cumprido", { id: obj.id, horizonte: obj.horizonte, premio }]);
   }
+  if (concederRetroativos(doc, catalogo, eventos)) mudou = true;
   if (atualizarProgresso(doc, catalogo, ctx)) mudou = true;
   return { mudou, eventos };
 }
 export {
+  ITEM_DO_NIVEL,
   OBJ_HOJE_LASCAS,
   OBJ_SEMANA_LASCAS,
   OBJ_SEMANA_N,
@@ -244,6 +264,7 @@ export {
   idHoje,
   idsSemana,
   inicioSemana,
+  itensDoPremio,
   listarAtivos,
   melhorSequenciaMeses,
   mesesSeguidosAtual,

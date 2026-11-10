@@ -1,4 +1,4 @@
-const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm";
+const VENDOR = "../../vendor/supabase.js";
 const falha = (codigo) => Object.assign(new Error(codigo), { codigo });
 function mapearErro(e) {
   if (!e) return falha("desconhecido");
@@ -6,7 +6,8 @@ function mapearErro(e) {
   const msg = String(e.message || e).toLowerCase(), code = String(e.code || e.status || "");
   const t = msg + " " + code.toLowerCase();
   if (/failed to fetch|networkerror|network request|load failed/.test(msg) || code === "0") return falha("rede");
-  if (/invalid login|invalid credentials|email not confirmed/.test(t)) return falha("credenciais");
+  if (/email[ _]not[ _]confirmed/.test(t)) return falha("email_nao_confirmado");
+  if (/invalid login|invalid credentials/.test(t)) return falha("credenciais");
   if (/already registered|already been registered|user_already_exists/.test(t)) return falha("email_existe");
   if (/invalid.*email|email.*invalid|validation_failed/.test(t)) return falha("email_invalido");
   if (/password/.test(msg) && /(weak|short|least|characters)/.test(msg)) return falha("password_fraca");
@@ -41,11 +42,19 @@ const nativoPadrao = () => {
   }
   return { ehNativo: () => n, App: P.App, Browser: P.Browser, SocialLogin: SL };
 };
+function limparSessaoLocal(ls = globalThis.localStorage) {
+  try {
+    const ks = [];
+    for (let i = 0; i < ls.length; i++) ks.push(ls.key(i));
+    for (const k of ks) if (/^sb-.*-auth-token/.test(k)) ls.removeItem(k);
+  } catch {
+  }
+}
 function criarSupabase(cfg, { cliente = null, carregar = null, nativo = null, tempoLimiteMs = 18e4 } = {}) {
   let c = cliente, sessaoCache = null;
   const obterCliente = async () => {
     if (c) return c;
-    const mod = carregar ? await carregar() : await import(CDN);
+    const mod = carregar ? await carregar() : await import(new URL(VENDOR, import.meta.url).href);
     c = mod.createClient(cfg.url, cfg.chavePublica, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" } });
     return c;
   };
@@ -71,6 +80,8 @@ function criarSupabase(cfg, { cliente = null, carregar = null, nativo = null, te
   };
   return {
     nome: "supabase",
+    cliente: () => env(async (s) => s),
+    // cliente único partilhado (feedbackTester.js, N-39)
     sessaoAtual() {
       return sessaoCache;
     },
@@ -157,9 +168,19 @@ function criarSupabase(cfg, { cliente = null, carregar = null, nativo = null, te
         }
       }
     }),
-    sair: () => env(async (s) => {
-      await s.auth.signOut();
+    // Terminar sessão nunca falha nem fica pendurado: tenta o servidor com limite de tempo e limpa SEMPRE a sessão local.
+    sair: async () => {
       sessaoCache = null;
+      try {
+        const s = await Promise.race([obterCliente(), new Promise((_, rej) => setTimeout(() => rej(new Error("tempo")), 4e3))]);
+        await Promise.race([s.auth.signOut({ scope: "local" }), new Promise((r) => setTimeout(r, 4e3))]);
+      } catch {
+      }
+      limparSessaoLocal();
+      sessaoCache = null;
+    },
+    reenviar: (email) => env(async (s) => {
+      ok(await s.auth.resend({ type: "signup", email, options: { emailRedirectTo: redirect } }));
     }),
     recuperar: (email) => env(async (s) => {
       ok(await s.auth.resetPasswordForEmail(email, { redirectTo: redirect }));
@@ -174,7 +195,11 @@ function criarSupabase(cfg, { cliente = null, carregar = null, nativo = null, te
     }),
     apagarConta: () => env(async (s) => {
       ok(await s.functions.invoke("apagar-conta", { body: {} }));
-      await s.auth.signOut();
+      try {
+        await s.auth.signOut({ scope: "local" });
+      } catch {
+      }
+      limparSessaoLocal();
       sessaoCache = null;
     }),
     exportar: () => env(async (s) => {
@@ -185,5 +210,6 @@ function criarSupabase(cfg, { cliente = null, carregar = null, nativo = null, te
 }
 export {
   criarSupabase,
+  limparSessaoLocal,
   mapearErro
 };

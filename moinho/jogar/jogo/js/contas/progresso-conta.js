@@ -1,3 +1,4 @@
+import { NIVEIS_ORDEM, PERSONALIDADES } from "../config.js";
 const JOGO_ID = "moinho";
 const SCHEMA = 1;
 const num = (a, b) => Math.max(Number.isFinite(a) ? a : 0, Number.isFinite(b) ? b : 0);
@@ -20,7 +21,16 @@ function fundirMeta(a, b) {
   const mais = (b.pontos || 0) > (a.pontos || 0) ? b : a, menos = mais === a ? b : a;
   const ca = a.contadores || {}, cb = b.contadores || {}, cont = {};
   for (const c of /* @__PURE__ */ new Set([...Object.keys(ca), ...Object.keys(cb)])) cont[c] = num(ca[c], cb[c]);
-  return { ...menos, ...mais, pontos: num(a.pontos, b.pontos), conquistas: uniao(a.conquistas, b.conquistas), pagos: uniao(a.pagos, b.pagos), contadores: cont, tutorialFeito: !!(a.tutorialFeito || b.tutorialFeito) };
+  const r = { ...menos, ...mais, pontos: num(a.pontos, b.pontos), conquistas: uniao(a.conquistas, b.conquistas), pagos: uniao(a.pagos, b.pagos), contadores: cont, tutorialFeito: !!(a.tutorialFeito || b.tutorialFeito) };
+  if (Array.isArray(a.niveisVencidos) || Array.isArray(b.niveisVencidos)) {
+    const v = [...a.niveisVencidos || [], ...b.niveisVencidos || []];
+    r.niveisVencidos = NIVEIS_ORDEM.filter((id) => v.includes(id));
+  }
+  if (Array.isArray(a.persVencidas) || Array.isArray(b.persVencidas)) {
+    const v = [...a.persVencidas || [], ...b.persVencidas || []];
+    r.persVencidas = Object.keys(PERSONALIDADES).filter((id) => v.includes(id));
+  }
+  return r;
 }
 function merge(local, remoto) {
   if (!local) return remoto || null;

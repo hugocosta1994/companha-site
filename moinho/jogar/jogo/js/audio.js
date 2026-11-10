@@ -123,19 +123,22 @@
     vol = Math.max(0, Math.min(1, v));
     if (master && ligado) suave(vol);
   }
+  var pausado = false;
   function pausa() {
+    pausado = true;
     musicaParar();
     pararCena();
     if (ctx && ctx.state === "running") {
       suave(0);
       setTimeout(function() {
-        if (ctx.state === "running") ctx.suspend();
+        if (pausado && ctx.state === "running") ctx.suspend();
       }, 80);
     }
   }
   function retoma() {
-    if (ctx && ctx.state === "suspended") {
-      ctx.resume();
+    pausado = false;
+    if (ctx) {
+      if (ctx.state === "suspended") ctx.resume();
       suave(ligado ? vol : 0);
     }
     if (emPartida && ligado && !mus) musicaIniciar();
@@ -248,12 +251,89 @@
     });
     ouvir(bus, "nivel:subiu", function() {
       [392, 494, 587, 784].forEach(function(f, i) {
-        tom(f, 0.7, "sine", 0.12, i * 0.1);
+        tom(f, 0.6, "sine", 0.07, i * 0.09, null, 0.012);
       });
     });
     ouvir(bus, "conquista:ganha", function() {
-      tom(660, 0.25, "triangle", 0.1);
-      tom(880, 0.35, "sine", 0.09, 0.1);
+      tom(660, 0.3, "triangle", 0.06, 0, null, 0.01);
+      tom(988, 0.45, "sine", 0.06, 0.1, null, 0.01);
+      tom(1976, 0.2, "sine", 0.012, 0.1, null, 0.01);
+    });
+    ouvir(bus, "cartao:importado", function(e) {
+      if (e && e.nova === false) return;
+      ruido("lowpass", 900, 1, 0.07, 0.05, 0, 500, 0.01);
+      tom(440, 0.12, "triangle", 0.06, 0.02, 330, 8e-3);
+      tom(587, 0.2, "sine", 0.05, 0.1, null, 0.01);
+    });
+    var recebida = function() {
+      tom(523, 0.25, "sine", 0.05, 0, null, 0.012);
+      tom(659, 0.35, "sine", 0.045, 0.14, null, 0.012);
+    };
+    ouvir(bus, "async:jogada", recebida);
+    ouvir(bus, "async:importado", function(e) {
+      if (e && e.nova === false) return;
+      recebida();
+    });
+    var seguro = function(nome, fn) {
+      try {
+        ouvir(bus, nome, fn);
+      } catch (e) {
+      }
+    };
+    seguro("cosmetico:desbloqueado", function() {
+      tom(587, 0.35, "sine", 0.055, 0, null, 0.012);
+      tom(880, 0.5, "sine", 0.05, 0.11, null, 0.012);
+      tom(1760, 0.25, "sine", 0.01, 0.11, null, 0.012);
+    });
+    seguro("tutorial:passo", function(e) {
+      var n = Math.max(1, Math.min(9, e && e.n || 1));
+      tom(392 * Math.pow(1.0595, n - 1), 0.16, "sine", 0.04, 0, null, 0.01);
+    });
+    seguro("tutorial:fim", function(e) {
+      if (e && e.saltado) return;
+      [392, 494, 587].forEach(function(f, i) {
+        tom(f, 0.45, "sine", 0.05, i * 0.08, null, 0.012);
+      });
+    });
+    seguro("puzzle:certo", function() {
+      tom(523, 0.3, "sine", 0.06, 0, null, 0.01);
+      tom(784, 0.4, "sine", 0.055, 0.1, null, 0.01);
+    });
+    seguro("puzzle:errado", function() {
+      tom(196, 0.25, "triangle", 0.06, 0, 165, 0.012);
+    });
+    seguro("desafio:fim", function(e) {
+      if (e && e.ganhou) {
+        [392, 523, 659].forEach(function(f, i) {
+          tom(f, 0.45, "sine", 0.05, i * 0.09, null, 0.012);
+        });
+      } else {
+        tom(294, 0.4, "sine", 0.05, 0, 247, 0.012);
+      }
+    });
+    seguro("async:enviado", function() {
+      ruido("lowpass", 1200, 1, 0.12, 0.04, 0, 500, 0.01);
+      tom(660, 0.18, "sine", 0.04, 0.04, null, 0.01);
+    });
+    seguro("anuncio:recompensa", function() {
+      tom(587, 0.3, "sine", 0.045, 0, null, 0.012);
+      tom(880, 0.4, "sine", 0.04, 0.1, null, 0.012);
+    });
+    seguro("async:convite", function() {
+      tom(392, 0.25, "sine", 0.045, 0, null, 0.012);
+      tom(587, 0.35, "sine", 0.04, 0.12, null, 0.012);
+    });
+    seguro("async:erro", function() {
+      tom(120, 0.07, "sine", 0.1, 0, null, 0.01);
+    });
+    seguro("async:fim", function(e) {
+      if (e && e.resultado === "desistiu") {
+        tom(330, 0.4, "sine", 0.04, 0, 294, 0.015);
+        return;
+      }
+      [587, 494, 392].forEach(function(f, i) {
+        tom(f, i === 2 ? 0.4 : 0.22, "sine", 0.045, i * 0.1, null, 0.012);
+      });
     });
     ouvir(bus, "app:pausa", pausa);
     ouvir(bus, "app:retoma", retoma);

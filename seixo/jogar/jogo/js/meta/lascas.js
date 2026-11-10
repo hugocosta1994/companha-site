@@ -1,7 +1,7 @@
 import { CONFIG } from "../config.js";
 import { diasEntre } from "../nucleo/dia.js";
 const RE_DIARIO = /^D-(\d{4}-\d{2}-\d{2})$/;
-const RE_CURADO = /^PAC-[A-Z]+(?:-[A-Z]+)*-\d{2}$/;
+const RE_CURADO = /^PAC-(?:[A-Z]+(?:-[A-Z]+)*|SAZ-\d{4}-Q[1-4])-\d{2}$/;
 const resolvido = (r) => !!r && (r.estado === "resolvido" || r.estado === "resolvido_com_pistas");
 const inteiro = (v, omissao) => Number.isInteger(v) && v >= 0 ? v : omissao;
 function valoresLascas(cfg = CONFIG) {
@@ -58,8 +58,24 @@ function recompensaSequencia(doc, eventosSeq, v = valoresLascas()) {
   }
   return eventos;
 }
+const MAX_ORDENS = 100;
+function creditarCompra(doc, { orderId, qtd, agora = (/* @__PURE__ */ new Date()).toISOString() } = {}) {
+  if (!orderId || !Number.isInteger(qtd) || qtd <= 0) throw new Error("creditarCompra: orderId ou qtd inv\xE1lidos");
+  const l = lascasDe(doc);
+  if (!Array.isArray(l.ordens)) l.ordens = [];
+  if (l.ordens.some((o) => o.id === orderId)) return [];
+  l.saldo += qtd;
+  l.compradasTotal = (l.compradasTotal || 0) + qtd;
+  l.ordens.push({ id: orderId, qtd, t: agora });
+  if (l.ordens.length > MAX_ORDENS) l.ordens = l.ordens.slice(-MAX_ORDENS);
+  return [["lascas:alteradas", { delta: qtd, saldo: l.saldo, motivo: "compra" }]];
+}
+const ordemRegistada = (doc, orderId) => !!(doc.lascas && Array.isArray(doc.lascas.ordens) && doc.lascas.ordens.some((o) => o.id === orderId));
 export {
+  MAX_ORDENS,
+  creditarCompra,
   creditarResolucao,
+  ordemRegistada,
   recompensaSequencia,
   valorDaResolucao,
   valoresLascas

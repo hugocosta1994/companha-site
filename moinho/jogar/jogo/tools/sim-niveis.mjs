@@ -22,11 +22,13 @@ function jogo(nb, np, rng) { // nb joga com cor 1
   return e.fim ? e.fim.resultado : 0;
 }
 for (let i = 1; i < NIVEIS_ORDEM.length; i++) {
-  const hi = NIVEIS_ORDEM[i], lo = NIVEIS_ORDEM[i - 1], rng = mulberry32(900 + i);
+  if (process.env.SO && NIVEIS_ORDEM[i] !== process.env.SO) continue;
+  const hi = NIVEIS_ORDEM[i], lo = NIVEIS_ORDEM[i - 1], rng = mulberry32(900 + i + (+process.env.SEMENTE || 0) * 7919);
   let vh = 0, vl = 0, ev = 0;
   for (let g = 0; g < N; g++) {
     const sw = g % 2, r = jogo(sw ? lo : hi, sw ? hi : lo, rng);
     if (!r) ev++; else if ((r === 1) !== !!sw) vh++; else vl++;
+    if ((g + 1) % 10 === 0) console.error(`  [${hi} vs ${lo}] ${g + 1}/${N} (${vh}-${vl}, empates ${ev})`);
   }
   const pct = (100 * vh / Math.max(1, vh + vl));
   console.log(`${hi} vs ${lo}: ${vh}-${vl} (empates ${ev}) -> ${hi} ganha ${pct.toFixed(0)}% das decididas (alvo >= ${ALVO[hi]}%) ${pct >= ALVO[hi] ? 'OK' : 'ABAIXO'}`);

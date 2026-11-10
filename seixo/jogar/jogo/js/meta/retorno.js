@@ -1,5 +1,5 @@
 import { diasEntre, somarDias, diaDaSemana, paraUtc } from "../nucleo/dia.js";
-const REGRESSO_NIVEIS = [3, 7, 30];
+import { REGRESSO_NIVEIS, nivelDeAusencia as nivelNucleo, ausenciaEmDias, melhorSerie, estadoDeRegresso } from "../nucleo/regresso.js";
 const HORA_LEMBRETE = "19:00";
 const LEMBRETE_SILENCIO_DIAS = 7;
 const SEMANAS_GUARDADAS = 12;
@@ -10,13 +10,7 @@ function ultimoDiaJogado(doc) {
   for (const r of Object.values(doc.puzzles || {})) if (resolvido(r) && r.resolvidoEm && (!u || r.resolvidoEm > u)) u = r.resolvidoEm;
   return u;
 }
-const nivelDeAusencia = (dias) => {
-  let n = 0;
-  REGRESSO_NIVEIS.forEach((m, i) => {
-    if (dias >= m) n = i + 1;
-  });
-  return n;
-};
+const nivelDeAusencia = (dias) => nivelNucleo(dias);
 function marcarAberto(doc, hoje) {
   const r = regressoDe(doc);
   if (!r.ultimoDia || hoje > r.ultimoDia) r.ultimoDia = hoje;
@@ -25,21 +19,25 @@ function avaliarRegresso(doc, hoje, { sugerir = () => null } = {}) {
   var _a;
   const r = regressoDe(doc);
   const ult = ultimoDiaJogado(doc);
-  const recorde = doc.sequencia && doc.sequencia.recorde || 0;
+  const recorde = melhorSerie(doc.sequencia);
   const aquecer = (n) => n === 3 && (doc.oficio && doc.oficio.po || 0) > 0;
   const vazio = { ausencia: 0, nivel: 0, mostrar: false, recorde, sugerido: null, aquecer: false, eventos: [] };
   if (!ult) return vazio;
-  const dias = diasEntre(ult, hoje);
+  const dias = ausenciaEmDias(ult, hoje);
   if (dias <= 0) return vazio;
   if (r.avaliadoEm === hoje) {
-    return { ausencia: dias, nivel: r.nivel, mostrar: r.nivel >= 2 && r.dispensadoEm !== hoje, recorde, sugerido: r.sugerido, aquecer: aquecer(r.nivel), eventos: [] };
+    return { ...doNucleo(ult, hoje, doc), ausencia: dias, nivel: r.nivel, mostrar: r.nivel >= 2 && r.dispensadoEm !== hoje, recorde, sugerido: r.sugerido, aquecer: aquecer(r.nivel), eventos: [] };
   }
   const nivel = nivelDeAusencia(dias);
   r.avaliadoEm = hoje;
   r.nivel = nivel;
   r.sugerido = nivel >= 1 ? (_a = sugerir(doc, nivel)) != null ? _a : null : null;
   const eventos = nivel >= 1 ? [["regresso:mostrado", { ausencia: dias, nivel }]] : [];
-  return { ausencia: dias, nivel, mostrar: nivel >= 2, recorde, sugerido: r.sugerido, aquecer: aquecer(nivel), eventos };
+  return { ...doNucleo(ult, hoje, doc), ausencia: dias, nivel, mostrar: nivel >= 2, recorde, sugerido: r.sugerido, aquecer: aquecer(nivel), eventos };
+}
+function doNucleo(ult, hoje, doc) {
+  const e = estadoDeRegresso(ult, hoje, { sequencia: doc.sequencia, po: doc.oficio && doc.oficio.po || 0 });
+  return { estado: e.estado, melhorSerie: e.melhorSerie, mostrarSerie: e.mostrarSerie, recomecar: e.recomecar };
 }
 function aceitarRegresso(doc, hoje) {
   const r = regressoDe(doc);

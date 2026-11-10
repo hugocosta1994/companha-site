@@ -2,8 +2,11 @@ const PRODUTOS = Object.freeze([
   { playId: "moinho_pack_azulejo", temas: ["ceramica"], eur: "1,99 \u20AC" },
   { playId: "moinho_pack_lareira", temas: ["lareira"], eur: "1,99 \u20AC" },
   { playId: "moinho_apoio", temas: ["granito"], eur: "2,99 \u20AC" },
-  { playId: "moinho_tudo", temas: ["ceramica", "lareira", "granito"], eur: "4,99 \u20AC" }
+  { playId: "moinho_tudo", temas: ["ceramica", "lareira", "granito"], eur: "4,99 \u20AC" },
+  { playId: "moinho_sem_anuncios", temas: ["sem_anuncios"], eur: "1,99 \u20AC" }
+  // direito em meta.pagos.sem_anuncios (T-1339); preço T-1341
 ]);
+const SKU_SEM_ANUNCIOS = "moinho_sem_anuncios";
 const playIdDoTema = (tema) => {
   var _a;
   return ((_a = PRODUTOS.find((p) => p.temas.includes(tema) && p.playId !== "moinho_tudo")) == null ? void 0 : _a.playId) || null;
@@ -77,7 +80,7 @@ async function porOmissao() {
   }
 }
 function criarCompras({ impl = null, dar = () => {
-}, tem = () => false } = {}) {
+}, tem = () => false, revogar = null, temPago = () => false } = {}) {
   let i = impl, estado = null, precos = {};
   const obter = async () => i || (i = await porOmissao());
   async function ligar() {
@@ -117,22 +120,42 @@ function criarCompras({ impl = null, dar = () => {
         return { resultado: "erro", erro: (x == null ? void 0 : x.codigo) || "desconhecido" };
       }
     },
+    // Restaurar (M2-08): a verdade é o histórico da Play. Só com resposta válida da Play é que o que já não consta é revogado
+    // (reembolso, caso 10); `conhecidas.confirmada === false` = o restore à Play falhou e o resultado é só cache local: não revoga; sem ligação ou com erro nunca se tira nada. Só toca nos temas pagos: o que se ganha a jogar nunca sai.
     async restaurar() {
       try {
         const e = await ligar();
-        if (!e.disponivel) return { resultado: "erro", n: 0 };
+        if (!e.disponivel) return { resultado: "erro", n: 0, motivo: "sem_ligacao" };
         const m = await obter();
         let n = 0;
-        for (const c of await m.comprasConhecidas()) if (await aplicar(m, c)) n++;
-        return { resultado: "ok", n };
+        const donos = /* @__PURE__ */ new Set();
+        const conhecidas = await m.comprasConhecidas();
+        for (const c of conhecidas) if (await aplicar(m, c)) {
+          n++;
+          temasDe(c.playId).forEach((t) => donos.add(t));
+        }
+        const removidos = [];
+        if (revogar && conhecidas.confirmada !== false) {
+          for (const tema of PRODUTOS.flatMap((p) => p.temas)) if (!donos.has(tema) && temPago(tema) && !removidos.includes(tema)) {
+            revogar(tema);
+            removidos.push(tema);
+          }
+        }
+        return { resultado: "ok", n, removidos };
       } catch {
         return { resultado: "erro", n: 0 };
       }
+    },
+    // Ao arrancar: igual a restaurar, em silêncio (sem ligação = mantém a posse local, caso 7).
+    async reconciliar() {
+      const r = await this.restaurar();
+      return r;
     }
   };
 }
 export {
   PRODUTOS,
+  SKU_SEM_ANUNCIOS,
   criarCompras,
   criarIndisponivel,
   criarStub,

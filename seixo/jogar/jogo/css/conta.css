@@ -1,12 +1,12 @@
 /* SEIXO — ecrãs de conta (T-1132; studio/marca/ui-login.html). Só tokens de tokens.css; alvos >= 48 dp, margens 16 dp, safe areas via .ecra. */
-.ecra-conta { z-index: 10; gap: 12px; }
-.ct-vista { display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px; }
+.ecra-conta { z-index: 10; }
+.ct-vista { display: flex; flex-direction: column; padding-bottom: 8px; }
 .ct-vista[hidden] { display: none; }
 .ct-vista p { margin: 0; font-size: 16px; }
-.ct-campo { display: flex; flex-direction: column; gap: 4px; font-size: 16px; }
+.ct-campo { display: flex; flex-direction: column; font-size: 16px; }
 .ct-campo[hidden] { display: none; }
 .ct-campo input { min-height: 52px; padding: 0 12px; border: 2px solid var(--borda); border-radius: var(--r-campo); font: inherit; font-size: 16px; background: var(--superficie); color: var(--tinta); }
-.ct-ck { display: flex; align-items: center; gap: 12px; min-height: 48px; font-size: 16px; }
+.ct-ck { display: flex; align-items: center; min-height: 48px; font-size: 16px; }
 .ct-ck input { width: 24px; height: 24px; flex: none; accent-color: var(--acento); }
 .ct-campo input:focus-visible, .ct-link:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
 .ct-ou { text-align: center; font-size: 16px; color: var(--tinta-suave); }
@@ -15,17 +15,17 @@
 .ec-botao.cheio.perigo { background: var(--aviso); border-color: var(--aviso); color: var(--texto-acento); }
 .ct-aviso { color: var(--aviso); font-weight: 600; }
 .ct-email { font-weight: 600; word-break: break-all; }
-.ct-sy { font-size: 16px; display: flex; gap: 8px; align-items: center; color: var(--tinta-suave); }
+.ct-sy { font-size: 16px; display: flex; align-items: center; color: var(--tinta-suave); }
 .ct-d { width: 12px; height: 12px; border-radius: 50%; flex: none; display: inline-block; background: var(--tinta-suave); }
 .ct-d.ok { background: var(--ok); } .ct-d.wk { background: var(--destaque); } .ct-d.off { background: var(--tinta-suave); } .ct-d.er { background: var(--aviso); }
-.ct-st { display: flex; gap: 12px; align-items: center; min-height: 48px; padding: 8px 0; border-bottom: 1px solid var(--linha-suave); }
+.ct-st { display: flex; align-items: center; min-height: 48px; padding: 8px 0; border-bottom: 1px solid var(--linha-suave); }
 .ct-st small { font-size: 16px; color: var(--tinta-suave); }
 .ct-msg { margin: 0; min-height: 24px; font-size: 16px; color: var(--ok); }
 .ct-msg.erro { color: var(--aviso); }
 .ct-abrir { margin-top: 12px; }
-@media (max-height: 699px) { .ct-vista { gap: 8px; } }
 
-.ct-marca { display: flex; align-items: center; gap: 12px; }
+
+.ct-marca { display: flex; align-items: center; }
 .ct-marca-nome { margin: 0; font: 700 20px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: .08em; color: var(--acento); }
 .ec-voltar[hidden] { display: none; }
 
@@ -43,3 +43,14 @@
 /* T-1257: botão Google oficial dentro do ecrã Conta (≥48 dp; escuro segue o sistema). */
 .ecra-conta .ec-botao.btn-google { min-height: 48px; border-radius: 24px; background: var(--gb); color: var(--gt); border: 1px solid var(--gbd); }
 @media (prefers-color-scheme: dark) { .ecra-conta .btn-google { --gb:#131314; --gbd:#8e918f; --gt:#e3e3e3; --gh:rgba(227,227,227,.1); } .ecra-conta .btn-google .btn-google__g { background-image: url(google-g-escuro.svg); } }
+
+/* WebView 69 (Android 8) ignora `gap` em flexbox: margens equivalentes (T-1642; problemas-conhecidos P-03). */
+.ecra-conta > * + * { margin-top: 12px; }
+.ct-vista > * + * { margin-top: 12px; }
+.ct-campo > * + * { margin-top: 4px; }
+.ct-ck > * + *, .ct-st > * + *, .ct-marca > * + * { margin-left: 12px; }
+.ct-sy > * + * { margin-left: 8px; }
+@media (max-height: 699px) { .ct-vista > * + * { margin-top: 8px; } }
+
+/* T-1662: WebView 69 encolhe filhos de colunas flex com altura limitada (problemas-conhecidos); nada encolhe. */
+.ecra-conta > *, .ct-vista > *, .ct-campo > * { flex-shrink: 0; }

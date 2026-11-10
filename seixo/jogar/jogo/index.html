@@ -9,8 +9,18 @@
   <link rel="stylesheet" href="css/tabuleiro.css">
   <link rel="stylesheet" href="css/botao-google.css">
   <link rel="stylesheet" href="css/conta.css">
+  <link rel="stylesheet" href="css/feedback.css">
+  <!-- T-1819 (S3-09): dados do arranque pedidos já, em paralelo com os módulos (o fetch() do main.js reutiliza-os). -->
+  <link rel="preload" href="data/puzzles.json" as="fetch" crossorigin>
+  <link rel="preload" href="data/diarios.json" as="fetch" crossorigin>
+  <link rel="preload" href="data/curados.json" as="fetch" crossorigin>
+  <link rel="preload" href="data/sazonais.json" as="fetch" crossorigin>
+  <link rel="preload" href="data/objetivos.json" as="fetch" crossorigin>
+  <link rel="preload" href="data/caminho.json" as="fetch" crossorigin>
+  <link rel="preload" href="data/caminho-reserva.json" as="fetch" crossorigin>
 </head>
 <body>
+  <div id="arranque-neutro" class="arranque-neutro" aria-hidden="true"></div>
   <main id="app">
     <header class="topo">
       <button id="btn-pausa" class="btn-pausa" type="button"></button>
@@ -30,5 +40,6 @@
   </main>
   <script src="js/contas/contas.config.js"></script>
   <script type="module" src="js/main.js"></script>
+  <script src="js/plataforma/precarregar.js"></script>
 </body>
 </html>

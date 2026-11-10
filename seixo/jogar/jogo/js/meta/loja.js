@@ -7,6 +7,12 @@ function artigoDe(catalogo, id) {
   if (!id || !Array.isArray(catalogo)) return null;
   const direto = catalogo.find((e) => e.id === id);
   if (direto) return direto.modelo ? null : direto;
+  if (/^PAC-SAZ-\d{4}-Q[1-4]$/.test(id)) {
+    const m = catalogo.find((e) => e.id === "PAC-SAZ-AAAA-Q");
+    if (!m) return null;
+    const { modelo, ...resto } = m;
+    return { ...resto, id, eur: null, play_id: null };
+  }
   if (RE_ARQ.test(id)) {
     const m = catalogo.find((e) => e.id === "ARQ-AAAA-MM");
     if (!m) return null;
@@ -26,7 +32,7 @@ function criarLoja(opcoes = {}) {
     var _a, _b;
     const art = artigoDe(catalogo, id);
     const reservado = art && art.reservado;
-    if (!art || !Number.isInteger(art.lascas) || art.lascas <= 0 || art.gratis || reservado) {
+    if (!art || art.kind === "lascas" || !Number.isInteger(art.lascas) || art.lascas <= 0 || art.gratis || reservado) {
       return { resultado: "nao_a_venda", faltam: 0 };
     }
     const consumivel = !!art.consumivel;
@@ -36,6 +42,7 @@ function criarLoja(opcoes = {}) {
     if (saldo < art.lascas) return { resultado: "saldo_insuficiente", faltam: art.lascas - saldo };
     const copia = structuredClone(atual);
     copia.lascas.saldo = saldo - art.lascas;
+    copia.lascas.gastasTotal = (copia.lascas.gastasTotal || 0) + art.lascas;
     const qtd = consumivel ? art.quantidade || 1 : 0;
     if (consumivel) copia.inventario.pistas = (copia.inventario.pistas || 0) + qtd;
     else copia.inventario.itens = [...copia.inventario.itens, id];

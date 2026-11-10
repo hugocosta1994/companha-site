@@ -13,7 +13,7 @@ const pistasHoje = (doc, hoje) => {
 function elegivel(doc, slot, { hoje, emTutorial = false, ref = null, cfg = CONFIG } = {}) {
   var _a, _b;
   if (emTutorial) return { ok: false, motivo: "tutorial" };
-  if (partidasCompletas(doc) < ((_a = cfg.AD_SEM_ANUNCIO_PRIMEIRAS) != null ? _a : 3)) return { ok: false, motivo: "primeiras" };
+  if (partidasCompletas(doc) < ((_a = cfg.AD_SEM_ANUNCIO_PRIMEIRAS) != null ? _a : 5)) return { ok: false, motivo: "primeiras" };
   const a = estadoAnuncios(doc);
   if (slot === "AD1" && pistasHoje(doc, hoje) >= ((_b = cfg.AD_PISTA_DIA) != null ? _b : 3)) return { ok: false, motivo: "limite" };
   if (slot === "AD2" && a.lascasDia === hoje) return { ok: false, motivo: "limite" };

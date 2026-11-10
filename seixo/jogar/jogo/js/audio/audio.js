@@ -19,6 +19,18 @@ let ronda = 0;
 let musica = null;
 let ambiente = null;
 let semente = 385472;
+function ligarMestre(ctx2, mestre2) {
+  const c = ctx2.createDynamicsCompressor ? ctx2.createDynamicsCompressor() : null;
+  if (c && c.threshold) {
+    c.threshold.value = -14;
+    c.knee.value = 12;
+    c.ratio.value = 6;
+    c.attack.value = 3e-3;
+    c.release.value = 0.2;
+    mestre2.connect(c);
+    c.connect(ctx2.destination);
+  } else mestre2.connect(ctx2.destination);
+}
 function aleatorio() {
   semente ^= semente << 13;
   semente >>>= 0;
@@ -34,6 +46,7 @@ function configurar({ criarContexto } = {}) {
   pararMusica();
   musicaPedida = false;
   ctx = mestre = sfx = amb = ruidoBuf = null;
+  movimentoReduzido = false;
   volume = VOLUME_OMISSAO;
   silenciado = false;
   pausado = false;
@@ -56,7 +69,7 @@ function iniciar() {
   if (!ctx) return false;
   mestre = ctx.createGain();
   mestre.gain.value = silenciado ? 0 : volume;
-  mestre.connect(ctx.destination);
+  ligarMestre(ctx, mestre);
   sfx = ctx.createGain();
   sfx.gain.value = 1;
   sfx.connect(mestre);
@@ -167,6 +180,8 @@ function evento(nome, dados = {}) {
       });
     case "puzzle:resolvido":
       return tocar("assentar", () => assentar(dados.n));
+    case "puzzle:assentado":
+      return tocar("conclusao", conclusao);
     case "puzzle:toque_fixa":
       return tocar("toque_seco", toqueSeco);
     case "puzzle:desfeito":
@@ -192,7 +207,13 @@ function evento(nome, dados = {}) {
     case "nivel:subiu":
       return tocar("nivel", nivelSobe);
     case "meta:cumprida":
-      return tocar("meta", metaCumprida);
+      return dados.horizonte === "longo" ? tocar("meta_longa", metaLonga) : tocar("meta", metaCumprida);
+    case "desafio:resultado": {
+      const r = DESAFIO[dados.resultado];
+      return r ? tocar(r[0], r[1]) : null;
+    }
+    case "desafio:erro":
+      return tocar("erro", erro);
     case "item:equipado":
       if (dados.tipo === "som") {
         somEquipado = String(dados.id || "SOM-PEDRA");
@@ -335,8 +356,9 @@ function quadrado() {
 }
 function pracaCompleta() {
   const t = ctx.currentTime;
-  PENTA.forEach((f, j) => tom({ tipo: "triangle", f, t: t + j * 0.09, ataque: 5e-3, queda: 0.6, vol: 0.08 }));
-  tom({ f: 146.8, t, ataque: 0.05, queda: 1.2, vol: 0.12 });
+  const r = movimentoReduzido ? 0.65 : 1;
+  PENTA.forEach((f, j) => tom({ tipo: "triangle", f, t: t + j * 0.06, ataque: 5e-3, queda: 0.26, vol: 0.08 * r }));
+  if (!movimentoReduzido) tom({ f: 146.8, t, ataque: 0.04, queda: 0.5, vol: 0.1 });
 }
 let motivoTocado = false;
 function motivoAbertura() {
@@ -355,14 +377,59 @@ function loja() {
 }
 function nivelSobe() {
   const t = ctx.currentTime;
-  [PENTA[0], PENTA[3], PENTA[0] * 2].forEach((f, j) => tom({ tipo: "triangle", f, t: t + j * 0.16, ataque: 0.01, queda: 0.5, vol: 0.09 }));
-  tom({ f: 146.8, t, ataque: 0.04, queda: 0.7, vol: 0.07 });
+  const r = movimentoReduzido ? 0.65 : 1;
+  [PENTA[0], PENTA[3], PENTA[0] * 2].forEach((f, j) => tom({ tipo: "triangle", f, t: t + j * 0.12, ataque: 0.01, queda: 0.32, vol: 0.09 * r }));
+  if (!movimentoReduzido) tom({ f: 146.8, t, ataque: 0.03, queda: 0.5, vol: 0.07 });
 }
+function conclusao() {
+  const t = ctx.currentTime;
+  const r = movimentoReduzido ? 0.6 : 1;
+  if (!movimentoReduzido) tom({ f: 110, t, ataque: 0.01, queda: 0.25, vol: 0.09 });
+  tom({ tipo: "triangle", f: PENTA[0], t: t + 0.03, ataque: 0.01, queda: 0.22 * (movimentoReduzido ? 0.8 : 1), vol: 0.07 * r });
+  tom({ tipo: "triangle", f: PENTA[3], t: t + 0.13, ataque: 0.01, queda: 0.3 * (movimentoReduzido ? 0.7 : 1), vol: 0.06 * r });
+}
+let movimentoReduzido = false;
+const definirMovimentoReduzido = (sim) => {
+  movimentoReduzido = !!sim;
+  return movimentoReduzido;
+};
+const movimentoReduzidoAtivo = () => movimentoReduzido;
 function metaCumprida() {
   const t = ctx.currentTime;
-  tom({ tipo: "sine", f: PENTA[2], t, queda: 0.25, vol: 0.08 });
-  tom({ tipo: "sine", f: PENTA[4], t: t + 0.1, queda: 0.4, vol: 0.07 });
+  const r = movimentoReduzido ? 0.65 : 1;
+  tom({ tipo: "sine", f: PENTA[2], t, ataque: 0.01, queda: 0.25, vol: 0.08 * r });
+  tom({ tipo: "sine", f: PENTA[4], t: t + 0.1, ataque: 0.01, queda: movimentoReduzido ? 0.3 : 0.4, vol: 0.07 * r });
 }
+function metaLonga() {
+  const t = ctx.currentTime;
+  const r = movimentoReduzido ? 0.65 : 1;
+  [PENTA[2], PENTA[4], PENTA[5]].forEach((f, j) => tom({ tipo: "sine", f, t: t + j * 0.09, ataque: 0.01, queda: 0.38, vol: 0.08 * r }));
+  if (!movimentoReduzido) tom({ f: 146.8, t, ataque: 0.03, queda: 0.45, vol: 0.06 });
+}
+function desafioBateste() {
+  const t = ctx.currentTime;
+  const r = movimentoReduzido ? 0.65 : 1;
+  tom({ tipo: "triangle", f: PENTA[3], t, ataque: 0.01, queda: 0.22, vol: 0.08 * r });
+  tom({ tipo: "triangle", f: PENTA[5], t: t + 0.1, ataque: 0.01, queda: 0.36, vol: 0.08 * r });
+}
+function desafioEmpate() {
+  const t = ctx.currentTime;
+  const r = movimentoReduzido ? 0.65 : 1;
+  tom({ tipo: "triangle", f: PENTA[3], t, ataque: 0.01, queda: 0.2, vol: 0.07 * r });
+  tom({ tipo: "triangle", f: PENTA[3], t: t + 0.12, ataque: 0.01, queda: 0.26, vol: 0.06 * r });
+}
+function desafioNaoBateste() {
+  const t = ctx.currentTime;
+  const r = movimentoReduzido ? 0.65 : 1;
+  tom({ tipo: "sine", f: PENTA[1], t, ataque: 0.015, queda: 0.22, vol: 0.06 * r });
+  tom({ tipo: "sine", f: PENTA[0], t: t + 0.13, ataque: 0.015, queda: 0.3, vol: 0.05 * r });
+}
+const DESAFIO = {
+  bateste: ["desafio_bateste", desafioBateste],
+  empataste: ["desafio_empate", desafioEmpate],
+  nao_bateste: ["desafio_nao_bateste", desafioNaoBateste]
+};
+const SONS_CONCLUSAO = ["conclusao", "meta", "meta_longa", "nivel", "praca", "desafio_bateste", "desafio_empate", "desafio_nao_bateste"];
 let somEquipado = "SOM-PEDRA";
 const definirSom = (id) => {
   somEquipado = String(id || "SOM-PEDRA");
@@ -505,8 +572,10 @@ function pararMusica() {
   }
 }
 export {
+  SONS_CONCLUSAO,
   ambienteAtivo,
   configurar,
+  definirMovimentoReduzido,
   definirSom,
   definirVolume,
   estaPronto,
@@ -515,6 +584,7 @@ export {
   iniciar,
   ligar,
   ligarGesto,
+  movimentoReduzidoAtivo,
   musicaAtiva,
   obterSom,
   obterVolume,

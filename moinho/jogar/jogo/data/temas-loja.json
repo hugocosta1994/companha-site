@@ -16,10 +16,11 @@
       "branca/preta": 11.58,
       "ponto/sup": 5.15,
       "sel/sup": 4.15
-    }
+    },
+    "contornoBranca": true
   },
   "ardosia": {
-    "n": "Ardosia",
+    "n": "Ardósia",
     "fundo": "#3B444C",
     "sup": "#5C6872",
     "linha": "#E3E8EB",
@@ -35,7 +36,8 @@
       "branca/preta": 17.97,
       "ponto/sup": 2.86,
       "sel/sup": 3.09
-    }
+    },
+    "contornoPreta": true
   },
   "papel": {
     "n": "Papel",
@@ -54,7 +56,8 @@
       "branca/preta": 11.39,
       "ponto/sup": 4.76,
       "sel/sup": 5.74
-    }
+    },
+    "contornoBranca": true
   },
   "noite": {
     "n": "Noite",
@@ -65,7 +68,7 @@
     "branca": "#F2D27A",
     "preta": "#0B1020",
     "sel": "#FF9F6B",
-    "desb": "1 partida de Alquerque",
+    "desb": "10 partidas",
     "contraste": {
       "branca/sup": 9.61,
       "preta/sup": 1.34,
@@ -73,7 +76,8 @@
       "branca/preta": 12.87,
       "ponto/sup": 5.09,
       "sel/sup": 7.02
-    }
+    },
+    "contornoPreta": true
   },
   "ceramica": {
     "n": "Azulejo",
@@ -92,7 +96,8 @@
       "branca/preta": 9.7,
       "ponto/sup": 4.6,
       "sel/sup": 4.82
-    }
+    },
+    "contornoBranca": true
   },
   "lareira": {
     "n": "Lareira",
@@ -111,7 +116,8 @@
       "branca/preta": 17.62,
       "ponto/sup": 5.36,
       "sel/sup": 7.19
-    }
+    },
+    "contornoPreta": true
   },
   "granito": {
     "n": "Granito",
@@ -130,7 +136,8 @@
       "branca/preta": 16.08,
       "ponto/sup": 5.09,
       "sel/sup": 4.04
-    }
+    },
+    "contornoBranca": true
   },
   "alvorada": {
     "n": "Alvorada",
@@ -149,6 +156,70 @@
       "branca/preta": 16.99,
       "ponto/sup": 5.1,
       "sel/sup": 3.85
-    }
+    },
+    "contornoBranca": true
+  },
+  "calcada": {
+    "n": "Calçada portuguesa",
+    "fundo": "#CFC4AB",
+    "sup": "#F4F0E6",
+    "linha": "#1B1B1B",
+    "ponto": "#4A4A4A",
+    "branca": "#FFFFFF",
+    "preta": "#161616",
+    "sel": "#8A2E16",
+    "desb": "nivel 6",
+    "contraste": {
+      "branca/sup": 1.14,
+      "preta/sup": 15.9,
+      "linha/sup": 15.14,
+      "branca/preta": 18.1,
+      "ponto/sup": 7.79,
+      "ponto/fundo": 5.12,
+      "sel/sup": 7.43,
+      "sel/fundo": 4.89
+    },
+    "contornoBranca": true
+  },
+  "cortica": {
+    "n": "Cortiça",
+    "fundo": "#C9A472",
+    "sup": "#D9B98A",
+    "linha": "#3B2410",
+    "ponto": "#5E3C1B",
+    "branca": "#FFF8EA",
+    "preta": "#2A1708",
+    "sel": "#7A1F10",
+    "desb": "nivel 12",
+    "contraste": {
+      "branca/sup": 1.76,
+      "preta/sup": 9.19,
+      "linha/sup": 7.79,
+      "branca/preta": 16.22,
+      "ponto/sup": 5.26,
+      "sel/sup": 5.54
+    },
+    "contornoBranca": true
+  },
+  "xisto": {
+    "n": "Xisto",
+    "fundo": "#2B323A",
+    "sup": "#3F4953",
+    "linha": "#E4EAEE",
+    "ponto": "#B9C4CC",
+    "branca": "#F7F9FA",
+    "preta": "#0B0E11",
+    "sel": "#F2C078",
+    "desb": "conq puzzles_todos",
+    "contraste": {
+      "branca/sup": 8.69,
+      "preta/sup": 2.11,
+      "linha/sup": 7.56,
+      "branca/preta": 18.33,
+      "ponto/sup": 5.17,
+      "sel/sup": 5.5
+    },
+    "contornoPreta": true,
+    "contornoBranca": true
   }
 }

@@ -1,23 +1,27 @@
 (() => {
   // jogo/js/config.js
+  var PECAS = 9;
   var SEM_CAPTURA_MAX = 50;
   var AVALIACAO = { pecas: 100, moinhos: 40, quase: 25, mobilidade: 5, bloqueadas: -15, bonusVoo: 30 };
   var NIVEIS = {
     aprendiz: { profundidade: 1, acaso: 0.4, ignoraMoinho: 1 / 3, pensa: [300, 600], limiteMs: 50 },
     facil: { profundidade: 2, acaso: 0.25, pensa: [400, 700], limiteMs: 150 },
-    media: { profundidade: 3, acaso: 0, pensa: [400, 700], limiteMs: 300 },
-    atenta: { profundidade: 4, acaso: 0.05, acasoSeguro: true, pensa: [450, 800], limiteMs: 300 },
-    dificil: { profundidade: 5, acaso: 0.1, acasoSeguro: true, pensa: [500, 900], limiteMs: 300 },
-    mestre: { profundidade: 5, profundidadeMax: 7, acaso: 0, pensa: [600, 1e3], limiteMs: 360 }
+    media: { profundidade: 3, acaso: 0, pensa: [400, 700], limiteMs: 300, abertura: { margem: 15 } },
+    atenta: { profundidade: 4, acaso: 0.05, acasoSeguro: true, pensa: [450, 800], limiteMs: 300, abertura: { margem: 15 } },
+    dificil: { profundidade: 5, acaso: 0.1, acasoSeguro: true, pensa: [500, 900], limiteMs: 300, abertura: { margem: 10 } },
+    mestre: { profundidade: 5, profundidadeMax: 7, acaso: 0, pensa: [600, 1e3], limiteMs: 360, abertura: { margem: 10 } }
   };
+  var ABERTURA = { meias: 6, profMax: 4 };
   var IA_MAX_MS = 300;
   var PERSONALIDADES = {
     equilibrada: { id: "equilibrada", pesos: { pecas: 100, moinhos: 40, quase: 25, mobilidade: 5, bloqueadas: -15 }, desempate: null },
     prudente: { id: "prudente", pesos: { pecas: 100, moinhos: 25, quase: 10, mobilidade: 10, bloqueadas: -30 }, desempate: "ameacas" },
-    agressiva: { id: "agressiva", pesos: { pecas: 100, moinhos: 70, quase: 45, mobilidade: 8, bloqueadas: -20 }, desempate: "quase" },
+    agressiva: { id: "agressiva", pesos: { pecas: 100, moinhos: 70, quase: 60, mobilidade: 8, bloqueadas: -20 }, desempate: "quase" },
     mobilidade: { id: "mobilidade", pesos: { pecas: 80, moinhos: 30, quase: 20, mobilidade: 15, bloqueadas: -25 }, desempate: "destinos" }
   };
   var PERSONALIDADE_PADRAO = "equilibrada";
+  var MODOS_STATS = ["ia_aprendiz", "ia_facil", "ia_media", "ia_atenta", "ia_dificil", "ia_mestre", "dois", "codigo", "alq_facil", "alq_media", "alq_dificil"];
+  var MODOS_STATS_ATIVOS = MODOS_STATS.filter((k) => !k.startsWith("alq_"));
 
   // jogo/js/nucleo/tabuleiro.js
   var N = 24;
@@ -177,9 +181,9 @@
   };
   function pesquisa(e, prof, alfa, beta, raiz, ctx) {
     const W = ctx.W;
+    if ((++ctx.nos & 7) === 0 && ctx.limite && Date.now() > ctx.limite) throw new Tempo();
     if (e.fim) return e.fim.resultado === 0 ? 0 : e.fim.resultado === raiz ? VITORIA + prof : -VITORIA - prof;
     if (prof === 0) return avaliar(e, raiz, W);
-    if ((++ctx.nos & 3) === 0 && ctx.limite && Date.now() > ctx.limite) throw new Tempo();
     const fs = filhosCompletos(e);
     fs.sort((x, y) => (y.m.tirar !== void 0) - (x.m.tirar !== void 0));
     if (e.vez === raiz) {
@@ -215,7 +219,30 @@
     quase: (n, j) => lado(n, j).quase,
     destinos: (n, j) => lado(n, j).mob
   };
-  function escolherJogada(e, { nivel = "media", rng = Math.random, semLimite = false, profundidade, personalidade = PERSONALIDADE_PADRAO, info = null } = {}) {
+  var meiasJogadas = (e) => 2 * PECAS - e.porColocar[1] - e.porColocar[2];
+  function variarAbertura(e, ms, P, margem, rng, ctx) {
+    let vals = null;
+    for (let d = 1; d <= P; d++) {
+      const v = new Array(ms.length);
+      let melhor = -Infinity;
+      try {
+        for (let k = 0; k < ms.length; k++) {
+          if (ctx.limite && Date.now() > ctx.limite) throw new Tempo();
+          v[k] = pesquisa(aplicar(e, ms[k]), d - 1, melhor === -Infinity ? -Infinity : melhor - margem - 1, Infinity, e.vez, ctx);
+          if (v[k] > melhor) melhor = v[k];
+        }
+      } catch (x) {
+        if (x instanceof Tempo) break;
+        throw x;
+      }
+      vals = { v, melhor, d };
+    }
+    if (!vals) return null;
+    const cand = ms.filter((_, k) => vals.v[k] >= vals.melhor - margem);
+    return { m: cand[Math.floor(rng() * cand.length)], d: vals.d };
+  }
+  function escolherJogada(e, { nivel = "media", rng = Math.random, semLimite = false, profundidade, personalidade = PERSONALIDADE_PADRAO, info = null, variar = true } = {}) {
+    const t0 = Date.now();
     const cfg = NIVEIS[nivel];
     const pers = PERSONALIDADES[personalidade] || PERSONALIDADES[PERSONALIDADE_PADRAO];
     const W = { ...AVALIACAO, ...pers.pesos };
@@ -228,7 +255,18 @@
     const livre = !cfg.acasoSeguro || fase(e) !== "voar" && !momentoCritico(e, ms);
     if (cfg.acaso && livre && rng() < cfg.acaso) return ms[Math.floor(rng() * ms.length)];
     const D = profundidade || cfg.profundidadeMax || cfg.profundidade;
-    const ctx = { W, nos: 0, limite: semLimite ? 0 : Date.now() + Math.round((cfg.limiteMs || IA_MAX_MS) * 0.65) };
+    const ctx = { W, nos: 0, limite: semLimite ? 0 : t0 + Math.round((cfg.limiteMs || IA_MAX_MS) * 0.65) };
+    if (cfg.abertura && variar && meiasJogadas(e) < ABERTURA.meias && !momentoCritico(e, ms)) {
+      const r = variarAbertura(e, ms.slice(), Math.min(cfg.profundidade, ABERTURA.profMax), cfg.abertura.margem, rng, ctx);
+      if (r) {
+        if (info) {
+          info.profundidade = r.d;
+          info.degradou = r.d < Math.min(cfg.profundidade, ABERTURA.profMax);
+          info.abertura = true;
+        }
+        return r.m;
+      }
+    }
     let escolhida = ms[0];
     let melhorFinal = -Infinity, dFeito = 0;
     for (let d = 1; d <= D; d++) {

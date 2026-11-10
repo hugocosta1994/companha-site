@@ -137,7 +137,7 @@ html[data-paleta-ui="terracota"] {
     --revelado: #F2B84B;
   }
 }
-.ecra-pausa { background: color-mix(in srgb, var(--fundo) 97%, transparent); }
+.ecra-pausa { background: var(--fundo); background: color-mix(in srgb, var(--fundo) 97%, transparent); }
 /* T-1195: sistema visual aprovado (arte/sistema-visual.html). Tokens de forma e extras de cor. */
 :root {
   --destaque: #C58A1B; /* DECORATIVO (chama, moeda): nunca texto nem estado */

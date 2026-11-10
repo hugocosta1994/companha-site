@@ -11,6 +11,7 @@ import { ligarOficio } from "./oficio.js";
 import { ligarCaminho } from "./caminho.js";
 import { configurarDificuldades } from "../nucleo/oficio.js";
 import { dataLocal } from "../nucleo/dia.js";
+import { creditarCompra } from "./lascas.js";
 const BASE = Object.freeze({ pedra: "PEDRA-BASALTO", paleta: "PAL-LISBOA", moldura: null, som: "SOM-PEDRA" });
 async function lerCatalogo(url) {
   try {
@@ -93,7 +94,16 @@ async function iniciarMeta(opcoes = {}) {
     const ok = await grav.escrever(doc);
     if (!ok) throw new Error("grava\xE7\xE3o dos direitos falhou");
   };
-  const promCompras = Promise.resolve().then(() => compras.iniciar({ catalogo, cache: est.documento().inventario.loja, gravarDireitos, temItem: (id) => est.temItem(id) })).catch((e) => {
+  const creditarLascas = async ({ orderId, qtd }) => {
+    const copia = structuredClone(est.documento());
+    const evs = creditarCompra(copia, { orderId, qtd });
+    if (!evs.length) return false;
+    if (!await grav.escrever(copia)) throw new Error("grava\xE7\xE3o do cr\xE9dito de lascas falhou");
+    est.substituir(copia);
+    for (const [nome, d] of evs) emitir(nome, d);
+    return true;
+  };
+  const promCompras = Promise.resolve().then(() => compras.iniciar({ catalogo, cache: est.documento().inventario.loja, gravarDireitos, temItem: (id) => est.temItem(id), creditarLascas })).catch((e) => {
     console.warn("[meta] compras n\xE3o iniciaram:", e);
     return { disponivel: false, motivo: "erro" };
   });

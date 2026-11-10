@@ -17,7 +17,7 @@ button:active { background: rgba(255,255,255,.24); }
 .contas-login button { min-height: 56px; }
 .contas-ck { display: flex; align-items: center; gap: 10px; min-height: 48px; margin: 8px 0; color: var(--texto); }
 .contas-ck input { width: 24px; height: 24px; flex: none; }
-.contas-ck a { color: inherit; text-decoration: underline; padding: 12px 4px; }
+.contas-ck a { color: inherit; text-decoration: underline; display: inline-flex; align-items: center; justify-content: center; min-width: 48px; min-height: 48px; padding: 0 8px; }
 
 .contas-login button.a-carregar { opacity: .85; cursor: progress; }
 .spinner { display: inline-block; width: 1em; height: 1em; margin-right: .5em; vertical-align: -.15em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: gira .8s linear infinite; }

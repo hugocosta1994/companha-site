@@ -1,9 +1,7 @@
-var _a, _b;
-import { CONFIG } from "../config.js";
 const ALFABETO = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const PREFIXO = "SEIXO-";
-const AMIGOS_MAX = (_a = CONFIG.AMIGOS_MAX) != null ? _a : 20;
-const CODIGO_VALIDADE_DIAS = (_b = CONFIG.CODIGO_VALIDADE_DIAS) != null ? _b : 90;
+const AMIGOS_MAX = 20;
+const CODIGO_VALIDADE_DIAS = 90;
 const NOME_MIN = 3, NOME_MAX = 16, NOME_OMISSAO = "Calceteiro";
 const EPOCA = Date.UTC(2026, 0, 1);
 const RE_ID = new RegExp(`^[${ALFABETO}]{8}$`);

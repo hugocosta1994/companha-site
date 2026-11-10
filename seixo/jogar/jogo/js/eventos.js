@@ -69,6 +69,16 @@ const EVENTOS = Object.freeze([
   "anuncio:recompensa",
   "anuncio:falhou",
   "consentimento:mudou",
+  "intersticial:elegivel",
+  "intersticial:mostrado",
+  "intersticial:saltado",
+  // 2.12 tutorial v3 (contrato 1.8, T-1700; contratos/tutorial-v3.md §7; nomes sem dígitos)
+  "cartao_tutorial:visto",
+  "cartao_tutorial:saltado",
+  "cartao_tutorial:fim",
+  "cartao_tutorial:migracao",
+  "cartao_tutorial:passo",
+  // T-1816
   "compras:estado",
   "compras:produtos",
   "compras:compra",
@@ -76,7 +86,7 @@ const EVENTOS = Object.freeze([
   "compras:restauro",
   "loja:troca"
 ]);
-const VERSAO_CONTRATO = "1.7";
+const VERSAO_CONTRATO = "1.8";
 const CONHECIDOS = new Set(EVENTOS);
 const ouvintes = [];
 const REGISTO_MAX = 200;
@@ -99,7 +109,7 @@ function emitir(nome, dados) {
     }
   }
   if (nome === "oficio:nivel") emitir("nivel:subiu", { nivel: plano.nivel });
-  else if (nome === "objetivo:cumprido") emitir("meta:cumprida", { id: plano.id });
+  else if (nome === "objetivo:cumprido") emitir("meta:cumprida", plano.horizonte ? { id: plano.id, horizonte: plano.horizonte } : { id: plano.id });
 }
 function ouvir(fn) {
   ouvintes.push(fn);

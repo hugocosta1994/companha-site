@@ -22,6 +22,8 @@ const CONFIG = {
   // a cada 7 dias de sequência, com PISTAS_SEQ7 pista (puzzle-formato §3.4)
   PISTAS_SEQ7: 1,
   LASCAS_PRACA: 50,
+  // pacote sazonal (T-1771; catalogo-v3.md §4.1): 1.º trimestre que aparece na app (a CEO fixa-o na release da v3)
+  SAZ_PRIMEIRO: "2026-Q4",
   // modo Caminho (T-1112; contratos/caminho.md §3, GDD §13.4): lascas por nível novo (F/M/D), bónus de troço, teto diário
   CAMINHO_LASCAS_F: 1,
   CAMINHO_LASCAS_M: 2,
@@ -37,18 +39,38 @@ const CONFIG = {
   // anúncios com recompensa (GDD §14, T-1335): IDs de teste da Google em plataforma/anuncios.js
   AD_PISTA_DIA: 3,
   AD_LASCAS_BONUS: 5,
-  AD_SEM_ANUNCIO_PRIMEIRAS: 3,
+  AD_SEM_ANUNCIO_PRIMEIRAS: 5,
   ANUNCIOS: {
     RELEASE: false,
     // T-1342: true só no build de release (ferramentas/modo-anuncios.mjs); em dev usa sempre IDs de teste
-    IDS_REAIS: { appId: "ca-app-pub-7114748739096443~2118421430", recompensa: "ca-app-pub-7114748739096443/3958116716" },
+    IDS_REAIS: {
+      appId: "ca-app-pub-7114748739096443~2118421430",
+      recompensa: "ca-app-pub-7114748739096443/3958116716",
+      intersticial: "ca-app-pub-7114748739096443/5346081936"
+      /* T-1501: bloco criado no AdMob a 8 nov 2026 */
+    },
     UMP_TEMPO_MS: 3e3,
-    INTERSTICIAIS: false,
+    INTERSTICIAIS: true,
+    INTERSTICIAL_CADA: 3,
+    INT_A_CADA_N_JOGOS: 3,
+    INT_INTERVALO_MIN_S: 180,
+    INT_MAX_SESSAO: 3,
+    INT_MAX_DIA: 8,
+    INT_CARGA_MAX_MS: 0,
+    // T-1459: 1 intersticial a cada N partidas (proposta do Fundador; ajustável)
     SLOTS: { AD1: "pista", AD2: "lascas_diario", AD3: "caminho_troco" }
   },
   // tutorial (GDD §4.7, §5.3): pista grátis no P3 ao fim de N s sem tocar; pistas oferecidas no fim do tutorial
   TUTORIAL_AJUDA_S: 30,
   PISTAS_INICIAIS: 3,
+  // tutorial v3.1 (contratos/tutorial-v3.md §9.5, §9.6; T-1816): ordem de desempate da meta do rumo, alvo com cartões,
+  // altura da fita, pulso do chip no T6 e duração do T6
+  TUTORIAL_V3_META_ORDEM: ["OBJ-L19", "OBJ-L13", "OBJ-L22"],
+  TUTORIAL_V3_ALVO_S: 60,
+  TUTORIAL_V3_FITA_ALTURA_DP: 44,
+  TUTORIAL_V3_PULSO_MS: 800,
+  TUTORIAL_V3_T6_MS: 1200,
+  TUTORIAL_V3_P3_CONTA_L19: true,
   // calceteiros (GDD §12.7, T-1048)
   AMIGOS_MAX: 20,
   CODIGO_VALIDADE_DIAS: 90,

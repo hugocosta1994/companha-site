@@ -1,5 +1,5 @@
 import { CONFIG, DIA_LANCAMENTO, EPOCA_TABELA } from "./config.js";
-import { t, tn, temTexto } from "./textos.js";
+import { t, tn, temTexto, linguaInicial, LANG_HTML } from "./textos.js";
 import { carregarPuzzle, carregarLista, escreverGrelha, VARIANTES, TAMANHOS, DIFICULDADES } from "./nucleo/formato.js";
 import { novoJogo, tocar, desfazer, recomecar, violacoes, estadoParaGravar, retomarJogo, revelar } from "./nucleo/regras.js";
 import { pista } from "./nucleo/pista.js";
@@ -12,22 +12,27 @@ import { iniciarMeta } from "./meta/arranque.js";
 import { documento, temItem, estado as estadoMeta } from "./meta/estado.js";
 import { ligarProgressoConta } from "./jogo/progressoConta.js";
 import { puzzleDoDia, dataDoId, idDoDia, estadoDe, sequenciaDe, arquivoDoMes, textoPartilha } from "./meta/diario.js";
-import { partilhar, ligarCicloDeVida, plugin } from "./plataforma/nativo.js";
+import { partilhar, ligarCicloDeVida, plugin, ehNativo } from "./plataforma/nativo.js";
 import { criarEcras } from "./jogo/ecras.js";
+import { criarFeedbackUI } from "./jogo/feedbackTesterUI.js";
+import { criarPortaoDefinicoes } from "./jogo/portaoDefinicoes.js";
+import { lerConfig as lerConfigContas } from "./contas/config.js";
 import { criarContasUI, carregarContas } from "./jogo/contasUI.js";
 import { emitir, ouvir } from "./eventos.js";
 import { escrever as gravarDocumento } from "./plataforma/gravacao.js";
 import * as audio from "./audio/audio.js";
 import { PACOTES, COLUNAS_LARGO, estadoDoPacote, pacoteDoId, idCurado, estadoDoMes, mesVizinho } from "./meta/pacotes.js";
+import { concederSazonais, pacotesVisiveis, textoSazonal, trimestreDoPacote, progressoSazonal } from "./meta/sazonal.js";
 import { loja, equipar, tipoDe } from "./meta/loja.js";
-import { comprar as comprarEur, produtos as produtosEur, restaurar as restaurarCompras, temDireito } from "./plataforma/compras.js";
+import { escolherImplementacao, comprar as comprarEur, produtos as produtosEur, restaurar as restaurarCompras, temDireito } from "./plataforma/compras.js";
 import { criarPraca, acenderMotivo, desenharMiniatura } from "./jogo/praca.js";
 import { mostrarAssentar, fecharAssentar, assentarVisivel } from "./jogo/assentar.js";
 import { criarEcraLoja, lojaVisivel } from "./jogo/ecraLoja.js";
-import { criarExperimentar } from "./jogo/experimentar.js";
+import { criarPrevisualizacao } from "./jogo/previsualizacao.js";
 import { criarEcraOficio, faixaOficio, corpoColecao } from "./jogo/ecraMetas.js";
 import { oficioVista, objetivosVista, colecaoVista } from "./meta/vistaV2.js";
 import { definirEquipado } from "./jogo/cosmeticos.js";
+import { carregarMotivosMes } from "./jogo/padroes.js";
 import * as tutorial from "./nucleo/tutorial.js";
 import { criarEcraCalceteiros } from "./jogo/ecraCalceteiros.js";
 import { aplicar as agendarLembrete, cancelar as cancelarLembrete } from "./plataforma/lembrete.js";
@@ -38,6 +43,8 @@ import { criarFeedback } from "./jogo/feedbackFim.js";
 import { criarEcraColecao } from "./jogo/ecraColecao.js";
 import { colecao as colecaoV3, oQueFalta } from "./nucleo/colecao.js";
 import * as retorno from "./meta/retorno.js";
+import { cartaoRumo, cartaoAmigo, escolherRumo, fitaRumo } from "./jogo/ecraTutorialV3.js";
+import { metaRumo, passoFita, linhaT6 } from "./meta/rumo.js";
 import { cartaoRegresso, cartaoSemana, corpoSemana, linhaLembrete } from "./jogo/ecraRetorno.js";
 import { dicaPendente, marcarDica } from "./meta/dicas.js";
 import { criarEcraQuadro } from "./jogo/ecraQuadro.js";
@@ -47,8 +54,17 @@ import { atualizarProgresso } from "./nucleo/objetivos.js";
 import * as amigos from "./nucleo/amigos.js";
 import { dificuldadeConfigurada } from "./nucleo/oficio.js";
 import * as caminho from "./meta/caminho.js";
+const marca = (n) => {
+  try {
+    performance.mark("seixo:" + n);
+  } catch {
+  }
+};
+marca("modulos");
 const params = new URLSearchParams(location.search);
 if (params.get("avisos") === "0") CONFIG.AVISOS_LIGADOS = false;
+const LINGUA = linguaInicial();
+document.documentElement.lang = LANG_HTML[LINGUA] || LINGUA;
 document.getElementById("escolha").closest("label").hidden = !params.has("escolha");
 const el = {
   titulo: document.getElementById("titulo"),
@@ -107,6 +123,9 @@ ui.pacotes = criar("details", { id: "pacotes", class: "arquivo pacotes" });
 ui.pacotesTitulo = criar("summary", {}, t("arquivo.sep_pacotes"));
 ui.pacotesCorpo = criar("div", { id: "pacotes-corpo", class: "arquivo-dias pacotes-corpo" });
 ui.pacotes.append(ui.pacotesTitulo, ui.pacotesCorpo);
+ui.pacotes.addEventListener("toggle", () => {
+  if (ui.pacotes.open) renderPacotes();
+});
 ui.praca = criar("details", { id: "praca", class: "arquivo pracas" });
 ui.pracaCorpo = criar("div", { id: "praca-corpo", class: "arquivo-dias pacotes-corpo" });
 ui.praca.append(criar("summary", {}, t("nav.praca")), ui.pracaCorpo);
@@ -137,44 +156,66 @@ def.tempo = criar("input", { id: "def-tempo", type: "checkbox" });
 def.corpo.append(criar("label", { class: "def-linha" }, def.tempo, " ", t("definicoes.tempo")));
 def.painel.append(def.titulo, def.corpo);
 ui.info.after(def.painel);
+let contasAtual = null;
+let infoVersao = null;
+const textoVersao = () => infoVersao ? t("versao.texto", { nome: infoVersao.version, build: infoVersao.build }) : "";
+{
+  const A = plugin("App");
+  if (A && typeof A.getInfo === "function") {
+    Promise.resolve(A.getInfo()).then((i) => {
+      if (i && i.version) {
+        infoVersao = { version: String(i.version), build: String(i.build) };
+        atualizarVersao();
+      }
+    }).catch((e) => console.warn("[main] getInfo:", e));
+  } else infoVersao = { version: "web", build: "-" };
+}
+function atualizarVersao() {
+  try {
+    if (def.versao) def.versao.textContent = textoVersao();
+    if (lojaUI.aberta()) lojaUI.render();
+  } catch (e) {
+  }
+}
 const lojaUI = criarEcraLoja({
   t,
   tn,
   documento,
   temItem,
   catalogo: () => loja.catalogo(),
+  sazonais: () => sazonaisVisiveis(),
+  // T-1771
   trocar: (id) => loja.trocar(id),
   equipar: (id) => equipar(id, { catalogo: loja.catalogo() }),
   tipoDe: (id) => tipoDe(loja.catalogo(), id),
   comprar: (id) => comprarEur(id),
   produtos: () => produtosEur(),
+  eurVisivel: () => eurVisivel(),
+  lascasVenda: () => lascasVenda(),
+  // T-1466: aberta só com sessão e progresso sincronizado
   restaurar: () => restaurarCompras(),
-  confirmar: (texto) => confirm(texto),
+  confirmar: (texto) => confirmarDialogo(texto),
+  // T-1514
   lascasDiario: CONFIG.LASCAS_DIARIO,
   // GDD §5.2 (só para o texto «faltam»)
   caminho: () => abrirCaminho(),
   caminhoTeto: CONFIG.CAMINHO_TETO_DIA,
   // BS-5
+  semAnuncios: () => semAnuncios(),
+  versao: () => textoVersao(),
   extraPistas: () => {
     setTimeout(() => ui.ad1.atualizar(), 0);
     return ui.ad1.el;
   },
   // T-1338
-  experimentar: (a) => experimentarUI.abrir(a)
+  previsualizar: (a) => previsualizacaoUI.abrir(a)
 });
-const experimentarUI = criarExperimentar({
-  t,
-  tocarSom: (id) => audio.previsualizarSom(id),
-  // T-1348 (S3-07): «Ver como fica» com Aplicar (só se já tens o item) e a condição por baixo quando está por ganhar.
-  aplicar: (id) => equipar(id, { catalogo: loja.catalogo() }),
-  tem: (id) => {
-    const it = itemDoCatalogo(id);
-    return !!(it && it.gratis) || temItem(documento(), id);
-  },
-  condicao: (a) => a.condicao_id ? t(a.condicao_id) : ""
-});
-document.getElementById("app").append(lojaUI.el, experimentarUI.el);
+const previsualizacaoUI = criarPrevisualizacao({ t, tocarSom: (id) => audio.previsualizarSom(id), silenciado: () => audio.estaSilenciado() });
+lojaUI.el.setAttribute("data-sem-inert", "");
+previsualizacaoUI.el.setAttribute("data-sem-inert", "");
+document.getElementById("app").append(lojaUI.el, previsualizacaoUI.el);
 new MutationObserver(() => atualizarNav()).observe(lojaUI.el, { attributes: true, attributeFilter: ["hidden"] });
+new MutationObserver(() => atualizarNav()).observe(previsualizacaoUI.el, { attributes: true, attributeFilter: ["hidden"] });
 ui.loja = criar("button", { id: "btn-loja", type: "button" }, t("nav.loja"));
 ui.loja.addEventListener("click", () => lojaUI.abrir());
 def.painel.before(ui.loja);
@@ -188,16 +229,44 @@ def.restaurar.addEventListener("click", async () => {
     def.restaurar.disabled = false;
   }
 });
+def.versao = criar("p", { id: "def-versao", class: "of-suave" }, textoVersao());
+def.corpo.append(def.versao);
 def.corpo.prepend(def.restaurar);
 let contasUI = null;
+const neutro = { contas: false, jogo: false };
+function fecharNeutro(parte) {
+  if (parte) neutro[parte] = true;
+  if (parte && !(neutro.contas && neutro.jogo)) return;
+  const n = document.getElementById("arranque-neutro");
+  if (!n) return;
+  const sair = () => {
+    n.hidden = true;
+  };
+  if (!parte) {
+    sair();
+    return;
+  }
+  try {
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(sair, 400)));
+  } catch {
+    sair();
+  }
+}
+setTimeout(() => fecharNeutro(), 15e3);
+let contasIniciadas = null;
+const aguardarContas = new Promise((r) => {
+  contasIniciadas = r;
+});
 (async () => {
   try {
     contasUI = criarContasUI({ app: document.getElementById("app"), contas: await carregarContas() });
     def.corpo.append(contasUI.botao);
+    await aguardarContas;
     contasUI.atualizar();
   } catch (e) {
     console.warn("[main] contas indispon\xEDveis:", e);
   }
+  fecharNeutro("contas");
 })();
 function definicoesAtuais() {
   return documento().definicoes || { avisos: true, som: true, vibracao: true };
@@ -252,17 +321,32 @@ let caminhoAtualObj = null;
 const caminhoMs = /* @__PURE__ */ new Map();
 let dicaSair = 0;
 const EVENTO_ECRA = { menu: "inicio", jogo: "puzzle", resultado: "resultado", praca: "praca", puzzles: "arquivo", opcoes: "definicoes", oficio: "oficio", metas: "oficio", calceteiros: "oficio" };
+let origemDef = "menu";
+const portaoDef = criarPortaoDefinicoes({
+  capturar: () => ui.feedbackTester && ui.feedbackTester.aoAbrirDefinicoes(),
+  aoFechar: () => {
+    if (ui.feedbackTester) ui.feedbackTester.aoFecharDefinicoes();
+  }
+});
 function ir(nome) {
+  if (ecraAtual === "opcoes" && nome !== "opcoes") portaoDef.fechar();
+  if (nome === "opcoes") portaoDef.marcarAbertas();
   ecraAtual = nome;
   const camada = ["menu", "pausa", "resultado"].includes(nome) ? nome : nome === "jogo" ? null : "sub";
   ecras.mostrar(camada);
   ecras.sub.marcarAba(camada === "sub" ? nome : "");
   atualizarNav();
+  if (nome === "menu") abandonarTutorial();
   if (nome !== "jogo" && nome !== "resultado") fecharAssentar();
   if (EVENTO_ECRA[nome]) emitir("ecra:aberto", { ecra: EVENTO_ECRA[nome] });
   if (nome === "pausa") guardarAMeio();
 }
 function abrirSub(nome, de = "menu") {
+  if (nome === "opcoes" && !["opcoes", "semana", "comojogar"].includes(ecraAtual)) {
+    if (portaoDef.interceptar(() => abrirSub(nome, de), () => {
+      origemDef = ecraAtual;
+    })) return;
+  }
   if (nome === "loja") {
     lojaUI.abrir();
     atualizarNav();
@@ -276,6 +360,7 @@ function abrirSub(nome, de = "menu") {
     ui.arquivo.open = true;
     ui.pacotes.open = true;
     c.replaceChildren(ui.arquivo, ui.pacotes, ui.colecao);
+    renderPacotes();
     renderDiario();
     renderColecao();
   } else if (nome === "oficio" || nome === "metas" || nome === "calceteiros") {
@@ -385,19 +470,29 @@ function guardarAMeio() {
   };
   gravarDocumento(doc).catch((e) => console.warn("[main] a meio n\xE3o gravou:", e));
 }
+function transicaoIntersticial() {
+  if (tut || !jogo || !jogo.resolvido || contouTransicao === jogo.puzzle.id) return;
+  contouTransicao = jogo.puzzle.id;
+  anuncios.intersticial.tentar({ tutorial: false }).catch(() => {
+  });
+}
+let contouTransicao = null;
 function sairParaMenu() {
+  if (ecraAtual === "resultado") transicaoIntersticial();
   guardarAMeio();
-  if (tut) {
-    tut = null;
-    appEl.classList.remove("em-tutorial");
-    tabuleiro.definirGuia(null);
-    clearInterval(tutRelogio);
-    ui.tutorial.hidden = true;
-    ui.tutorialSair.hidden = true;
-    el.regra.hidden = false;
-  }
+  abandonarTutorial();
   ir("menu");
   renderDiario();
+}
+function abandonarTutorial() {
+  if (!tut) return;
+  tut = null;
+  appEl.classList.remove("em-tutorial");
+  tabuleiro.definirGuia(null);
+  clearInterval(tutRelogio);
+  ui.tutorial.hidden = true;
+  ui.tutorialSair.hidden = true;
+  el.regra.hidden = false;
 }
 function codigoDesafio() {
   const p = jogo.puzzle, ref = desafio.refDeId(p.id), faixa = desafio.faixaDe(p.dificuldade || "medio");
@@ -450,6 +545,8 @@ function mostrarResultado() {
   resultadoDesafio(R);
   R.seguinte.hidden = dataDoId(id) === hoje();
   ir("resultado");
+  if (!tut) anuncios.intersticial.preCarregar().catch(() => {
+  });
   if (assentarUltimo && assentarUltimo.puzzleId === id) {
     assentarPendente = assentarUltimo;
     mostrarQuadradoAssente();
@@ -481,6 +578,8 @@ const ecraCalc = criarEcraCalceteiros({ t, tn }, {
   recordes: () => amigos.meusRecordes(documento(), hoje(), difDe),
   amigos: () => amigos.garantirSocial(documento()).amigos.length
 }, {
+  confirmar: (texto) => confirmarDialogo(texto),
+  // T-1514
   guardarNome: (txt) => {
     const vazio = !String(txt).trim(), n = amigos.nomeValido(txt);
     if (!vazio && !n) return { ok: false };
@@ -567,17 +666,42 @@ const ecraOficio = criarEcraOficio({ t, tn }, {
 });
 let regressoVista = null, resumoNovo = null;
 ui.retorno = criar("div", { id: "menu-retorno", class: "mn-retorno" });
+ui.regresso = criar("div", { id: "menu-regresso", class: "mn-retorno" });
 const emitirTodos = (evs) => {
   for (const [n, d] of evs || []) emitir(n, d);
 };
+const puzzleSugerivel = (id) => (dataDoId(id) ? tabela.find((x) => x.id === id) : curados.find((x) => x.id === id)) || null;
 const rotuloSugerido = (id) => {
-  const o = curados.find((x) => x.id === id);
+  const o = puzzleSugerivel(id);
   return o ? `${t(`dif.${o.dificuldade}`)} ${o.n}x${o.n}` : "";
 };
+const NIVEL_TEC = { N1: 1, N2: 2, N3: 3 };
 function sugerirRegresso(doc) {
-  const c = curados.find((o) => o.id.startsWith("PAC-ROSSIO") && o.dificuldade === "facil" && o.n <= 6 && !["resolvido", "resolvido_com_pistas"].includes(estadoDe(doc, o.id)));
+  const feito = (id) => ["resolvido", "resolvido_com_pistas"].includes(estadoDe(doc, id));
+  const nivelDe = (o) => NIVEL_TEC[o && o.classificacao && o.classificacao.nivelMax] || 1;
+  let tecJogador = 1;
+  for (const id of Object.keys(doc.puzzles || {})) if (feito(id)) {
+    const o = puzzleSugerivel(id);
+    if (o) tecJogador = Math.max(tecJogador, nivelDe(o));
+  }
+  const ligeiro = (o, tam = [5, 6]) => !!o && o.dificuldade === "facil" && tam.includes(o.n) && nivelDe(o) <= tecJogador && !feito(o.id);
+  const h = hoje(), porId = new Map(tabela.map((o) => [o.id, o]));
+  const limite = h >= DIA_LANCAMENTO ? DIA_LANCAMENTO : EPOCA_TABELA;
+  for (let k = 1; k <= 30; k++) {
+    const d = somarDias(h, -k);
+    if (d < limite) break;
+    const o = porId.get(idDoDia(d));
+    if (ligeiro(o)) return o.id;
+  }
+  const ultimoPac = Object.keys(doc.puzzles || {}).map(pacoteDoId).filter(Boolean).pop();
+  if (ultimoPac) {
+    const c2 = curados.find((o) => o.id.startsWith(ultimoPac.pacote + "-") && ligeiro(o));
+    if (c2) return c2.id;
+  }
+  const c = curados.find((o) => o.id.startsWith("PAC-ROSSIO") && ligeiro(o, [4, 5, 6]));
   return c ? c.id : null;
 }
+const abrirSugerido = (id) => dataDoId(id) ? abrirDia(dataDoId(id)) : abrir(id);
 function iniciarRetorno() {
   try {
     const doc = documento(), h = hoje();
@@ -596,14 +720,14 @@ function iniciarRetorno() {
 function renderRetorno() {
   const doc = documento(), h = hoje();
   const dispensado = !!regressoVista && retorno.regressoDe(doc).dispensadoEm === h;
-  const reg = regressoVista && regressoVista.nivel >= 2 && dispensado ? { ...regressoVista, mostrar: false } : regressoVista;
+  const reg = regressoVista && dispensado ? { ...regressoVista, mostrar: false, aceite: true } : regressoVista;
   const acoesReg = {
     jogar: () => {
       const s = regressoVista.sugerido;
       emitirTodos(retorno.aceitarRegresso(doc, h));
       gravarSocial();
       renderRetorno();
-      if (s) abrir(s);
+      if (s) abrirSugerido(s);
       else abrirDia(h);
     },
     recomecar: () => {
@@ -611,7 +735,9 @@ function renderRetorno() {
       gravarSocial();
       renderRetorno();
       abrirDia(h);
+      el.mensagem.textContent = t("retorno.recomecar_feito");
     },
+    // T-1811: «Nova série. Um dia de cada vez.»
     aquecer: () => {
       emitirTodos(retorno.aceitarRegresso(doc, h));
       gravarSocial();
@@ -624,9 +750,14 @@ function renderRetorno() {
       renderRetorno();
     }
   };
-  const filhos = [cartaoRegresso({ t }, reg, acoesReg), cartaoSemana({ t, tn }, resumoNovo, () => abrirSub("semana"))].filter(Boolean);
+  const cr = cartaoRegresso({ t, tn }, reg, acoesReg), cartaoReg = cr && cr.id === "regresso-cartao" ? cr : null;
+  const filhos = [cartaoSemana({ t, tn }, resumoNovo, () => abrirSub("semana"))].filter(Boolean);
+  if (cr && !cartaoReg) filhos.unshift(cr);
+  const porFazer = tutorial.tutorialPorFazer(doc);
+  ui.regresso.replaceChildren(...cartaoReg ? [cartaoReg] : []);
+  ui.regresso.hidden = !cartaoReg || porFazer;
   ui.retorno.replaceChildren(...filhos);
-  ui.retorno.hidden = !filhos.length || tutorial.tutorialPorFazer(doc);
+  ui.retorno.hidden = !filhos.length || porFazer;
 }
 const pluginLembrete = () => plugin("LocalNotifications");
 const textosLembrete = () => ({ titulo: t("jogo.nome"), texto: t("lembrete.texto") });
@@ -673,29 +804,57 @@ ui.lembrete = linhaLembrete({ t }, () => retorno.lembreteDe(documento()), { muda
 ui.minhaSemana = criar("button", { id: "btn-def-semana", type: "button", class: "def-restaurar" }, t("resumo.botao"));
 ui.minhaSemana.addEventListener("click", () => abrirSub("semana", "opcoes"));
 def.corpo.append(ui.lembrete.el, ui.minhaSemana);
-const itemDoCatalogo = (id) => loja.catalogo().find((i) => i.id === id) || null;
+const RE_MOLD_MES_COL = /^MOLD-(\d{4})-(\d{2})$/;
+const itemDoCatalogo = (id) => loja.catalogo().find((i) => i.id === id) || (RE_MOLD_MES_COL.test(id || "") ? { id, categoria: "moldura", gratis: false, eur: null, lascas: null, ganha_se: "praca_completa" } : null);
+function molduraMesCartoes(doc, eq) {
+  var _a;
+  const mesHoje = hoje().slice(0, 7);
+  const ids = new Set((((_a = doc.inventario) == null ? void 0 : _a.itens) || []).filter((id) => RE_MOLD_MES_COL.test(id)));
+  ids.add(`MOLD-${mesHoje}`);
+  return [...ids].sort().reverse().map((id) => {
+    if (temItem(id)) return { id, categoria: "moldura", estado: Object.values(eq).includes(id) ? "aplicado" : "tens", condicao: null, progresso: null };
+    const e = estadoPracaMes(mesHoje);
+    return { id, categoria: "moldura", estado: "bloqueado", condicao: { tipo: "praca", chave: "colecao.cond.mold_mes" }, progresso: { atual: e.feitos, alvo: e.total } };
+  });
+}
 const ecraColecaoV3 = criarEcraColecao({ t, tn }, {
   colecao: () => {
     const doc = documento(), eq = doc.inventario && doc.inventario.equipado || {};
-    return colecaoV3(loja.catalogo(), {
+    const seps = colecaoV3(loja.catalogo(), {
       doc,
-      tem: (id) => temItem(doc, id),
+      tem: (id) => temItem(id),
       aplicado: (id) => Object.values(eq).includes(id),
       objetivos: Object.fromEntries(objetivosCat.map((o) => [o.id, o])),
       hoje: hoje(),
       infoDe: puzzleInfo,
       hojeMes: hoje().slice(0, 7)
     });
+    const mold = seps.find((s) => s.separador === "moldura");
+    if (mold) {
+      const extra = molduraMesCartoes(doc, eq);
+      mold.cartoes = [...mold.cartoes, ...extra];
+      mold.N += extra.length;
+      mold.n += extra.filter((c) => c.estado !== "bloqueado").length;
+    }
+    return seps;
   },
   oQueFalta,
   item: itemDoCatalogo,
   lascasDe: (id) => {
     var _a;
     return (_a = (itemDoCatalogo(id) || {}).lascas) != null ? _a : 0;
+  },
+  nome: (id) => {
+    const m = RE_MOLD_MES_COL.exec(id || "");
+    return m ? t("artigo.MOLD-AAAA-MM.nome", { mes: t(`mes.titulo.${Number(m[2])}`), ano: m[1] }) : null;
+  },
+  legenda: (id) => {
+    const m = RE_MOLD_MES_COL.exec(id || "");
+    return m ? t(`colecao.mold_mes.${m[2]}`) : null;
   }
 }, {
   aplicar: (id) => equipar(id, { catalogo: loja.catalogo() }),
-  ver: (item) => experimentarUI.abrir(item),
+  ver: (item) => previsualizacaoUI.abrir(item),
   aoAbrir: (sep) => emitir("colecao:aberta", { separador: sep })
 });
 const feedbackFim = criarFeedback({ app: appEl, criar, duracaoMs: CONFIG.FEEDBACK_FIM_MS, reduzir: () => !!(globalThis.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) });
@@ -703,7 +862,7 @@ ui.btnColecao = criar("button", { id: "btn-colecao", type: "button", class: "ec-
 ui.btnColecao.addEventListener("click", () => abrirSub("colecao", "praca"));
 const semAnuncios = () => {
   try {
-    return temItem(documento(), "SEM-ANUNCIOS") || temDireito("sem_anuncios");
+    return temItem("SEM-ANUNCIOS") || temDireito("sem_anuncios");
   } catch {
     return false;
   }
@@ -739,6 +898,7 @@ ui.ad3 = fabricaOferta("ad-troco", "AD3", {
   confirmar: (g) => t("anuncio.ganhou_lascas", { n: g.lascas || 0 })
 });
 ui.privacidade = criar("button", { id: "btn-def-privacidade", type: "button", class: "def-restaurar" }, t("anuncio.privacidade"));
+ui.privacidade.hidden = true;
 ui.privacidade.addEventListener("click", () => {
   anuncios.abrirPrivacidade().catch((e) => console.warn("[main] privacidade:", e));
 });
@@ -746,6 +906,7 @@ ui.removerAnuncios = criar("button", { id: "btn-def-sem-anuncios", type: "button
 ui.removerAnunciosMsg = criar("p", { id: "def-sem-anuncios-msg", class: "of-suave", role: "status" });
 function renderSemAnuncios() {
   ui.removerAnuncios.hidden = semAnuncios();
+  ui.privacidade.hidden = !anuncios.opcoesPrivacidade();
   if (semAnuncios()) ui.removerAnunciosMsg.textContent = t("anuncio.removidos");
 }
 ui.removerAnuncios.addEventListener("click", async () => {
@@ -761,6 +922,12 @@ ui.removerAnuncios.addEventListener("click", async () => {
   renderSemAnuncios();
 });
 def.corpo.append(ui.privacidade, ui.removerAnuncios, ui.removerAnunciosMsg);
+ui.feedbackTester = criarFeedbackUI({ t, criar, lerConfig: () => lerConfigContas(), ecraAtual: () => ecraAtual === "opcoes" ? origemDef : ecraAtual });
+def.corpo.append(ui.feedbackTester.botao);
+def.painel.addEventListener("toggle", () => {
+  if (!def.painel.open) portaoDef.fechar();
+});
+document.body.append(ui.feedbackTester.dlg);
 ui.colecao = criar("div", { id: "colecao-host" });
 function renderColecao() {
   const atual = hoje().slice(0, 7), minimo = DIA_LANCAMENTO.slice(0, 7) < atual ? DIA_LANCAMENTO.slice(0, 7) : atual;
@@ -792,11 +959,26 @@ function renderMenu(est, linhaSeq, meta) {
   M.nome.textContent = meta ? `${num} \xB7 ${t("inicio.tipo", { variante: t(`variante.${meta.variante}`), dif: t(`dif.${meta.dificuldade}`) })}` : num;
   M.estado.textContent = t(ROTULO_ESTADO[est] || "arquivo.por_jogar");
   M.semanaSerie.textContent = tn("inicio.sequencia", seq.atual, { n: seq.atual });
-  const meta0 = !tutObj() && objetivosCat.length ? vistaMetas().hoje[0] : null;
-  M.objetivo.hidden = !meta0 || primeira;
-  if (meta0) {
-    M.objetivo.replaceChildren(ecras.nav.icone("visto", false), document.createTextNode(t(meta0.feito ? "objetivo.hoje_feito" : "objetivo.hoje", { meta: t(meta0.texto) })));
-    M.objetivo.classList.toggle("feito", !!meta0.feito);
+  const melhor = regressoVista && regressoVista.nivel >= 1 && seq.recorde > seq.atual ? seq.recorde : 0;
+  if (melhor) {
+    const m = tn("retorno.melhor_serie", melhor, { n: melhor });
+    M.semanaSerie.textContent = seq.atual > 0 ? `${M.semanaSerie.textContent} \xB7 ${m}` : m;
+  }
+  M.semanaSerie.dataset.melhor = melhor ? String(melhor) : "";
+  const vm = !tutObj() && objetivosCat.length ? vistaMetas() : null;
+  M.objetivo.hidden = !vm || primeira;
+  if (vm) {
+    const l1 = vm.longo.find((o) => o.id === "OBJ-L1");
+    const porFazer = l1 && !l1.feito ? l1 : [...vm.hoje, ...vm.semana || []].find((o) => !o.feito) || null;
+    const fita = fitaRumo({ t, temTexto }, {
+      id: "menu-fita",
+      objetivo: porFazer ? t("tutorial3.fita_hoje", { objetivo: t(porFazer.texto) }) : t("tutorial3.fita_hoje_feito"),
+      meta: metaRumo(longasRumo(vm.longo)),
+      navegavel: true,
+      abrir: () => abrirSub("metas")
+    });
+    M.objetivo.replaceChildren(fita.el);
+    M.objetivo.classList.toggle("feito", !porFazer);
   }
   const h = hoje(), ini = somarDias(h, -diaDaSemana(h));
   M.semana.replaceChildren(...[0, 1, 2, 3, 4, 5, 6].map((i) => {
@@ -823,7 +1005,7 @@ function renderMenu(est, linhaSeq, meta) {
 function atualizarNav() {
   const nivel1 = ["menu", "puzzles", "praca", "calceteiros"].includes(ecraAtual);
   const lojaAberta = !lojaUI.el.hidden;
-  const visivel = (nivel1 || lojaAberta && ["menu", "puzzles", "praca", "calceteiros", "oficio", "metas"].includes(ecraAtual)) && !tutorial.tutorialPorFazer(documento());
+  const visivel = previsualizacaoUI.el.hidden && (nivel1 || lojaAberta && ["menu", "puzzles", "praca", "calceteiros", "oficio", "metas"].includes(ecraAtual)) && !tutorial.tutorialPorFazer(documento());
   ecras.nav.mostrar(lojaAberta ? "loja" : ecraAtual === "menu" ? "inicio" : "praca", visivel);
 }
 const tutObj = () => tut;
@@ -856,6 +1038,7 @@ const ecras = criarEcras({ t, app: appEl, acoes: {
   sair: sairParaMenu,
   voltar
 } });
+ecras.menu.cartao.before(ui.regresso);
 ecras.menu.cartao.after(ui.retorno);
 {
   const A = plugin("App");
@@ -886,16 +1069,58 @@ async function mostrarBuild() {
   }
 }
 mostrarBuild();
-async function lerPuzzles(url) {
-  const r = await fetch(url);
+const DADOS_ARRANQUE = [
+  "data/puzzles.json",
+  "data/diarios.json",
+  "data/curados.json",
+  "data/sazonais.json",
+  "data/objetivos.json",
+  "data/caminho.json",
+  "data/caminho-reserva.json"
+];
+const pedidos = /* @__PURE__ */ new Map();
+function buscar(url) {
+  const p = pedidos.get(url);
+  if (p) {
+    pedidos.delete(url);
+    return p;
+  }
+  return fetch(url);
+}
+function pedirDadosArranque() {
+  for (const u of DADOS_ARRANQUE) if (!pedidos.has(u)) {
+    const p = fetch(u);
+    p.catch(() => {
+    });
+    pedidos.set(u, p);
+  }
+}
+const validacoesAdiadas = [];
+function validarAdiados() {
+  for (const doc of validacoesAdiadas.splice(0)) {
+    const ok = new Set(carregarLista(doc).puzzles.map((p) => p.id));
+    const maus = new Set(doc.puzzles.filter((o) => !ok.has(o && o.id)).map((o) => o && o.id));
+    if (maus.size) {
+      curados = curados.filter((o) => !maus.has(o.id));
+      renderPacotes();
+    }
+  }
+}
+async function lerPuzzles(url, adiar = false) {
+  const r = await buscar(url);
   if (!r.ok) throw new Error(`n\xE3o consegui ler ${url}: ${r.status}`);
   const doc = await r.json();
+  if (adiar && Array.isArray(doc.puzzles)) {
+    validacoesAdiadas.push(doc);
+    return doc.puzzles.filter((o) => o && typeof o.id === "string" && typeof o.dadas === "string" && typeof o.solucao === "string");
+  }
   const { puzzles } = carregarLista(doc);
   const validos = new Set(puzzles.map((p) => p.id));
   return doc.puzzles.filter((o) => validos.has(o.id));
 }
 function abrir(fonte, { novo = false } = {}) {
   guardarAMeio();
+  if (tut && !(typeof fonte === "string" && fonte === tutorial.puzzleAtual(tut))) abandonarTutorial();
   const obj = typeof fonte === "string" ? lista.find((o) => o.id === fonte) || curados.find((o) => o.id === fonte) : fonte;
   if (!obj) throw new Error(`puzzle ${fonte} n\xE3o existe`);
   const p = carregarPuzzle(obj);
@@ -923,7 +1148,7 @@ function tituloDe(p) {
   const pc = pacoteDoId(p.id);
   const cam = caminho.caminhoDoId(p.id);
   if (cam != null) return t("caminho.titulo_nivel", { n: cam });
-  if (pc) return `${t(`artigo.${pc.pacote}.nome`)} \xB7 ${pc.indice} \xB7 ${t(`dif.${p.dificuldade || "medio"}`)}`;
+  if (pc) return `${nomePacote(pc.pacote)} \xB7 ${pc.indice} \xB7 ${t(`dif.${p.dificuldade || "medio"}`)}`;
   if (!data) return `${p.id} \xB7 ${p.nome || p.variante}`;
   if (data !== hoje()) return t("puzzle.titulo_arquivo", { dia: Number(data.slice(8)), mes: t(`mes.${Number(data.slice(5, 7))}`) });
   return t("puzzle.titulo_diario", { num: numeroDe(data), dif: t(`dif.${p.dificuldade || "medio"}`) });
@@ -1022,7 +1247,7 @@ function mostrarQuadradoAssente() {
     const e = estadosPacotes().find((x) => x.id === d.praca);
     if (!e) return null;
     dados = {
-      titulo: t(`artigo.${e.id}.nome`),
+      titulo: nomePacote(e.id),
       colunas: COLUNAS_LARGO,
       deslocamento: 0,
       quadrados: e.quadrados,
@@ -1102,11 +1327,47 @@ function renderPraca() {
 let pacoteAberto = PACOTES[0].id;
 const LASCAS_DIARIO = CONFIG.LASCAS_DIARIO;
 const curadoPorId = () => Object.fromEntries(curados.map((o) => [o.id, o]));
+let trimestresSaz = /* @__PURE__ */ new Set();
+const nomePacote = (id) => {
+  var _a;
+  return (_a = textoSazonal(t, id, "nome")) != null ? _a : t(`artigo.${id}.nome`);
+};
+const sazonaisVisiveis = () => {
+  var _a;
+  return pacotesVisiveis(hoje(), trimestresSaz, CONFIG.SAZ_PRIMEIRO, ((_a = documento().inventario) == null ? void 0 : _a.itens) || []);
+};
+function concederSaz() {
+  const doc = documento();
+  const r = concederSazonais(doc, (q) => trimestresSaz.has(q));
+  if (!r.mudou) return r;
+  import("./plataforma/gravacao.js").then((g) => g.gravarJa(doc)).catch((e) => console.warn("[main] sazonal n\xE3o gravou:", e));
+  for (const [n, d] of r.eventos) emitir(n, d);
+  return r;
+}
 function estadosPacotes() {
   const doc = documento();
   const puzzles = curadoPorId();
-  const catalogo = PACOTES.map((p) => loja.artigo(p.id)).filter(Boolean);
-  return PACOTES.map((p) => estadoDoPacote(doc, p.id, { temItem, catalogo, puzzles }));
+  const ids = [...PACOTES.map((p) => p.id), ...sazonaisVisiveis()];
+  const catalogo = ids.map((id) => loja.artigo(id)).filter(Boolean);
+  return ids.map((id) => estadoDoPacote(doc, id, { temItem, catalogo, puzzles }));
+}
+function eurVisivel() {
+  var _a;
+  try {
+    return escolherImplementacao(((_a = globalThis.location) == null ? void 0 : _a.search) || "", ehNativo()) !== "indisponivel";
+  } catch {
+    return true;
+  }
+}
+function lascasVenda() {
+  try {
+    const e = contasAtual && contasAtual.estado ? contasAtual.estado() : null;
+    if (!e || !e.sessao) return "fechada";
+    if (e.sync === "a_sincronizar") return "a_sincronizar";
+    return e.sync === "ok" && !e.conflito ? "aberta" : "fechada";
+  } catch {
+    return "fechada";
+  }
 }
 function precoEur(id) {
   try {
@@ -1117,8 +1378,8 @@ function precoEur(id) {
   }
 }
 async function trocarPacote(est) {
-  const artigo = t(`artigo.${est.id}.nome`);
-  if (!confirm(t("loja.confirmar_lascas", { preco: est.preco.lascas, artigo }))) return { resultado: "cancelada" };
+  const artigo = nomePacote(est.id);
+  if (!await confirmarDialogo(t("loja.confirmar_lascas", { preco: est.preco.lascas, artigo }))) return { resultado: "cancelada" };
   const r = await loja.trocar(est.id);
   if (r.resultado === "concluida" || r.resultado === "ja_tem") el.mensagem.textContent = t("loja.comprado", { artigo });
   else if (r.resultado === "saldo_insuficiente") el.mensagem.textContent = t("caminho.loja_faltam", { n: r.faltam, teto: CONFIG.CAMINHO_TETO_DIA });
@@ -1128,7 +1389,7 @@ async function trocarPacote(est) {
 }
 async function comprarPacote(est) {
   var _a;
-  const artigo = t(`artigo.${est.id}.nome`);
+  const artigo = nomePacote(est.id);
   el.mensagem.textContent = t("loja.a_comprar");
   let r;
   try {
@@ -1141,8 +1402,13 @@ async function comprarPacote(est) {
   renderPacotes();
   return r;
 }
-function renderPacotes() {
+function renderPacotes(forcar = false) {
+  var _a, _b;
   if (!ui.pacotesCorpo) return;
+  if (!forcar && !ui.pacotes.open) {
+    ui.pacotesCorpo.replaceChildren();
+    return;
+  }
   const estados = estadosPacotes();
   const abas = criar("div", { class: "pacotes-abas", role: "tablist" }, ...estados.map((e2) => {
     const b = criar("button", {
@@ -1151,17 +1417,25 @@ function renderPacotes() {
       role: "tab",
       class: "pacote-aba",
       "aria-selected": String(e2.id === pacoteAberto)
-    }, t(`artigo.${e2.id}.nome`));
+    }, nomePacote(e2.id));
     b.addEventListener("click", () => {
       pacoteAberto = e2.id;
       renderPacotes();
     });
     return b;
   }));
+  const leftAnt = ((_a = ui.pacotesCorpo.querySelector(".pacotes-abas")) == null ? void 0 : _a.scrollLeft) || 0;
+  requestAnimationFrame(() => {
+    const sel = abas.querySelector('[aria-selected="true"]');
+    abas.scrollLeft = leftAnt;
+    if (sel && (sel.offsetLeft < abas.scrollLeft || sel.offsetLeft + sel.offsetWidth > abas.scrollLeft + abas.clientWidth)) abas.scrollLeft = Math.max(0, sel.offsetLeft - 16);
+  });
   const e = estados.find((x) => x.id === pacoteAberto) || estados[0];
-  const estadoTxt = !e.desbloqueado ? t("arquivo.pacote_bloqueado") : `${e.gratis ? t("arquivo.pacote_gratis") + " \xB7 " : ""}${t("praca.progresso_largo", { feitos: e.feitos, total: e.total })}`;
+  const saz = trimestreDoPacote(e.id);
+  const pSaz = saz && !e.desbloqueado ? progressoSazonal(((_b = documento().inventario) == null ? void 0 : _b.itens) || [], saz) : null;
+  const estadoTxt = pSaz ? `${t("colecao.cond.pac_saz")} ${t("colecao.progresso", { atual: pSaz.feito, alvo: pSaz.alvo })}` : !e.desbloqueado ? t("arquivo.pacote_bloqueado") : `${e.gratis ? t("arquivo.pacote_gratis") + " \xB7 " : ""}${t("praca.progresso_largo", { feitos: e.feitos, total: e.total })}`;
   const cab = criar("p", { class: "pacote-estado", id: "pacote-estado" }, estadoTxt);
-  const nome = t(`artigo.${e.id}.nome`);
+  const nome = nomePacote(e.id);
   const praca = criarPraca({
     id: e.id,
     colunas: COLUNAS_LARGO,
@@ -1194,7 +1468,7 @@ function renderPacotes() {
       ir2.addEventListener("click", () => abrirCaminho());
       filhos.push(criar("p", { id: `pacote-caminho-${e.id}`, class: "loja-info" }, t("caminho.loja_faltam", { n: faltam, teto: CONFIG.CAMINHO_TETO_DIA })), ir2);
     }
-    if (e.preco.eur != null) {
+    if (e.preco.eur != null && eurVisivel()) {
       const preco = precoEur(e.id);
       const b = criar("button", { id: `btn-eur-${e.id}`, type: "button" }, preco != null ? preco : t("loja.eur_sem_rede"));
       b.disabled = preco == null;
@@ -1214,7 +1488,7 @@ function textoDaPartilha() {
     t,
     tn,
     diaLancamento: DIA_LANCAMENTO,
-    nomePacote: (id) => t(`artigo.${id}.nome`)
+    nomePacote: (id) => nomePacote(id)
   });
 }
 async function aoPartilhar() {
@@ -1237,17 +1511,128 @@ function aoTocar(l, c) {
   }
   if (r.depois !== 0) tabuleiro.animarAssentar(r.i);
   if (tut && jogo.puzzle.id === tutorial.puzzleAtual(tut)) {
+    const antes = tut;
     tut = tutorial.aoTocar(tut, jogo.puzzle, jogo.grelha, r.i, performance.now());
+    emitirPasso3(antes, tut);
   }
   depoisDeMudar();
   renderTutorial();
   return r;
+}
+function confirmarDialogo(texto) {
+  return new Promise((resolve) => {
+    const fundo = criar("div", { class: "dialogo-fundo", role: "alertdialog", "aria-modal": "true", "aria-label": texto });
+    fundo.style.cssText = "position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:16px";
+    const caixa = criar("div", { class: "dialogo-caixa" });
+    caixa.style.cssText = "max-width:360px;width:100%;background:var(--fundo,#fff);color:var(--texto,#222);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 32px rgba(0,0,0,.4)";
+    const p = criar("p", { class: "dialogo-texto" }, texto);
+    const linha = criar("div", { class: "dialogo-botoes" });
+    linha.style.cssText = "display:flex;gap:12px;justify-content:flex-end";
+    const nao = criar("button", { type: "button", class: "sec dialogo-cancelar" }, t("comum.cancelar"));
+    const sim = criar("button", { type: "button", class: "dialogo-ok" }, t("comum.ok"));
+    const fim = (v) => {
+      document.removeEventListener("keydown", tecla, true);
+      fundo.remove();
+      resolve(v);
+    };
+    const tecla = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        fim(false);
+      }
+    };
+    nao.addEventListener("click", () => fim(false));
+    sim.addEventListener("click", () => fim(true));
+    document.addEventListener("keydown", tecla, true);
+    linha.append(nao, sim);
+    caixa.append(p, linha);
+    fundo.append(caixa);
+    document.body.append(fundo);
+    nao.focus();
+  });
+}
+function dialogoSaltarTutorial() {
+  return dialogoFolha({ titulo: t("tutorial.saltar") + "?", corpo: t("tutorial.saltar_confirmar"), prim: t("tutorial.saltar_manter"), sec: t("tutorial.saltar_sim"), primFalso: true });
+}
+function dialogoReverTutorial() {
+  return dialogoFolha({ titulo: t("tutorial.rever_titulo"), corpo: t("tutorial.rever_corpo"), prim: t("tutorial.rever_sim"), sec: t("tutorial.rever_nao"), primFalso: false });
+}
+function dialogoFolha({ titulo, corpo: texto, prim: tPrim, sec: tSec, primFalso }) {
+  return new Promise((resolve) => {
+    const fundo = criar("div", { class: "folha-fundo" });
+    const folha = criar("div", { class: "folha", role: "alertdialog", "aria-modal": "true", "aria-labelledby": "folha-titulo", "aria-describedby": "folha-corpo" });
+    const tit = criar("h2", { id: "folha-titulo", class: "folha-titulo" }, titulo);
+    const corpo = criar("p", { id: "folha-corpo", class: "folha-corpo" }, texto);
+    const prim = criar("button", { type: "button", class: "folha-btn-prim" }, tPrim);
+    const sec = criar("button", { type: "button", class: "folha-btn-sec" }, tSec);
+    const fim = (v) => {
+      document.removeEventListener("keydown", tecla, true);
+      fundo.remove();
+      resolve(v);
+    };
+    const tecla = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        fim(false);
+      } else if (e.key === "Tab") {
+        e.preventDefault();
+        (document.activeElement === prim ? sec : prim).focus();
+      }
+    };
+    fundo.addEventListener("click", (e) => {
+      if (e.target === fundo) fim(false);
+    });
+    prim.addEventListener("click", () => fim(!primFalso));
+    sec.addEventListener("click", () => fim(primFalso));
+    document.addEventListener("keydown", tecla, true);
+    folha.append(tit, corpo, prim, sec);
+    fundo.append(folha);
+    document.body.append(fundo);
+    prim.focus();
+  });
 }
 let tut = null;
 let tutRelogio = null;
 ui.tutorial = criar("p", { id: "tutorial-dica", class: "tutorial-dica", role: "status", "aria-live": "polite", hidden: true });
 ui.tutorialSair = criar("button", { id: "btn-tutorial-sair", type: "button", hidden: true }, t("comum.voltar"));
 el.regra.before(ui.tutorial);
+ui.fitaTut = criar("div", { id: "fita-tut", class: "fita-caixa", hidden: true });
+ui.tutorial.before(ui.fitaTut);
+let tutT0 = 0, tutPassoId = null, tutMetaAntes = null, tutTempoP3 = 0, tutP3Em = 0, tutFita = null;
+const longasRumo = (longo) => {
+  const l = longo.filter((o) => o.id !== "OBJ-L1");
+  const v3 = l.filter((o) => temTexto(`${o.texto}_curto`));
+  return v3.length ? v3 : l;
+};
+const metaDoRumo = () => objetivosCat.length ? metaRumo(longasRumo(vistaMetas().longo)) : null;
+function renderFitaTut() {
+  const pf = tut && tut.modo === "primeira" ? passoFita(tut) : null;
+  ui.fitaTut.hidden = !pf;
+  if (!pf) {
+    ui.fitaTut.replaceChildren();
+    tutFita = null;
+    return;
+  }
+  const meta = metaDoRumo();
+  if (pf.id === "T5" && tutMetaAntes === null) {
+    tutMetaAntes = meta ? { id: meta.id, atual: meta.atual } : { id: null, atual: 0 };
+    tutP3Em = performance.now();
+  }
+  tutFita = fitaRumo({ t, temTexto }, { id: "fita-tut-rumo", passo: pf.id === "T6" ? null : pf.i, objetivo: t(pf.objetivo), meta });
+  ui.fitaTut.replaceChildren(tutFita.el);
+  const novo = pf.id !== tutPassoId;
+  if (novo) {
+    tutPassoId = pf.id;
+    emitir("cartao_tutorial:passo", { id: pf.id, ms: Math.round(performance.now() - tutT0) });
+  }
+  if (pf.id === "T6") {
+    const semPista = !(jogo && jogo.pistasUsadas > 0);
+    const subiu = !!meta && !!tutMetaAntes && meta.id === tutMetaAntes.id && meta.atual > tutMetaAntes.atual;
+    ui.tutorial.textContent = t(linhaT6({ semPista, subiu }));
+    ui.tutorial.hidden = false;
+    if (novo && subiu) tutFita.pulsar();
+  }
+}
 ui.avisoGravacao = criar("p", { id: "aviso-gravacao", class: "aviso-gravacao", role: "alert", hidden: true });
 ui.avisoGravacao.addEventListener("click", () => {
   ui.avisoGravacao.hidden = true;
@@ -1256,7 +1641,7 @@ el.regra.before(ui.avisoGravacao);
 el.recomecar.after(ui.tutorialSair);
 ui.tutorialSair.addEventListener("click", async () => {
   if (tut && tut.modo === "primeira") {
-    if (!confirm(t("tutorial.saltar_confirmar"))) return;
+    if (!await dialogoSaltarTutorial()) return;
     const r = tutorial.saltar(documento(), hoje());
     try {
       await gravarDocumento(documento());
@@ -1264,12 +1649,16 @@ ui.tutorialSair.addEventListener("click", async () => {
       console.warn("[main] saltar tutorial n\xE3o gravou:", e);
     }
     for (const [n, d] of r.eventos) emitir(n, d);
+    const TC = tutorial.saltarParaCartoes(tut, performance.now());
+    terminarTutorial();
+    mostrarCartoesV3(false, TC);
+    return;
   }
   terminarTutorial();
 });
 def.rever = criar("button", { id: "btn-def-tutorial", type: "button", class: "def-restaurar" }, t("definicoes.rever_tutorial"));
-def.rever.addEventListener("click", () => {
-  if (!confirm(t("tutorial.rever_confirmar"))) return;
+def.rever.addEventListener("click", async () => {
+  if (!await dialogoReverTutorial()) return;
   def.painel.open = false;
   iniciarTutorial("rever");
 });
@@ -1277,6 +1666,11 @@ def.corpo.append(def.rever);
 function iniciarTutorial(modo = "primeira") {
   appEl.classList.add("em-tutorial");
   tut = tutorial.criarTutorial(documento(), { modo, agoraMs: performance.now() });
+  tutT0 = performance.now();
+  tutPassoId = null;
+  tutMetaAntes = null;
+  tutTempoP3 = 0;
+  tutP3Em = 0;
   ui.painel.hidden = true;
   lojaUI.fechar();
   abrir(tutorial.puzzleAtual(tut), { novo: modo === "rever" });
@@ -1293,9 +1687,19 @@ function terminarTutorial() {
   ui.painel.hidden = false;
   ui.tutorial.hidden = true;
   ui.tutorialSair.hidden = true;
+  ui.fitaTut.hidden = true;
+  ui.fitaTut.replaceChildren();
   el.regra.hidden = false;
   abrirDia(hoje());
   ir("menu");
+}
+function emitirPasso3(antes, depois) {
+  if (!antes || !depois || antes.passo3 === depois.passo3 || !antes.passo3) return depois;
+  const agora = performance.now();
+  const [n, d] = tutorial.passoEvento(antes, agora);
+  emitir(n, d);
+  depois.passoMs = agora;
+  return depois;
 }
 function vistaTutorial() {
   if (!tut) return null;
@@ -1319,6 +1723,7 @@ function renderTutorial() {
   const d = v.destaque && v.ecra === "puzzle" && jogo ? v.destaque : null;
   const sol = d && jogo.puzzle.solucao;
   tabuleiro.definirGuia(d ? { i: d.i, cor: (_a = d.cor) != null ? _a : sol ? sol[d.i] : null, mao: true } : null);
+  renderFitaTut();
 }
 function verAjudaTutorial() {
   if (!tut || !jogo || jogo.resolvido) return;
@@ -1337,7 +1742,16 @@ function verAjudaTutorial() {
   renderTutorial();
 }
 async function aoResolverTutorial() {
-  const r = tutorial.aoResolver(tut, documento(), hoje(), { pistasIniciais: CONFIG.PISTAS_INICIAIS });
+  if (tut && tut.indice === 2 && tutP3Em) tutTempoP3 = performance.now() - tutP3Em;
+  const antes = tut, agora = performance.now();
+  const r = tutorial.aoResolver(tut, documento(), hoje(), { pistasIniciais: CONFIG.PISTAS_INICIAIS, semPista: !(jogo && jogo.pistasUsadas > 0), agoraMs: agora });
+  if (antes.indice === 2) {
+    const [n, d] = tutorial.passoEvento(antes, agora);
+    emitir(n, d);
+  } else if (r.T.passo === "resultado") {
+    const [n, d] = tutorial.passoEvento(antes, agora);
+    emitir(n, d);
+  }
   tut = r.T;
   if (r.eventos.length) {
     try {
@@ -1349,10 +1763,62 @@ async function aoResolverTutorial() {
   }
   renderTutorial();
 }
+ui.tut3 = criar("section", { id: "ecra-tutorial3", class: "ecra tutorial-cartoes", hidden: true, "aria-label": t("tutorial3.rumo_titulo") });
+appEl.append(ui.tut3);
+let tut3Em = 0;
+const tut3Fechar = (cartao, ms) => emitir("cartao_tutorial:visto", { cartao, ms: Math.round(ms) });
+function mostrarCartoesV3(migracao, TC = null) {
+  const doc = documento(), t0 = performance.now();
+  const avancar = () => {
+    if (!TC) return;
+    const r = tutorial.avancarCartoes(TC, performance.now());
+    TC = r.T;
+    for (const [n, d] of r.eventos) emitir(n, d);
+  };
+  doc.tutorialV3Visto = true;
+  gravarSocial();
+  if (migracao) emitir("cartao_tutorial:migracao", {});
+  const fim = () => {
+    ui.tut3.hidden = true;
+    ui.tut3.replaceChildren();
+    emitir("cartao_tutorial:fim", { total_ms: Math.round(performance.now() - t0) });
+    ir("menu");
+    abrirDia(hoje());
+  };
+  const B = () => {
+    avancar();
+    tut3Em = performance.now();
+    const s = Math.ceil(tutTempoP3 / 1e3), tempo = !migracao && s > 0 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : null;
+    ui.tut3.replaceChildren(cartaoAmigo({ t }, {
+      ir: () => {
+        tut3Fechar("B", performance.now() - tut3Em);
+        avancar();
+        fim();
+      },
+      saltar: () => {
+        emitir("cartao_tutorial:saltado", { cartao: "B" });
+        tut3Fechar("B", performance.now() - tut3Em);
+        avancar();
+        fim();
+      }
+    }, { tempo }));
+  };
+  const lv = vistaMetas().longo, rumo = escolherRumo([...lv.filter((o) => o.id === "OBJ-L1"), ...longasRumo(lv)]);
+  if (TC && TC.passo3 === "T6") avancar();
+  else if (TC) TC = { ...TC, passoMs: performance.now() };
+  tut3Em = performance.now();
+  ui.tut3.hidden = false;
+  ui.tut3.replaceChildren(cartaoRumo({ t }, rumo, { seguinte: () => {
+    tut3Fechar("A", performance.now() - tut3Em);
+    B();
+  } }));
+}
 function continuarTutorial() {
   tut = tutorial.continuar(tut, performance.now());
   if (tut.passo === "saiu") {
+    const primeira = tut.modo === "primeira", TC = tut;
     terminarTutorial();
+    if (primeira) mostrarCartoesV3(false, TC);
     return;
   }
   abrir(tutorial.puzzleAtual(tut), { novo: tut.modo === "rever" });
@@ -1564,10 +2030,11 @@ setInterval(() => {
   mostrarTempo();
 }, 500);
 el.seguinte.addEventListener("click", () => {
-  if (tut) {
+  if (tut && jogo.puzzle.id === tutorial.puzzleAtual(tut)) {
     continuarTutorial();
     return;
   }
+  transicaoIntersticial();
   if (caminho.caminhoDoId(jogo.puzzle.id) != null) {
     abrirCaminho();
     return;
@@ -1613,6 +2080,7 @@ ouvir((nome, dados) => {
   if (nome === "dia:verificado" || nome === "sequencia:alterada" || nome === "puzzle:assentado") renderDiario();
   if (nome === "pistas:alteradas" && jogo) atualizarUI();
   if (["praca:quadrado", "item:obtido", "item:perdido", "compras:direitos", "compras:produtos"].includes(nome)) renderPacotes();
+  if (["compras:direitos", "compras:restauro", "compras:compra", "item:obtido", "item:perdido"].includes(nome)) renderSemAnuncios();
   if (/^(lascas|pistas|item|compras):/.test(nome)) lojaUI.render();
   if (nome === "item:equipado") {
     if ((_b = (_a = documento().inventario) == null ? void 0 : _a.equipado) == null ? void 0 : _b.som) audio.definirSom(documento().inventario.equipado.som);
@@ -1626,6 +2094,13 @@ ouvir((nome, dados) => {
   }
   if (nome === "puzzle:assentado" && assentarPendente && dados && dados.id === assentarPendente.puzzleId) mostrarQuadradoAssente();
   if (nome === "praca:completa" && dados && /^\d{4}-\d{2}$/.test(dados.praca)) {
+    queueMicrotask(() => {
+      try {
+        concederSaz();
+      } catch (e) {
+        console.warn("[main] sazonal:", e);
+      }
+    });
     mesPraca = dados.praca;
     renderPraca();
     acenderMotivo(ui.pracaCorpo.querySelector(".praca"));
@@ -1635,7 +2110,7 @@ ouvir((nome, dados) => {
     pacoteAberto = dados.praca;
     renderPacotes();
     acenderMotivo(ui.pacotesCorpo.querySelector(".praca"));
-    el.mensagem.textContent = t("resultado.largo_completo", { pacote: t(`artigo.${dados.praca}.nome`) });
+    el.mensagem.textContent = t("resultado.largo_completo", { pacote: nomePacote(dados.praca) });
   }
 });
 function estado() {
@@ -1672,7 +2147,7 @@ function gerarDeParams(seed) {
 }
 async function lerTabela(url) {
   try {
-    const r = await fetch(url);
+    const r = await buscar(url);
     if (!r.ok) throw new Error(String(r.status));
     const doc = await r.json();
     return Array.isArray(doc.puzzles) ? doc.puzzles : [];
@@ -1700,7 +2175,14 @@ function marcarMenu() {
 }
 async function arrancar() {
   var _a, _b, _c;
+  pedirDadosArranque();
   ligarCicloDeVida();
+  try {
+    const mq = matchMedia("(prefers-reduced-motion: reduce)");
+    audio.definirMovimentoReduzido(!!mq.matches);
+    if (mq.addEventListener) mq.addEventListener("change", (e) => audio.definirMovimentoReduzido(!!e.matches));
+  } catch (e) {
+  }
   try {
     audio.ligar();
     audio.ligarGesto();
@@ -1710,20 +2192,30 @@ async function arrancar() {
   lista = await lerPuzzles("data/puzzles.json");
   for (const o of lista) el.escolha.add(new Option(o.id, o.id));
   tabela = await lerTabela("data/diarios.json");
-  curados = await lerPuzzles("data/curados.json").catch((e) => {
+  curados = await lerPuzzles("data/curados.json", true).catch((e) => {
     console.warn("[main] curados indispon\xEDveis:", e);
     return [];
   });
-  objetivosCat = await fetch("data/objetivos.json").then((r) => r.json()).then((d) => d.objetivos || []).catch((e) => {
+  const saz = await lerPuzzles("data/sazonais.json", true).catch((e) => {
+    console.warn("[main] sazonais indispon\xEDveis:", e);
+    return [];
+  });
+  trimestresSaz = new Set(saz.map((o) => {
+    var _a2, _b2;
+    return (_b2 = (_a2 = o.origem) == null ? void 0 : _a2.pacote) == null ? void 0 : _b2.slice(8);
+  }).filter(Boolean));
+  curados = [...curados, ...saz];
+  objetivosCat = await buscar("data/objetivos.json").then((r) => r.json()).then((d) => d.objetivos || []).catch((e) => {
     console.warn("[main] objetivos indispon\xEDveis:", e);
     return [];
   });
   const porId = new Map([...lista, ...curados, ...tabela].map((o) => [o.id, o]));
-  const [camTabela, camReserva] = await Promise.all(["data/caminho.json", "data/caminho-reserva.json"].map((u) => fetch(u).then((r) => r.json()).catch((e) => {
+  const [camTabela, camReserva] = await Promise.all(["data/caminho.json", "data/caminho-reserva.json"].map((u) => buscar(u).then((r) => r.json()).catch((e) => {
     console.warn(`[main] ${u} indispon\xEDvel:`, e);
     return null;
   })));
   if (camTabela) caminho.configurarCaminho({ tabela: camTabela, reserva: camReserva });
+  marca("dados");
   const puzzlePorId = (id) => {
     const n = caminho.caminhoDoId(id);
     if (n == null) return porId.get(id) || null;
@@ -1740,26 +2232,38 @@ async function arrancar() {
     console.warn("[main] meta n\xE3o arrancou:", e);
     return {};
   });
-  carregarContas().then((c) => ligarProgressoConta({
-    contas: c,
-    ouvir,
-    documento,
-    substituir: (d) => estadoMeta.substituir(d),
-    gravarJa: (d) => import("./plataforma/gravacao.js").then((g) => g.gravarJa(d)),
-    aoMudar: (e) => contasUI && contasUI.aoMudar(e),
-    aoAplicado: () => {
-      aplicarDefinicoes();
-      renderOficio();
-    }
-  })).catch((e) => console.warn("[main] progresso/contas:", e));
+  marca("meta");
+  carregarContas().then((c) => {
+    contasAtual = c;
+    return ligarProgressoConta({
+      contas: c,
+      ouvir,
+      documento,
+      substituir: (d) => estadoMeta.substituir(d),
+      gravarJa: (d) => import("./plataforma/gravacao.js").then((g) => g.gravarJa(d)),
+      aoMudar: (e) => contasUI && contasUI.aoMudar(e),
+      aoAplicado: () => {
+        aplicarDefinicoes();
+        renderOficio();
+      }
+    });
+  }).catch((e) => console.warn("[main] progresso/contas:", e)).finally(() => contasIniciadas());
   aplicarDefinicoes();
   definirEquipado((_a = documento().inventario) == null ? void 0 : _a.equipado);
   audio.definirSom((_c = (_b = documento().inventario) == null ? void 0 : _b.equipado) == null ? void 0 : _c.som);
   renderOficio();
+  try {
+    concederSaz();
+  } catch (e) {
+    console.warn("[main] sazonal:", e);
+  }
   painelPronto = true;
+  marca("painel");
   iniciarRetorno();
   renderSemAnuncios();
-  anuncios.iniciar().catch((e) => console.warn("[main] an\xFAncios:", e));
+  ouvir((nome) => {
+    if (nome === "consentimento:mudou") ui.privacidade.hidden = !anuncios.opcoesPrivacidade();
+  });
   const pedido = params.get("p");
   if (params.get("data")) abrir(gerarDiario(params.get("data")).puzzle);
   else if (params.get("seed")) abrir(gerarDeParams(params.get("seed")));
@@ -1770,6 +2274,8 @@ async function arrancar() {
     abrirDia(hoje());
     ir("menu");
   }
+  marca("aberto");
+  if (params.get("tutorial") !== "0" && !tut && !tutorial.tutorialPorFazer(documento()) && !documento().tutorialV3Visto && !params.get("p") && !params.get("data") && !params.get("seed") && !params.get("dia")) mostrarCartoesV3(true);
   if (params.get("debug") === "1") {
     globalThis.SEIXO_DEBUG = {
       estado,
@@ -1817,6 +2323,16 @@ async function arrancar() {
         abrir(id);
         return estado();
       },
+      // pacote sazonal (T-1771): sazonais() = { visiveis, comDados } · concederSazonais([MOLD-AAAA-MM…]) junta as molduras
+      // dadas ao inventário (só debug) e corre a concessão → eventos
+      sazonais: () => ({ visiveis: sazonaisVisiveis(), comDados: [...trimestresSaz].sort() }),
+      concederSazonais: (molduras = []) => {
+        const inv = documento().inventario;
+        for (const id of molduras) if (!inv.itens.includes(id)) inv.itens.push(id);
+        const r = concederSaz();
+        renderPacotes();
+        return r.eventos;
+      },
       trocarPacote: (id) => loja.trocar(id).then((r) => {
         renderPacotes();
         return r;
@@ -1824,7 +2340,7 @@ async function arrancar() {
       comprarPacote: (id) => comprarPacote({ id }),
       abaPacote: (id) => {
         pacoteAberto = id;
-        renderPacotes();
+        renderPacotes(true);
         return ui.pacotesCorpo.textContent;
       },
       // Loja (T-395): ecraLoja.abrir('cosmeticos'|'puzzles'|'pistas') · estado() · trocar(id) sem confirmar ·
@@ -1869,6 +2385,10 @@ async function arrancar() {
         painelInicio: !ui.painel.hidden
       } : { ativo: false, painelInicio: !ui.painel.hidden, concluido: !tutorial.tutorialPorFazer(documento()) },
       tutorialIniciar: (modo) => iniciarTutorial(modo),
+      tutorialCartoes: () => {
+        mostrarCartoesV3(false);
+        return !ui.tut3.hidden;
+      },
       tutorialContinuar: () => {
         continuarTutorial();
         return estado();
@@ -1897,7 +2417,7 @@ async function arrancar() {
       },
       uiPacotes: () => {
         var _a2, _b2, _c2, _d;
-        return {
+        return renderPacotes(true), {
           estado: (_b2 = (_a2 = document.getElementById("pacote-estado")) == null ? void 0 : _a2.textContent) != null ? _b2 : null,
           precos: [...ui.pacotesCorpo.querySelectorAll(".pacote-precos button")].map((b) => ({ id: b.id, texto: b.textContent, ativo: !b.disabled })),
           quadrados: [...ui.pacotesCorpo.querySelectorAll(".praca-q")].map((b) => ({ id: b.id, classe: b.className, ativo: !b.disabled })),
@@ -1944,9 +2464,28 @@ async function arrancar() {
     ui.avisoGravacao.hidden = false;
   }
   document.body.dataset.pronto = "1";
+  marca("pronto");
   marcarMenu();
+  setTimeout(() => {
+    try {
+      validarAdiados();
+    } catch (e) {
+      console.warn("[main] valida\xE7\xE3o dos curados:", e);
+    }
+  }, 0);
+  setTimeout(() => {
+    carregarMotivosMes().then((n) => {
+      if (n) {
+        renderPacotes();
+        renderPraca();
+        if (lojaUI.aberta()) lojaUI.render();
+      }
+    }).catch(() => {
+    });
+  }, 1500);
 }
-arrancar().catch((e) => {
+arrancar().then(() => fecharNeutro("jogo")).catch((e) => {
+  fecharNeutro();
   el.mensagem.textContent = `${t("comum.erro_arranque")} (${e.message})`;
   document.body.dataset.erro = e.message;
   console.error(e);

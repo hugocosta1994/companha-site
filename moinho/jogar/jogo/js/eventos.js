@@ -1,6 +1,11 @@
 const EVENTOS = Object.freeze([
   "app:pausa",
   "app:retoma",
+  "anuncio:pedido",
+  "anuncio:mostrado",
+  "anuncio:recompensa",
+  "anuncio:falhou",
+  "consentimento:mudou",
   "jogada:recusada",
   "moinho:fechado",
   "partida:fim",
@@ -20,10 +25,17 @@ const EVENTOS = Object.freeze([
   "async:desistiu",
   "async:fim",
   "xp:ganho",
+  "cosmetico:desbloqueado",
+  "cosmetico:aplicado",
+  "tutorial:passo",
+  "tutorial:fim",
   "nivel:subiu",
   "conquista:ganha",
   "desafio:iniciado",
-  "desafio:fim"
+  "desafio:fim",
+  "cartao:partilhado",
+  "cartao:importado",
+  "cartao:erro"
 ]);
 const ouvintes = /* @__PURE__ */ new Map();
 function ouvir(nome, f) {

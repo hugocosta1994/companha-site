@@ -55,6 +55,7 @@ async function reconciliar({ adaptador, armazem, jogoId, schema, merge = mergePo
     if (remoto && remoto.schema > schema) return { resultado: "erro", erro: { codigo: "desconhecido", motivo: "schema_novo" } };
     const temLocal = local.rev > 0;
     const enviar = async (dados, base) => {
+      if (tamanho(dados) > LIMITE_BYTES) return { erro: { codigo: "limite" } };
       try {
         const nova = await adaptador.guardar(jogoId, schema, base, device, dados);
         if (nova == null) return "perdido";

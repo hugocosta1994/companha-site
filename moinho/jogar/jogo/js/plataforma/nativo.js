@@ -15,6 +15,29 @@ function ligarCicloDeVida({ aoVoltar } = {}) {
     if (cap && cap.exitApp) cap.exitApp();
   } };
 }
+function plugin(nome) {
+  const c = globalThis.Capacitor;
+  if (!(c && typeof c.isNativePlatform === "function" && c.isNativePlatform())) return null;
+  return c.Plugins && c.Plugins[nome] || null;
+}
+async function partilharTexto(texto, sis = globalThis) {
+  const sh = plugin("Share");
+  try {
+    if (sh && sh.share) {
+      await sh.share({ text: texto });
+      return "partilhado";
+    }
+    if (sis.navigator && sis.navigator.share) {
+      await sis.navigator.share({ text: texto });
+      return "partilhado";
+    }
+  } catch {
+    return "cancelado";
+  }
+  return "indisponivel";
+}
 export {
-  ligarCicloDeVida
+  ligarCicloDeVida,
+  partilharTexto,
+  plugin
 };

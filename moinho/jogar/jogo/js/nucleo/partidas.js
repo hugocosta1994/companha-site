@@ -37,7 +37,7 @@ function ultimaDoAdversario(g) {
   const r = lerCodigo(g.codigo);
   if (!r.ok || !r.jogadas.length) return null;
   const m = r.jogadas[r.jogadas.length - 1];
-  if (m === "X") return null;
+  if (m === "X" || m === "W") return null;
   const cor = r.jogadas.length % 2 === 1 ? 1 : 2;
   return cor === corDe(g) ? null : m;
 }
@@ -55,10 +55,10 @@ function desistir(lista, semente, { agora = Date.now() } = {}) {
   if (i < 0) return { ok: false, erro: "invalido" };
   const est = estadoLista(lista[i], agora);
   if (est === "minha_vez") return jogarNaPartida(lista, semente, "X", { agora });
-  if (est === "a_espera" || est === "esquecida") {
-    const nl = lista.slice();
-    nl[i] = { ...lista[i], desistiLocal: true, atualizada: agora };
-    return { ok: true, lista: nl, partida: nl[i], codigo: null };
+  if (est === "a_espera") return jogarNaPartida(lista, semente, "W", { agora });
+  if (est === "esquecida") {
+    const r = lerCodigo(lista[i].codigo);
+    if (r.ok) return jogarNaPartida(lista, semente, r.partida.estado.vez === corDe(lista[i]) ? "X" : "W", { agora });
   }
   return { ok: false, erro: "ilegal" };
 }

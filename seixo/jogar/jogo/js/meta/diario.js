@@ -1,7 +1,7 @@
 import { dataLocal, diasEntre, indiceTabela, naTabela, numeroPartilha, verDia, eFuturo } from "../nucleo/dia.js";
 import { creditarResolucao, recompensaSequencia } from "./lascas.js";
 const RE_DIARIO = /^D-(\d{4}-\d{2}-\d{2})$/;
-const RE_CURADO = /^(PAC-[A-Z]+(?:-[A-Z]+)*)-(\d{2})$/;
+const RE_CURADO = /^(PAC-(?:[A-Z]+(?:-[A-Z]+)*|SAZ-\d{4}-Q[1-4]))-(\d{2})$/;
 const dataDoId = (id) => (RE_DIARIO.exec(id || "") || [])[1] || null;
 const idDoDia = (data) => `D-${data}`;
 function puzzleDoDia(data, { tabela = [], epoca, carregar = (o) => o, reserva }) {

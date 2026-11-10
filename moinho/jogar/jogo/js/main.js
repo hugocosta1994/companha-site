@@ -1,24 +1,33 @@
 import { carregarTextos, t } from "./textos.js";
 import { emitir, ouvir } from "./eventos.js";
-import { ligarCicloDeVida } from "./plataforma/nativo.js";
+import { ligarCicloDeVida, partilharTexto } from "./plataforma/nativo.js";
 import { ler, escrever, CHAVE, CHAVE_STATS, CHAVE_PUZZLES, lerJSON, escreverJSON, apagar } from "./plataforma/gravacao.js";
-import { VERSAO, PERSONALIDADES, PERSONALIDADE_PADRAO, PUZZLES } from "./config.js";
+import { VERSAO, PERSONALIDADES, PERSONALIDADE_PADRAO, PUZZLES, MODOS_STATS_ATIVOS } from "./config.js";
 import { iniciarPartida } from "./jogo/controlo.js";
-import { criarTabuleiro, desenhar, marcarMoinho, limparMoinho, iconePeca } from "./jogo/vista.js";
+import { criarTabuleiro, desenhar, marcarMoinho, limparMoinho, iconePeca, definirFormaPreta } from "./jogo/vista.js";
 import { fase, destinos, jogar as jogarRegra, aplicar } from "./nucleo/regras.js";
 import { novaPartida, jogarCompleta } from "./nucleo/partida.js";
 import { escolherJogada } from "./nucleo/ia.js";
 import { estadoDoPuzzle, avaliarJogada, moinhosEmUm } from "./nucleo/puzzles.js";
-import { registar, registarGlobais, taxaVitoria, vitoriasPorNivel, modoDe, total, mediaJogadas, validarStats, validarResolvidos, vitoriasIA, tipoAberto, resolvidosDoTipo, proximoPuzzle } from "./nucleo/estatisticas.js";
+import { registar, registarGlobais, taxaVitoria, vitoriasPorNivel, modoDe, total, mediaJogadas, validarStats, validarResolvidos, vitoriasIA, tipoAberto, resolvidosDoTipo, proximoPuzzle, statsParaGravar, puzzlesParaGravar } from "./nucleo/estatisticas.js";
 import { contas } from "./contas/contas.js";
 import { ecraConta, ecraLogin } from "./contas/contas-ui.js";
 import { JOGO_ID, SCHEMA, lerProgresso, merge as mergeConta } from "./contas/progresso-conta.js";
 import { validarGravacao } from "./nucleo/gravacao.js";
-import { CHAVE_META, CONQUISTAS, TEMAS_ORDEM, validarMeta, rankDe, proximoRank, hojeISO, registarFim, temaAberto, nivelDe, proximoNivel, patenteDeNivel, xpDoNivel, estadoDesafio, serieAtual, conquistaEvento } from "./nucleo/meta.js";
+import { migrarSaves } from "./nucleo/migracao.js";
+import { novosDesbloqueios, linhasGanhos, proximoDesafio } from "./nucleo/meta.js";
+import { CHAVE_META, CONQUISTAS, TEMAS_ORDEM, validarMeta, rankDe, proximoRank, hojeISO, registarFim, temaAberto, nivelDe, proximoNivel, patenteDeNivel, xpDoNivel, estadoDesafio, serieAtual, conquistaEvento, desbloqueioCosmetico, condicaoCosmetico, aplicarCosmetico, novosCosmeticos } from "./nucleo/meta.js";
 import { criarConvite, jogarNaPartida, importarCodigo, estadoDaPartida, corDe, lerCodigo, novoPerfil, gerarCartao, adicionarAmigo, ordenarTabela, sugerirNivel, SEMENTE_MAX, posicaoDoDia, sementeDoDia, podeJogarDesafio } from "./nucleo/multijogador.js";
 import { normalizarEntrada, agrupar, estadoLista, contarMinhaVez, diasDesde, ultimaDoAdversario, resultadoFim, desistir, apagar as apagarPartida, carregarLista, guardarLista, textoPartilha } from "./nucleo/partidas.js";
 import { NIVEIS_ORDEM } from "./config.js";
-import { criarCompras, playIdDoTema } from "./plataforma/compras.js";
+import { criarCompras, playIdDoTema, SKU_SEM_ANUNCIOS, PRODUTOS } from "./plataforma/compras.js";
+import { SELOS, estadoDe, secoes, cartoesApoio } from "./nucleo/loja-secoes.js";
+import * as anuncios from "./plataforma/anuncios.js";
+import { criarFeedbackUI } from "./jogo/feedbackTesterUI.js";
+import { lerConfig as lerConfigContas } from "./contas/config.js";
+import { criarToques, alternarContador } from "./plataforma/fps.js";
+import { podeSlot, conceder, semAnuncios } from "./nucleo/anuncios-regras.js";
+import { ANUNCIOS } from "./config.js";
 const app = document.getElementById("app");
 const fmt = (k, v = {}) => t(k).replace(/\{(\w+)\}/g, (_, c) => c in v ? v[c] : `{${c}}`);
 const PADRAO = { versao: 0, partida: null, opcoes: { som: true, destaques: true, daltonico: false, vibrar: true }, tutorialVisto: false };
@@ -43,15 +52,29 @@ function aplicarConta(d) {
   stats = validarStats(d.stats);
   resolvidos = validarResolvidos(d.resolvidos);
   escreverJSON(CHAVE_META, meta);
-  escreverJSON(CHAVE_STATS, stats);
-  escreverJSON(CHAVE_PUZZLES, resolvidos);
+  escreverJSON(CHAVE_STATS, statsParaGravar(stats, lerJSON(CHAVE_STATS)));
+  escreverJSON(CHAVE_PUZZLES, puzzlesParaGravar(resolvidos, lerJSON(CHAVE_PUZZLES)));
   aplicarTema(meta.tema);
 }
 const gravarMeta = () => {
   escreverJSON(CHAVE_META, meta);
   sincronizar();
 };
-const ctxMeta = () => ({ vitoriasIA: vitoriasIA(stats), puzzlesResolvidos: Object.keys(resolvidos).length, alquerque: Object.keys(stats).filter((k) => k.startsWith("alq_")).reduce((a, k) => a + stats[k].partidas, 0) });
+const ctxMeta = () => ({ vitoriasIA: vitoriasIA(stats), puzzlesResolvidos: Object.keys(resolvidos).length });
+let cosmeticos = [];
+const itemCosm = (id) => cosmeticos.find((i) => i.id === id);
+function varsCosm(el, peca, moldura) {
+  const pc = peca && itemCosm(peca), md = moldura && itemCosm(moldura);
+  if (pc) {
+    el.style.setProperty("--peca-b", pc.branca);
+    el.style.setProperty("--peca-p", pc.preta);
+  }
+  if (el === document.documentElement) definirFormaPreta(pc ? pc.formaPreta : "quadrado");
+  if (md) {
+    el.style.setProperty("--moldura", md.cor);
+    el.style.setProperty("--moldura-l", `${md.largura || 3}px`);
+  }
+}
 function aplicarTema(id) {
   const th = temas[id] || temas.madeira;
   if (!th) return;
@@ -66,8 +89,14 @@ function aplicarTema(id) {
   st.setProperty("--peca-b", th.branca);
   st.setProperty("--peca-p", th.preta);
   st.setProperty("--ponto", th.ponto);
+  varsCosm(document.documentElement, meta.peca, meta.moldura);
+  document.documentElement.classList.toggle("com-moldura", !!(meta.moldura && itemCosm(meta.moldura)));
 }
 function carregar() {
+  try {
+    migrarSaves({ get: (k) => localStorage.getItem(k), set: (k, v) => localStorage.setItem(k, v) });
+  } catch {
+  }
   const r = validarGravacao(ler());
   dados = r.dados;
   avisoGravacao = r.aviso;
@@ -85,11 +114,11 @@ function carregar() {
   resolvidos = validarResolvidos(lerJSON(CHAVE_PUZZLES));
 }
 const gravarStats = () => {
-  escreverJSON(CHAVE_STATS, stats);
+  escreverJSON(CHAVE_STATS, statsParaGravar(stats, lerJSON(CHAVE_STATS)));
   sincronizar();
 };
 const gravarResolvidos = () => {
-  escreverJSON(CHAVE_PUZZLES, resolvidos);
+  escreverJSON(CHAVE_PUZZLES, puzzlesParaGravar(resolvidos, lerJSON(CHAVE_PUZZLES)));
   sincronizar();
 };
 function gravar() {
@@ -103,6 +132,36 @@ ouvir("som:mudou", ({ ligado }) => {
   dados.opcoes.som = ligado;
   gravar();
 });
+function botaoAnuncio(slot, ctx, aoGanhar) {
+  const caixa = document.createElement("div");
+  caixa.className = "anuncio";
+  if (!podeSlot(meta, slot, ctx).ok) return caixa;
+  const id = ANUNCIOS.SLOTS[slot], direto = semAnuncios(meta);
+  anuncios.recompensa.preparar(id).then((ok) => {
+    if (!ok || !caixa.isConnected || !podeSlot(meta, slot, ctx).ok) return;
+    const nome = t(`mo.ad.${slot}`), txt = direto ? nome : `\u25B6 ${t("mo.ad.ver")} \xB7 ${nome}`;
+    const b = btn(txt, async () => {
+      b.disabled = true;
+      const r = await anuncios.recompensa.mostrar(id);
+      b.remove();
+      if (!r.ganhou) return;
+      const c = conceder(meta, slot, ctx);
+      if (c) {
+        gravarMeta();
+        aoGanhar(c);
+      }
+    }, "contorno anuncio-btn");
+    b.setAttribute("aria-label", txt);
+    caixa.append(b);
+  });
+  return caixa;
+}
+function criarEl(tag, attrs = {}, ...filhos) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  e.append(...filhos);
+  return e;
+}
 function btn(txt, f, cls = "") {
   const b = document.createElement("button");
   b.textContent = txt;
@@ -110,7 +169,7 @@ function btn(txt, f, cls = "") {
   b.addEventListener("click", f);
   return b;
 }
-const NAV_DE = { E1: "jogar", E2: "jogar", E9: "jogar", E9P: "jogar", E10P: "jogar", E11P: "jogar", E13: "jogar", E14: "jogar", E11: "rank", E10: "rank", E12: "loja", E15: "perfil" };
+const NAV_DE = { E1: "jogar", E2: "jogar", E9P: "jogar", E10P: "jogar", E11P: "jogar", E13: "jogar", E14: "jogar", E11: "rank", E12: "loja", E15: "perfil", E9: "perfil", E10: "perfil" };
 const NAV = [["jogar", "mo.nav.jogar", "\u25CB", () => menu()], ["rank", "mo.nav.rank", "\u2605", () => lugar()], ["loja", "mo.nav.loja", "\u25A3", () => loja()], ["perfil", "mo.nav.perfil", "\u263A", () => perfil()]];
 const REABRE = { E1: () => menu(), E11: () => lugar(), E12: () => {
   aplicarTema(meta.tema);
@@ -167,7 +226,7 @@ function topo(titulo, voltarF) {
     b.setAttribute("aria-label", t("mo.nav.voltar"));
     esq.append(b);
   } else {
-    const g = btn("\u2699", () => opcoes(REABRE[ecraAtual] || menu), "icone-b engrenagem");
+    const g = btn("\u2699", () => abrirOpcoes(REABRE[ecraAtual] || menu), "icone-b engrenagem");
     g.setAttribute("aria-label", t("mo.menu.definicoes"));
     dir.append(g);
   }
@@ -200,9 +259,15 @@ function menu() {
   niveis.className = "grupo atalhos";
   niveis.setAttribute("role", "group");
   niveis.setAttribute("aria-label", t("mo.menu.nivel_rapido"));
-  for (const id of ["facil", "media", "dificil"]) niveis.append(btn(t(`e2.nivel.${id}`), () => preparar(id), "atalho"));
+  for (const id of ["facil", "media", "dificil"]) niveis.append(btn(t(`mo.nivel.${NIVEIS_ORDEM.indexOf(id) + 1}.nome`), () => preparar(id), "atalho"));
   const ia = btn(t("mo.menu.jogar_ia"), () => preparar(), dados.partida ? "contorno" : "principal");
-  r.append(l, mini.svg, rk, falta, cartaoDesafio());
+  const prox = proximoDesafio(meta);
+  r.append(l, mini.svg, rk, falta);
+  if (prox) {
+    const pd = par(fmt("mo.menu.proximo", { nivel: t(`mo.nivel.${NIVEIS_ORDEM.indexOf(prox) + 1}.nome`) }), "nota proximo-desafio");
+    r.append(pd);
+  }
+  r.append(cartaoDesafio());
   if (!meta.tutorialFeito) r.append(tut);
   if (dados.partida) r.append(btn(t("e1.continuar"), continuar, "principal"));
   r.append(ia, niveis, comBadge(btn(t("mo.menu.amigo"), mpMenu, "contorno alto")));
@@ -268,11 +333,20 @@ function toast(txt) {
   document.body.append(f);
   setTimeout(() => f.remove(), 2e3);
 }
+function avisarCosm(antes) {
+  for (const n of novosCosmeticos(antes, meta, cosmeticos, ctxMeta())) {
+    const it = itemCosm(n.id);
+    emitir("cosmetico:desbloqueado", n);
+    if (it) toast(fmt("mo.cosm.toast", { nome: it.n }));
+  }
+}
 function eventoMeta(id) {
   const x = conquistaEvento(meta, id);
   if (!x.novas.length) return;
+  const antes = meta;
   meta = x.meta;
   gravarMeta();
+  avisarCosm(antes);
   for (const k of x.novas) {
     emitir("conquista:ganha", { id: k });
     toast(fmt("mo.conq.toast", { nome: t(`mo.conq.${k}.nome`) }));
@@ -336,16 +410,31 @@ function preparar(nivelInicial) {
       v.className = "visto";
       v.setAttribute("aria-hidden", "true");
       b.append(a, c, v);
+      if ((meta.niveisVencidos || []).includes(id)) {
+        const sv = document.createElement("span");
+        sv.className = "selo-vencido";
+        sv.textContent = t("mo.nivel.vencido");
+        sv.title = t("mo.nivel.vencido.aria");
+        b.append(sv);
+        b.setAttribute("aria-description", t("mo.nivel.vencido.aria"));
+      }
       return b;
     });
     g.append(...bs);
     marca();
     r.append(s0, g);
-    if (sug && sug.tipo === "subir") {
-      const q = document.createElement("p");
-      q.className = "nota destaque";
-      q.textContent = fmt("mo.nivel.subiu", { nivel: t(`mo.nivel.${NIVEIS_ORDEM.indexOf(sug.para) + 1}.nome`) });
+    if (sug) {
+      const nome = t(`mo.nivel.${NIVEIS_ORDEM.indexOf(sug.para) + 1}.nome`);
+      const nq = sug.tipo === "descer" ? par(t("mo.nivel.descer.nota"), "nota") : null;
+      const q = btn(fmt(sug.tipo === "subir" ? "mo.nivel.experimentar" : "mo.nivel.descer", { nivel: nome }), () => {
+        esc.nivel = sug.para;
+        marca();
+        q.remove();
+        if (nq) nq.remove();
+      }, "contorno sugestao-nivel");
+      q.dataset.sugestao = sug.tipo;
       r.append(q);
+      if (nq) r.append(nq);
     }
   }
   {
@@ -360,7 +449,7 @@ function preparar(nivelInicial) {
     s.className = "sub";
     s.textContent = t("tab.ia.titulo");
     const g = document.createElement("div");
-    g.className = "grupo";
+    g.className = "grupo grupo-feitios";
     const n = document.createElement("p");
     n.className = "nota";
     const ids = Object.keys(PERSONALIDADES);
@@ -396,7 +485,8 @@ function jogar(cfg) {
     opcoes: () => dados.opcoes,
     guardar: guardarPartida,
     aoPausar: (retomar) => pausa(retomar),
-    aoFim: (p) => fim(p)
+    aoFim: (p) => fim(p),
+    avatar: () => itemCosm(meta.moldura) ? avatarMoldura(itemCosm(meta.moldura), "peq") : null
   });
 }
 function pausa(retomar) {
@@ -424,11 +514,12 @@ function pausa(retomar) {
     }),
     conf,
     btn(t("e5.opcoes"), () => {
-      r.style.display = "none";
-      opcoes(() => {
+      abrirOpcoes(() => {
         r.style.display = "";
         sobrepor();
-      }, true);
+      }, true, () => {
+        r.style.display = "none";
+      });
     }),
     btn(t("e5.sair"), () => {
       fechar();
@@ -445,6 +536,7 @@ function fim(p) {
   const e = p.estado.fim, res = e.resultado;
   dados.partida = null;
   gravar();
+  const metaAntes = meta, ctxAntes = ctxMeta();
   registarPartida(p);
   const rm = registarMeta(p);
   const titulo = res === 0 ? "fim.titulo.empate" : p.modo === "2j" ? res === 1 ? "fim.titulo.brancas" : "fim.titulo.pretas" : res === p.cor ? "fim.titulo.ganhaste" : "fim.titulo.perdeste";
@@ -456,40 +548,36 @@ function fim(p) {
   c.className = "nota";
   const cont = (j) => p.estado.celas.filter((x) => x === j).length + p.estado.porColocar[j];
   c.textContent = fmt("fim.contagem", { brancas: cont(1), pretas: cont(2) });
+  {
+    const mdf = itemCosm(meta.moldura);
+    if (mdf) {
+      const w = document.createElement("div");
+      w.className = "av-fim";
+      w.append(avatarMoldura(mdf, "med"));
+      r.append(w);
+    }
+  }
   r.append(h, m, c);
   if (rm) {
-    if (rm.xp) {
-      const L = rm.xp.linhas, ln = [];
-      for (const k of ["base", "moinhos", "ia", "desafio"]) if (L[k]) ln.push(fmt(`mo.xp.linha.${k}`, { n: L[k] }));
-      const xp = document.createElement("p");
-      xp.className = "nota xp-linhas";
-      xp.textContent = rm.xp.total ? `${fmt("mo.xp.ganho", { n: rm.xp.total })} (${ln.join(" \xB7 ")})` : meta.xpHoje.n >= 400 ? t("mo.xp.teto") : "";
-      if (xp.textContent) r.append(xp);
-      if (rm.xp.total) emitir("xp:ganho", { total: rm.xp.total, linhas: L });
-    }
-    if (rm.subiu) {
-      const nv = document.createElement("p");
-      nv.className = "nota destaque faixa-nivel";
-      nv.textContent = fmt("mo.xp.subiu", { n: rm.nivelDepois });
-      r.append(nv);
-      emitir("nivel:subiu", { de: rm.nivelAntes, para: rm.nivelDepois });
+    const novos = novosDesbloqueios(metaAntes, meta, temas, cosmeticos, ctxAntes, ctxMeta());
+    const linhas = linhasGanhos(rm, novos, { tetoAtingido: meta.xpHoje.n >= 400 });
+    if (rm.xp && rm.xp.total) emitir("xp:ganho", { total: rm.xp.total, linhas: rm.xp.linhas });
+    if (rm.subiu) emitir("nivel:subiu", { de: rm.nivelAntes, para: rm.nivelDepois });
+    for (const k of rm.novas) emitir("conquista:ganha", { id: k });
+    for (const n of novos) emitir("cosmetico:desbloqueado", n);
+    if (linhas.length) {
+      r.append(blocoGanhos(linhas));
+      r.classList.add("com-ganhos");
     }
     const gp = document.createElement("p");
     gp.className = "nota";
     gp.textContent = rm.ganhos ? fmt("mo.fim.ganhos", { n: rm.ganhos }) : p.modo === "ia" && meta.hoje >= 40 ? t("mo.fim.limite") : "";
-    r.append(gp);
+    if (gp.textContent) r.append(gp);
     if (rm.rankDepois > rm.rankAntes) {
       const q = document.createElement("p");
       q.className = "nota destaque";
       q.textContent = fmt("mo.rank.subiste", { rank: t(`mo.rank.${rm.rankDepois}`) });
       r.append(q);
-    }
-    for (const k of rm.novas) {
-      const q = document.createElement("p");
-      q.className = "nota destaque";
-      q.textContent = fmt("mo.conq.novo", { nome: t(`mo.conq.${k}.nome`) });
-      r.append(q);
-      emitir("conquista:ganha", { id: k });
     }
     if (rm.desafioSerie !== void 0) emitir("desafio:fim", { ganhou: res === p.cor, serie: rm.desafioSerie });
   }
@@ -497,13 +585,95 @@ function fim(p) {
   if (p.modo === "ia" && PERSONALIDADES[pers]) {
     const fr = document.createElement("p");
     fr.className = "nota";
-    fr.textContent = t(`tab.ia.${pers}.${res === p.cor ? "perde" : res === 0 ? "abre" : "ganha"}`);
+    fr.textContent = t(`tab.ia.${pers}.${res === p.cor ? "perde" : res === 0 ? "empate" : "ganha"}`);
     r.append(fr);
   }
   r.append(btn(t("fim.revanche"), () => {
     const n = { modo: p.modo, nivel: p.nivel, personalidade: pers, cor: p.modo === "ia" ? 3 - p.cor : 1 };
     comecar(n);
   }, "principal"), btn(t("fim.menu"), menu));
+  if (rm && p.modo === "ia" && res === p.cor && rm.moedas > 0) r.append(botaoAnuncio("A1", { moedasPartida: rm.moedas }, (c2) => toast(fmt("mo.ad.A1.ok", { n: c2.moedas }))));
+  if (rm && cfgAtual && cfgAtual.desafio && res !== p.cor && metaAntesFim) {
+    const antes = metaAntesFim;
+    r.append(botaoAnuncio("A2", {}, () => {
+      meta.desafio = antes.desafio;
+      meta.ultimoDesafio = antes.ultimoDesafio;
+      meta.contadores.desafioDias = antes.contadores.desafioDias;
+      gravarMeta();
+      comecarDesafio();
+    }));
+  }
+}
+function blocoGanhos(linhas) {
+  const b = document.createElement("section");
+  b.className = "ganhos-fim";
+  b.setAttribute("aria-label", t("mo.fim.ganhos.aria"));
+  const h = document.createElement("h3");
+  h.textContent = t("mo.fim.ganhos.titulo");
+  const ul = document.createElement("ul");
+  ul.className = "ganhos-lista";
+  for (const l of linhas) {
+    const li = document.createElement("li");
+    li.dataset.ganho = l.ganho;
+    if (!["xp", "teto"].includes(l.ganho)) li.className = "destaque";
+    const tx = document.createElement("span");
+    tx.className = "ganho-tx";
+    if (l.ganho === "xp") {
+      const ln = [];
+      for (const k of ["base", "moinhos", "ia", "desafio"]) if (l.linhas[k]) ln.push(fmt(`mo.xp.linha.${k}`, { n: l.linhas[k] }));
+      tx.textContent = fmt("mo.fim.ganhos.xp", { n: l.n, linhas: ln.join(t("mo.fim.ganhos.sep")) });
+      li.append(tx);
+    } else if (l.ganho === "nivel") {
+      tx.textContent = fmt("mo.fim.ganhos.nivel", { n: l.n });
+      li.append(tx, barraXP());
+    } else if (l.ganho === "moedas") {
+      tx.textContent = fmt("mo.fim.ganhos.moedas", { n: l.n });
+      li.append(tx);
+    } else if (l.ganho === "conquista") {
+      tx.textContent = fmt("mo.fim.ganhos.conquista", { nome: t(`mo.conq.${l.id}.nome`) });
+      li.append(tx);
+    } else if (l.ganho === "teto") {
+      tx.textContent = t("mo.fim.ganhos.teto");
+      li.append(tx);
+    } else if (l.ganho === "cosmetico") {
+      const it = l.tipo === "tema" ? temas[l.id] : itemCosm(l.id);
+      if (!it) continue;
+      tx.textContent = fmt("mo.fim.ganhos.cosmetico", { nome: it.n });
+      const mini = document.createElement("span");
+      mini.className = `ganho-mini mini-${l.tipo}`;
+      mini.setAttribute("aria-hidden", "true");
+      if (l.tipo === "tema") {
+        mini.style.background = it.fundo;
+        mini.style.borderColor = it.linha;
+        mini.style.color = it.preta;
+      } else if (l.tipo === "peca") {
+        mini.style.background = it.sup || "var(--superficie)";
+        mini.style.color = it.preta;
+      } else if (l.tipo === "moldura") mini.style.borderColor = it.cor;
+      const emUso = () => (l.tipo === "tema" ? meta.tema : meta[l.tipo]) === l.id;
+      const usar = btn("", () => {
+        if (l.tipo === "tema") mudarTema(l.id);
+        else {
+          const o = aplicarCosmetico(meta, it, ctxMeta());
+          if (!o.aplicado) return;
+          meta = o.meta;
+          gravarMeta();
+          aplicarTema(meta.tema);
+        }
+        emitir("cosmetico:aplicado", { id: l.id });
+        marca();
+      }, "contorno usar");
+      const marca = () => {
+        usar.textContent = t(emUso() ? "mo.fim.ganhos.em_uso" : "mo.fim.ganhos.usar");
+        usar.disabled = emUso();
+      };
+      marca();
+      li.append(mini, tx, usar);
+    }
+    ul.append(li);
+  }
+  b.append(h, ul);
+  return b;
 }
 function chegouAVoar(p) {
   try {
@@ -516,14 +686,16 @@ function chegouAVoar(p) {
   }
   return false;
 }
+let metaAntesFim = null;
 function registarMeta(p) {
   const res = p.estado.fim.resultado;
   const eu = p.modo === "ia" ? p.cor : 1;
   const resultado = res === 0 ? "e" : p.modo === "2j" ? "v" : res === p.cor ? "v" : "d";
-  const tiradas = p.historico.filter((m) => m !== "X" && m.tirar !== void 0).length;
+  const tiradas = p.historico.filter((m) => m !== "X" && m !== "W" && m.tirar !== void 0).length;
   const pers = cfgAtual && cfgAtual.personalidade;
   const meus = p.historico.filter((m, i) => m.tirar !== void 0 && (i % 2 === 0 ? 1 : 2) === eu).length;
-  const r = registarFim(meta, { modo: p.modo, nivel: p.nivel, resultado, jogadas: p.historico.length, pecasPerdidas: tiradas - meus, gata: pers === "mobilidade", iaMoinhos: p.modo === "ia" ? tiradas - meus : void 0, jogadasMinhas: Math.ceil((p.historico.length - (cfgAtual && cfgAtual.desafioIni || 0)) / (p.modo === "ia" ? 2 : 1)), moinhos: meus, fase3: chegouAVoar(p), desafio: !!(cfgAtual && cfgAtual.desafio) }, ctxMeta());
+  const r = registarFim(meta, { modo: p.modo, nivel: p.nivel, resultado, jogadas: p.historico.length, pecasPerdidas: tiradas - meus, gata: pers === "mobilidade", personalidade: pers, iaMoinhos: p.modo === "ia" ? tiradas - meus : void 0, jogadasMinhas: Math.ceil((p.historico.length - (cfgAtual && cfgAtual.desafioIni || 0)) / (p.modo === "ia" ? 2 : 1)), moinhos: meus, fase3: chegouAVoar(p), desafio: !!(cfgAtual && cfgAtual.desafio) }, ctxMeta());
+  metaAntesFim = JSON.parse(JSON.stringify(meta));
   meta = r.meta;
   gravarMeta();
   return r;
@@ -535,10 +707,11 @@ function registarPartida(p) {
   stats = registarGlobais(stats, { moinhos: p.historico.filter((m) => m.tirar !== void 0).length, resultado, dia: hojeISO() }, meta.contadores.melhorSerie);
   gravarStats();
 }
+const nomeNivel = (id) => t(`mo.nivel.${NIVEIS_ORDEM.indexOf(id) + 1}.nome`);
 function estatisticas() {
   const r = ecra("E10");
   r.append(topo(t("tab.stats.titulo"), perfil));
-  const modos = Object.keys(stats).filter((k) => k !== "_g" && stats[k].partidas > 0);
+  const modos = MODOS_STATS_ATIVOS.filter((k) => stats[k] && stats[k].partidas > 0);
   const g = stats._g || { moinhos: 0, melhorSerieGeral: 0 }, tg = total(stats), tx = taxaVitoria(stats);
   r.append(par(textoNivel(), "sub"), barraXP());
   const dl = document.createElement("dl");
@@ -556,7 +729,7 @@ function estatisticas() {
   for (const x of vn) {
     const li = document.createElement("li");
     const nm = document.createElement("span");
-    nm.textContent = t(`tab.stats.modo.ia_${x.nivel}`).replace(/^Moinho, /, "");
+    nm.textContent = nomeNivel(x.nivel);
     const br = document.createElement("i");
     br.style.width = `${Math.round(100 * x.v / mx)}%`;
     const nu = document.createElement("b");
@@ -590,7 +763,7 @@ function estatisticas() {
     d.append(s, l);
     r.append(d);
   };
-  for (const k of modos) bloco(t(`tab.stats.modo.${k}`), stats[k], k === "dois");
+  for (const k of modos) bloco(k.startsWith("ia_") ? `${t("mo.nivel.titulo")}: ${nomeNivel(k.slice(3))}` : t(`tab.stats.modo.${k}`), stats[k], k === "dois");
   if (modos.length) bloco(t("tab.stats.total"), total(stats));
   const pz = document.createElement("p");
   pz.className = "nota";
@@ -635,11 +808,12 @@ function finais() {
     r.append(f);
   }
 }
+const adDicasPuzzle = /* @__PURE__ */ new Map();
 function puzzle(pz, dicasUsadas = 0) {
   const r = ecra("E9");
   let e = estadoDoPuzzle(pz), passo = 0, sel = null, feito = false, dicas = PUZZLES.dicasMax - dicasUsadas, dicaPonto = null;
-  const h = document.createElement("h2");
-  h.textContent = `${t(`tab.puzzle.${pz.tipo}.nome`)} \xB7 ${pz.id}`;
+  const doTipo = puzzles.filter((q) => q.tipo === pz.tipo), nPz = Math.max(1, doTipo.findIndex((q) => q.id === pz.id) + 1);
+  const h = topo(`${t(`tab.puzzle.${pz.tipo}.nome`)} \xB7 ${fmt("tab.puzzle.n_de", { n: nPz, total: doTipo.length || 3 })}`, finais);
   const d = document.createElement("p");
   d.className = "nota";
   d.textContent = t(`tab.puzzle.${pz.tipo}.desc`);
@@ -659,12 +833,27 @@ function puzzle(pz, dicasUsadas = 0) {
     dicaPonto = sol.para;
     pintar();
   });
+  let caixaDica = null;
+  function ofertaDica() {
+    if (feito || dicas > 0 || caixaDica) return;
+    caixaDica = botaoAnuncio("A3", { dicasUsadasNoPuzzle: adDicasPuzzle.get(pz.id) || 0 }, () => {
+      adDicasPuzzle.set(pz.id, (adDicasPuzzle.get(pz.id) || 0) + 1);
+      dicas++;
+      caixaDica = null;
+      pintar();
+    });
+    acoes.after(caixaDica);
+  }
   function pintar() {
     const dests = sel !== null ? destinos(e, sel) : [];
     if (dicaPonto !== null) dests.push(dicaPonto);
     desenhar(tab, e.celas, { destinos: dests, selecionado: sel, daltonico: dados.opcoes.daltonico });
-    dicaBtn.textContent = `${t("tab.puzzle.dica")} \xB7 ${dicas > 0 ? fmt("tab.puzzle.dicas_resto", { n: dicas }) : t("tab.puzzle.sem_dicas")}`;
+    dicaBtn.textContent = dicas > 0 ? `${t("tab.puzzle.dica")} (${dicas})` : t("tab.puzzle.sem_dicas");
     dicaBtn.disabled = dicas <= 0 || feito;
+    if (feito && caixaDica) {
+      caixaDica.remove();
+      caixaDica = null;
+    } else ofertaDica();
   }
   function tocar(pt) {
     if (feito) return;
@@ -691,7 +880,7 @@ function puzzle(pz, dicasUsadas = 0) {
     if (res === "segue") {
       e = jogarRegra(e, m);
       pintar();
-      const resp = escolherJogada(e, { nivel: "media", semLimite: true });
+      const resp = escolherJogada(e, { nivel: "media", semLimite: true, variar: false });
       e = aplicar(e, resp);
       passo = 1;
       pintar();
@@ -709,7 +898,7 @@ function puzzle(pz, dicasUsadas = 0) {
     const prox = proximoPuzzle(resolvidos, puzzles);
     acoes.replaceChildren(...prox ? [btn(t("tab.puzzle.proximo"), () => puzzle(prox), "principal")] : [], btn(t("tab.puzzle.voltar"), finais));
   }
-  acoes.append(dicaBtn, btn(t("tab.puzzle.recomecar"), () => puzzle(pz, PUZZLES.dicasMax - dicas)), btn("\u2039", finais, "voltar"));
+  acoes.append(dicaBtn, btn(t("tab.puzzle.recomecar"), () => puzzle(pz, PUZZLES.dicasMax - dicas)));
   pintar();
 }
 function comoJogar(depois) {
@@ -756,6 +945,28 @@ function comoJogar(depois) {
     if (i < 2) r.append(btn(t("e7.saltar"), fimTut));
   }
   pagina();
+}
+let ecraOrigemFb = "";
+let fbUIc = null;
+function fb() {
+  if (!fbUIc) {
+    fbUIc = criarFeedbackUI({ t: fmt, criar: criarEl, lerConfig: () => lerConfigContas(), ecraAtual: () => ecraOrigemFb });
+    document.body.append(fbUIc.dlg);
+  }
+  return fbUIc;
+}
+async function abrirOpcoes(voltar2, daPausa = false, aoPreparar = () => {
+}) {
+  ecraOrigemFb = String(ecraAtual || "");
+  try {
+    await Promise.race([Promise.resolve(fb().aoAbrirDefinicoes()), new Promise((r) => setTimeout(r, 1500))]);
+  } catch {
+  }
+  aoPreparar();
+  opcoes(() => {
+    fb().aoFecharDefinicoes();
+    voltar2();
+  }, daPausa);
 }
 function opcoes(voltar2, daPausa = false) {
   const alvo = daPausa ? document.createElement("div") : ecra("E8");
@@ -821,7 +1032,25 @@ function opcoes(voltar2, daPausa = false) {
   });
   const v = document.createElement("p");
   v.textContent = fmt("e8.versao", { v: VERSAO });
-  alvo.append(som, dest, dalt, vib, repor, rep, v, btn("\u2039", () => {
+  {
+    const toque = criarToques(5);
+    v.addEventListener("click", () => {
+      if (toque()) alternarContador(t, fmt);
+    });
+  }
+  const priv = btn(t("mo.anuncio.privacidade"), () => {
+    anuncios.abrirPrivacidade().catch((e) => console.warn("[main] privacidade:", e));
+  });
+  priv.id = "btn-def-privacidade";
+  priv.hidden = !anuncios.opcoesPrivacidade();
+  anuncios.iniciar().then(() => {
+    priv.hidden = !anuncios.opcoesPrivacidade();
+  }).catch(() => {
+  });
+  const avisoCompras = par("", "msg");
+  avisoCompras.setAttribute("role", "status");
+  fb().botao.hidden = !fb().visivel();
+  alvo.append(som, dest, dalt, vib, priv, btnRestaurar(avisoCompras), avisoCompras, fb().botao, repor, rep, v, btn("\u2039", () => {
     if (daPausa) alvo.remove();
     voltar2();
   }, "voltar"));
@@ -844,6 +1073,24 @@ const compras = criarCompras({ tem: (tema) => !!meta.pagos[tema], dar: (tema) =>
     gravarMeta();
   }
 } });
+function btnRestaurar(aviso, depois = () => {
+}) {
+  let aCorrer = false;
+  const b = btn(t("mo.loja.restaurar"), async () => {
+    if (aCorrer) return;
+    aCorrer = true;
+    b.disabled = true;
+    try {
+      const x = await compras.restaurar();
+      aviso.textContent = x.resultado === "erro" ? t("mo.loja.sem_ligacao") : x.n ? fmt("mo.cosm.restauradas", { n: x.n }) : t("mo.loja.restaurar.vazio");
+      depois();
+    } finally {
+      aCorrer = false;
+      b.disabled = false;
+    }
+  }, "btn-restaurar");
+  return b;
+}
 const mudarTema = (id) => {
   meta.tema = id;
   gravarMeta();
@@ -852,13 +1099,24 @@ const mudarTema = (id) => {
 function tutorial(depois) {
   const r = ecra("E7");
   const LINHA = [0, 1, 2], ADV = [12, 20];
-  let passo = 0, sel = null;
+  const T0 = Date.now();
+  let passo = 0, sel = null, temp = null;
+  let sub = 0;
+  const reduzir = () => {
+    try {
+      return matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      return false;
+    }
+  };
   const celas = new Array(24).fill(0);
   for (const p of ADV) celas[p] = 2;
   const msg = par("", "msg");
   msg.setAttribute("role", "status");
   const txt = par("", "sub");
   const prog = par("");
+  const extra = document.createElement("div");
+  extra.className = "tut-extra";
   let de = null;
   const tab = criarTabuleiro({ aoPonto: (pt, acao) => {
     if (acao === "down") {
@@ -876,29 +1134,136 @@ function tutorial(depois) {
   } });
   const acoes = document.createElement("div");
   acoes.className = "acoes";
-  const fimTut = () => {
+  const fimTut = (concluido) => {
+    clearTimeout(temp);
+    emitir("tutorial:fim", { saltado: !concluido, ms: Date.now() - T0 });
+    if (concluido && !meta.tutorialCompleto) {
+      meta.tutorialCompleto = true;
+      meta.xp += 50;
+    }
     meta.tutorialFeito = true;
     dados.tutorialVisto = true;
     gravarMeta();
     gravar();
     depois();
   };
-  r.append(h2(t("mo.tut.titulo")), par(t("mo.tut.objetivo"), "objetivo"), prog, tab.svg, txt, msg, acoes);
+  r.append(h2(t("mo.tut.titulo")), par(t("mo.tut.objetivo"), "objetivo"), prog, tab.svg, txt, msg, extra, acoes);
+  const maq = (el) => {
+    el.classList.add("tut-maqueta");
+    return el;
+  };
+  const exemplo = () => par(t("mo.tut.exemplo"), "nota tut-exemplo");
+  const brilho = (b) => {
+    b.classList.add("tut-alvo");
+    return b;
+  };
+  const codigo = () => {
+    const c = document.createElement("code");
+    c.className = "tut-codigo";
+    c.textContent = "MOI1-EXEMPLO";
+    c.setAttribute("aria-hidden", "true");
+    c.style.userSelect = "none";
+    return c;
+  };
+  function barraMaqueta() {
+    const w = maq(document.createElement("div"));
+    w.className += " xp";
+    const rm = reduzir();
+    const b = document.createElement("div");
+    b.className = "xp-barra";
+    b.setAttribute("role", "progressbar");
+    b.setAttribute("aria-label", t("mo.xp.barra"));
+    b.setAttribute("aria-valuemin", "0");
+    b.setAttribute("aria-valuemax", "60");
+    b.setAttribute("aria-valuenow", rm ? "60" : "0");
+    const i = document.createElement("i");
+    i.style.width = rm ? "100%" : "0%";
+    if (!rm) i.style.transition = "width 800ms linear";
+    b.append(i);
+    const nv = par(rm ? t("mo.tut.7.nivel") : "", "nota destaque faixa-nivel");
+    if (!rm) {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        i.style.width = "100%";
+      }));
+      setTimeout(() => {
+        nv.textContent = t("mo.tut.7.nivel");
+        b.setAttribute("aria-valuenow", "60");
+      }, 800);
+    }
+    w.append(exemplo(), b, par(t("mo.tut.7.linhas"), "nota"), nv);
+    return w;
+  }
   function pintar() {
+    clearTimeout(temp);
     msg.textContent = "";
+    extra.replaceChildren();
+    acoes.replaceChildren();
+    const maquetas = passo >= 6 && passo <= 8;
+    tab.svg.style.display = maquetas ? "none" : "";
     let alvo = passo < 3 ? [LINHA[passo]] : [];
     if (passo === 4) alvo = sel === null ? [] : [3];
     if (passo === 5) alvo = sel === null ? [] : celas.map((v, i) => v ? -1 : i).filter((i) => i >= 0);
-    desenhar(tab, celas, { destinos: alvo, selecionado: sel !== null ? sel : passo === 4 ? 2 : passo === 5 ? 0 : null, removiveis: passo === 3 ? ADV : null, daltonico: dados.opcoes.daltonico });
-    prog.textContent = passo < 6 ? fmt("mo.tut.passo", { n: passo + 1 }) : "";
-    txt.textContent = t(`mo.tut.${passo + 1}`);
-    acoes.replaceChildren();
-    if (passo === 6) {
+    if (!maquetas) desenhar(tab, celas, { destinos: alvo, selecionado: sel !== null ? sel : passo === 4 ? 2 : passo === 5 ? 0 : null, removiveis: passo === 3 ? ADV : null, daltonico: dados.opcoes.daltonico });
+    prog.textContent = passo < 9 ? fmt("mo.tut.passo", { n: passo + 1 }) : "";
+    const CH = ["1", "2", "3", "4", "5", "6", "7.xp", sub ? "8.codigo" : "8.convidar", sub ? "9.recebida" : "9.colar"];
+    txt.textContent = passo < 9 ? t(`mo.tut.${CH[passo]}`) : "";
+    if (passo === 9) {
       msg.textContent = t("mo.tut.fim");
-      acoes.append(btn(t("mo.tut.comecar"), fimTut, "principal"));
-    } else acoes.append(btn(t("mo.tut.saltar"), fimTut));
+      acoes.append(btn(t("mo.tut.comecar"), () => fimTut(true), "principal"));
+      return;
+    }
+    emitir("tutorial:passo", { n: passo + 1 });
+    const seguinte = () => {
+      sub = 0;
+      passo++;
+      pintar();
+    };
+    const abrir = () => {
+      sub = 1;
+      pintar();
+    };
+    let dica = null;
+    if (passo === 6) {
+      extra.append(barraMaqueta());
+      dica = btn(t("mo.tut.7.continuar"), seguinte, "principal");
+      acoes.append(dica);
+    } else if (passo === 7 && !sub) {
+      dica = brilho(btn(t("tab.async.convidar"), abrir));
+      extra.append(maq(dica));
+    } else if (passo === 7) {
+      const p = btn(t("tab.async.partilhar"), () => {
+      });
+      p.setAttribute("aria-hidden", "true");
+      p.tabIndex = -1;
+      p.style.pointerEvents = "none";
+      extra.append(maq(Object.assign(document.createElement("div"), {})));
+      extra.lastChild.append(exemplo(), codigo(), p);
+      dica = btn(t("mo.tut.7.continuar"), seguinte, "principal");
+      acoes.append(dica);
+    } else if (passo === 8 && !sub) {
+      const w = maq(document.createElement("div"));
+      dica = brilho(btn(t("tab.async.colar"), abrir));
+      w.append(exemplo(), codigo(), dica);
+      extra.append(w);
+    } else if (passo === 8) {
+      extra.append(maq(Object.assign(document.createElement("div"), {})));
+      extra.lastChild.append(exemplo());
+      tab.svg.style.display = "";
+      const c2 = new Array(24).fill(0);
+      c2[0] = 2;
+      c2[1] = 1;
+      c2[2] = 1;
+      desenhar(tab, c2, { selecionado: 1, destinos: [4], daltonico: dados.opcoes.daltonico });
+      temp = setTimeout(() => desenhar(tab, c2, { daltonico: dados.opcoes.daltonico }), 600);
+      dica = btn(t("mo.tut.7.continuar"), seguinte, "principal");
+      acoes.append(dica);
+    }
+    acoes.append(btn(t("mo.tut.saltar"), () => fimTut(false)));
+    const d = dica;
+    temp = setTimeout(() => (d || tab.svg).classList.add("tut-alvo"), 8e3);
   }
   function tocar(pt) {
+    if (passo > 5) return;
     if (passo < 3) {
       if (pt !== LINHA[passo]) {
         msg.textContent = t("mo.tut.dica.errada");
@@ -907,6 +1272,7 @@ function tutorial(depois) {
       celas[pt] = 1;
       passo++;
       if (passo === 3) {
+        clearTimeout(temp);
         desenhar(tab, celas, { daltonico: dados.opcoes.daltonico });
         marcarMoinho(tab, LINHA);
         emitir("moinho:fechado", { jogador: 1, linha: LINHA, removiveis: ADV });
@@ -973,7 +1339,9 @@ function contagemConq(k) {
     puzzles: f(Object.keys(resolvidos).length, 10),
     puzzles_todos: f(Object.keys(resolvidos).length, puzzles.length || 1),
     nivel10: f(nivelDe(meta.xp), 10),
-    nivel20: f(nivelDe(meta.xp), 20)
+    nivel20: f(nivelDe(meta.xp), 20),
+    nivel30: f(nivelDe(meta.xp), 30),
+    quatro_feitios: f((meta.persVencidas || []).length, 4)
   };
   return M[k] || "";
 }
@@ -1006,6 +1374,34 @@ function lugar() {
   }
   r.append(lista, btn(t("mo.menu.amigos_rank"), () => amigos()));
 }
+function guirlanda(cor) {
+  const NS = "http://www.w3.org/2000/svg", sv = document.createElementNS(NS, "svg");
+  sv.setAttribute("class", "guirlanda");
+  sv.setAttribute("viewBox", "0 0 100 100");
+  sv.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 9; i++) {
+    const a = Math.PI * (0.1 + 0.8 * i / 8), x = 50 + 46 * Math.cos(a + Math.PI), y = 50 + 46 * Math.sin(a + Math.PI);
+    const tri = document.createElementNS(NS, "path");
+    tri.setAttribute("d", `M${x - 5} ${y - 3} L${x + 5} ${y - 3} L${x} ${y + 7} Z`);
+    tri.setAttribute("fill", i % 2 ? cor : "var(--ouro, #B08A2E)");
+    sv.append(tri);
+  }
+  return sv;
+}
+function avatarMoldura(md, tam = "med") {
+  const nome = meta.perfil && meta.perfil.alcunha ? meta.perfil.alcunha : t("mo.perfil.sem_alcunha");
+  const av = document.createElement("span");
+  av.className = `avatar ${tam}`;
+  av.setAttribute("aria-hidden", "true");
+  av.textContent = [...nome][0].toUpperCase();
+  if (md) {
+    av.classList.add("av-m");
+    av.style.setProperty("--moldura", md.cor);
+    av.style.setProperty("--moldura-l", `${md.largura || 3}px`);
+    if (md.guirlanda) av.append(guirlanda(md.cor));
+  }
+  return av;
+}
 function perfil() {
   const r = ecra("E15");
   r.append(topo(t("mo.perfil.titulo")));
@@ -1018,7 +1414,15 @@ function perfil() {
   av.textContent = [...nome][0].toUpperCase();
   const nm = document.createElement("strong");
   nm.textContent = nome;
+  const md = itemCosm(meta.moldura), tt0 = itemCosm(meta.titulo);
+  if (md && md.guirlanda) av.append(guirlanda(md.cor));
   cab.append(av, nm);
+  if (tt0) {
+    const ti = document.createElement("span");
+    ti.className = "perfil-titulo";
+    ti.textContent = tt0.n;
+    cab.append(ti);
+  }
   r.append(cab);
   const tt = total(stats);
   const linhas = document.createElement("dl");
@@ -1032,78 +1436,237 @@ function perfil() {
     d1.append(a, b);
     linhas.append(d1);
   }
-  r.append(linhas, btn(t("mo.perfil.editar"), () => amigos(), "contorno"), btn(t("tab.stats.titulo"), estatisticas), btn(t("mo.perfil.conta"), () => conta(), "contorno"));
+  r.append(linhas, btn(t("mo.perfil.editar"), () => amigos(), "contorno"), btn(t("tab.puzzle.titulo"), finais), btn(t("tab.stats.titulo"), estatisticas), btn(t("mo.perfil.conta"), () => conta(), "contorno"));
 }
 function conta() {
   ecraConta(contas, { ecra, topo, btn, par, t, aoAplicar: async () => {
     aplicarConta(await contas.carregar());
   }, aoSair: entrada });
 }
-function loja() {
+function loja(sep = "temas") {
   const r = ecra("E12");
-  r.append(topo(t("mo.loja.titulo")), par(t("mo.loja.sem_anuncios")));
+  r.append(topo(t("mo.cosm.titulo")), par(t("mo.loja.sem_anuncios")));
+  const saldo = par("", "nota");
+  const abas = document.createElement("div");
+  abas.className = "abas";
+  abas.setAttribute("role", "tablist");
   const caixa = document.createElement("div");
-  caixa.className = "loja grelha";
+  caixa.className = "loja";
   const aviso = par("", "msg");
   aviso.setAttribute("role", "status");
-  function lista() {
-    caixa.replaceChildren();
-    for (const id of TEMAS_ORDEM) {
-      const th = temas[id];
-      if (!th) continue;
-      const aberto = temaAberto(id, th.desb, ctxMeta(), meta);
-      const c = document.createElement("div");
-      c.className = "item cartao-tema";
-      const st = c.style;
-      st.setProperty("--fundo", th.fundo);
-      st.setProperty("--superficie", th.sup);
-      st.setProperty("--tinta", th.linha);
-      st.setProperty("--ferrugem", th.sel);
-      st.setProperty("--peca-b", th.branca);
-      st.setProperty("--peca-p", th.preta);
-      st.setProperty("--ponto", th.ponto);
-      const pv = criarTabuleiro();
-      pv.svg.classList.add("mini-tema");
-      pv.svg.removeAttribute("role");
-      pv.svg.setAttribute("aria-hidden", "true");
-      const cm = new Array(24).fill(0);
-      for (const [pt, v] of Object.entries({ 0: 1, 4: 1, 9: 2, 14: 2, 21: 1, 12: 2 })) cm[+pt] = v;
-      desenhar(pv, cm, {});
-      const nome = document.createElement("span");
-      nome.className = "nome";
-      nome.textContent = th.n;
-      c.append(pv.svg, nome);
-      if (aberto) c.append(meta.tema === id ? par(t("mo.loja.em_uso"), "em-uso") : btn(t("mo.loja.usar"), () => {
-        mudarTema(id);
-        lista();
-      }));
-      else if (th.desb === "loja (cosmetico)") c.append(btn(fmt("mo.loja.comprar", { preco: compras.preco(playIdDoTema(id)) }), async () => {
-        aviso.textContent = "";
-        const x = await compras.comprar(playIdDoTema(id));
-        if (x.resultado === "concluida") {
-          aviso.textContent = fmt("mo.loja.comprado", { nome: th.n });
-          lista();
-        } else if (x.resultado === "erro") aviso.textContent = t(x.erro === "sem_rede" || x.erro === "loja_indisponivel" ? "mo.loja.sem_ligacao" : "mo.loja.erro");
-        else if (x.resultado === "pendente") aviso.textContent = t("mo.loja.pendente");
-      }));
-      else c.append(par(fmt("mo.loja.bloqueado", { como: th.desb }), "nota-tema"));
-      caixa.append(c);
+  const erroCompra = (x) => {
+    if (x.resultado === "erro") aviso.textContent = t(x.erro === "sem_rede" || x.erro === "loja_indisponivel" ? "mo.loja.sem_ligacao" : "mo.loja.erro");
+    else if (x.resultado === "pendente") aviso.textContent = t("mo.loja.pendente");
+  };
+  const comprarTema = async (id, th) => {
+    aviso.textContent = "";
+    const x = await compras.comprar(playIdDoTema(id));
+    if (x.resultado === "concluida") {
+      aviso.textContent = fmt("mo.loja.comprado", { nome: th.n });
+      lista();
+    } else erroCompra(x);
+  };
+  const abertoDe = (item, tipo) => tipo === "tema" ? temaAberto(item.id, item.desb, ctxMeta(), meta) : desbloqueioCosmetico(item.desb, ctxMeta(), meta) === true;
+  const fraseTema = (item) => {
+    const k = `tab.tema.${item.id}.desbloqueio`;
+    const f = t(k);
+    return f === `\xAB${k}\xBB` ? null : f;
+  };
+  const condTxt = (item, semPrefixo = false) => {
+    const c = condicaoCosmetico(item.desb);
+    if (c) return fmt(semPrefixo && c.chave === "mo.cosm.conq" ? "mo.cosm.conq.selo" : c.chave, { n: c.valor, nome: c.chave === "mo.cosm.conq" ? t(`mo.conq.${c.valor}.nome`) : "" });
+    const f = fraseTema(item);
+    return f || (semPrefixo ? String(item.desb) : fmt("mo.loja.bloqueado", { como: item.desb }));
+  };
+  const vars = (el, th) => {
+    const st = el.style;
+    st.setProperty("--fundo", th.fundo);
+    st.setProperty("--superficie", th.sup);
+    st.setProperty("--tinta", th.linha);
+    st.setProperty("--ferrugem", th.sel);
+    st.setProperty("--peca-b", th.branca);
+    st.setProperty("--peca-p", th.preta);
+    st.setProperty("--ponto", th.ponto);
+  };
+  const miniTab = (cm, forma) => {
+    const pv = criarTabuleiro();
+    pv.svg.classList.add("mini-tema", "com-moldura");
+    pv.svg.removeAttribute("role");
+    pv.svg.setAttribute("aria-hidden", "true");
+    desenhar(pv, cm, { daltonico: dados.opcoes.daltonico, formaPreta: forma });
+    return pv.svg;
+  };
+  const formaDe = (item, tipo) => (tipo === "peca" ? item.formaPreta : (itemCosm(meta.peca) || {}).formaPreta) || "quadrado";
+  const pecasEx = (o) => {
+    const cm = new Array(24).fill(0);
+    for (const [pt, v] of Object.entries(o)) cm[+pt] = v;
+    return cm;
+  };
+  function previa(item, tipo) {
+    const th = tipo === "tema" ? item : temas[meta.tema] || temas.madeira;
+    const pv = document.createElement("div");
+    pv.className = "previa";
+    pv.setAttribute("role", "dialog");
+    pv.setAttribute("aria-label", item.n);
+    vars(pv, th);
+    varsCosm(pv, tipo === "peca" ? item.id : meta.peca, tipo === "moldura" ? item.id : meta.moldura);
+    const aberto = abertoDe(item, tipo);
+    const acs = document.createElement("div");
+    acs.className = "acoes";
+    const ap = btn(t("mo.cosm.aplicar"), () => {
+      if (tipo === "tema") mudarTema(item.id);
+      else {
+        const o = aplicarCosmetico(meta, item, ctxMeta());
+        if (!o.aplicado) return;
+        meta = o.meta;
+        gravarMeta();
+        aplicarTema(meta.tema);
+      }
+      emitir("cosmetico:aplicado", { id: item.id });
+      lista();
+    }, "principal");
+    ap.disabled = !aberto;
+    acs.append(ap, btn(t("mo.cosm.voltar"), () => pv.remove(), "contorno"));
+    if (tipo === "moldura") {
+      const cmp = document.createElement("div");
+      cmp.className = "av-cmp";
+      for (const [md, rot] of [[null, t("mo.moldura.sem")], [item, item.n]]) {
+        const f = document.createElement("figure");
+        f.append(avatarMoldura(md, "grd"));
+        const fc = document.createElement("figcaption");
+        fc.textContent = rot;
+        f.append(fc);
+        cmp.append(f);
+      }
+      pv.append(par(item.n, "sub"), cmp, par(t(`mo.moldura.${item.id}.desc`), "nota"), par(aberto ? "" : condTxt(item), "nota"), acs);
+    } else pv.append(par(item.n, "sub"), miniTab(pecasEx({ 0: 1, 4: 1, 9: 2, 14: 2 }), formaDe(item, tipo)), par(aberto ? "" : condTxt(item), "nota"), acs);
+    r.append(pv);
+  }
+  function selo(est, cond = "", preco = "") {
+    const d = SELOS[est];
+    const e = document.createElement("p");
+    e.className = `selo selo-${d.forma}`;
+    const ic = document.createElement("span");
+    ic.setAttribute("aria-hidden", "true");
+    ic.textContent = d.icone + " ";
+    e.append(ic, document.createTextNode(d.chave ? t(d.chave) : preco));
+    if (est === "ganha" && cond) {
+      const c = document.createElement("small");
+      c.textContent = cond;
+      e.append(document.createElement("br"), c);
     }
-    if (compras.ofertavel("moinho_tudo")) caixa.append(btn(fmt("mo.loja.tudo", { preco: compras.preco("moinho_tudo") }), async () => {
-      const x = await compras.comprar("moinho_tudo");
+    e.setAttribute("aria-label", fmt(d.aria, { cond, preco }));
+    return e;
+  }
+  function cartaoApoio(p) {
+    const c = document.createElement("div");
+    c.className = "item cartao-tema cartao-apoio";
+    const th = temas[p.falta[0]];
+    if (th) vars(c, th);
+    if (p.comMiniatura && th) c.append(miniTab(pecasEx({ 0: 1, 4: 1, 9: 2, 14: 2 }), "quadrado"));
+    c.append(par(`${p.coracao ? "\u2665 " : ""}${t(`loja.produto.${p.chave}.titulo`)}`, "sub"), par(t(`loja.produto.${p.chave}.texto`), "nota-tema"));
+    if (p.coracao) c.append(par(t("loja.produto.apoio.nota"), "nota-tema"));
+    if (p.chave === "tudo") c.append(par(fmt("loja.produto.tudo.falta", { lista: p.falta.map((x) => (temas[x] || {}).n || x).join(", ") }), "nota-tema"));
+    const preco = compras.preco(p.playId);
+    c.append(selo("venda", "", preco));
+    const comprar = btn(fmt("loja.comprar", { preco }), async () => {
+      aviso.textContent = "";
+      const x = await compras.comprar(p.playId);
       if (x.resultado === "concluida") {
-        aviso.textContent = t("mo.loja.tudo.ok");
+        aviso.textContent = t(p.chave === "tudo" ? "mo.loja.tudo.ok" : "mo.loja.comprado").replace("{nome}", (temas[p.falta[0]] || {}).n || "");
         lista();
-      } else if (x.resultado === "erro") aviso.textContent = t(x.erro === "sem_rede" || x.erro === "loja_indisponivel" ? "mo.loja.sem_ligacao" : "mo.loja.erro");
-      else if (x.resultado === "pendente") aviso.textContent = t("mo.loja.pendente");
-    }));
+      } else erroCompra(x);
+    }, "principal");
+    c.append(comprar);
+    if (th) c.append(btn(t("loja.experimentar"), () => {
+      r.querySelectorAll(".previa").forEach((x) => x.remove());
+      previa({ ...th, id: p.falta[0] }, "tema");
+    }, "contorno"), par(t("loja.experimentar.nota"), "nota-tema"));
+    return c;
+  }
+  function secao(chave, titulo, sub, filhos, contagem = "", aviso2 = "") {
+    if (!filhos.length) return;
+    const sec = document.createElement("section");
+    sec.className = `loja-secao loja-secao-${chave}`;
+    const h = document.createElement("h2");
+    h.className = "secao";
+    h.textContent = titulo;
+    if (contagem) {
+      const ct = document.createElement("span");
+      ct.className = "secao-contagem";
+      ct.textContent = contagem;
+      h.append(ct);
+    }
+    sec.append(h);
+    if (sub) sec.append(par(sub, "nota"));
+    if (aviso2) sec.append(par(aviso2, "msg"));
+    const g = document.createElement("div");
+    g.className = "loja-cartoes";
+    g.append(...filhos);
+    sec.append(g);
+    caixa.append(sec);
+  }
+  function cartao(item, tipo) {
+    const aberto = abertoDe(item, tipo);
+    const emUso = tipo === "tema" ? meta.tema === item.id : meta[tipo] === item.id;
+    const venda = !aberto && tipo === "tema" && !!playIdDoTema(item.id);
+    const c = document.createElement("div");
+    c.className = "item cartao-tema";
+    vars(c, tipo === "tema" ? item : temas[meta.tema] || temas.madeira);
+    if (tipo === "peca" || tipo === "moldura") varsCosm(c, tipo === "peca" ? item.id : "", tipo === "moldura" ? item.id : "");
+    if (tipo === "moldura") {
+      const w = document.createElement("div");
+      w.className = "av-cartao";
+      w.append(avatarMoldura(item, "med"));
+      c.append(w);
+    } else if (tipo !== "titulo") c.append(miniTab(pecasEx({ 0: 1, 4: 1, 9: 2, 14: 2, 21: 1, 12: 2 }), formaDe(item, tipo)));
+    const ver = btn(item.n, () => {
+      r.querySelectorAll(".previa").forEach((x) => x.remove());
+      previa(item, tipo);
+    }, "contorno");
+    ver.classList.add("ver");
+    c.append(ver);
+    c.append(selo(estadoDe({ emUso, aberto }), condTxt(item, true)));
+    if (tipo === "moldura") c.append(par(t(`mo.moldura.${item.id}.desc`), "nota-tema"));
+    return c;
+  }
+  function lista() {
+    r.querySelectorAll(".previa").forEach((x) => x.remove());
+    caixa.replaceChildren();
+    abas.replaceChildren();
+    saldo.textContent = fmt("mo.loja.saldo", { n: meta.moedas || 0 });
+    for (const [k, rot] of [["temas", "mo.cosm.sep.temas"], ["pecas", "mo.cosm.sep.pecas"], ["molduras", "mo.cosm.sep.molduras"]]) {
+      const b = btn(t(rot), () => {
+        sep = k;
+        lista();
+      }, k === sep ? "principal" : "contorno");
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", String(k === sep));
+      abas.append(b);
+    }
+    const itens = sep === "temas" ? TEMAS_ORDEM.filter((id) => temas[id]).map((id) => ({ ...temas[id], id })) : sep === "pecas" ? cosmeticos.filter((x) => x.tipo === "peca") : cosmeticos.filter((x) => x.tipo === "moldura" || x.tipo === "titulo");
+    const tp = (i) => sep === "temas" ? "tema" : i.tipo;
+    const sc = secoes(itens, { aberto: (i) => abertoDe(i, tp(i)), emUso: (i) => tp(i) === "tema" ? meta.tema === i.id : meta[tp(i)] === i.id, apoio: (i) => sep === "temas" && !!playIdDoTema(i.id) && !abertoDe(i, "tema") });
+    secao("teus", t("loja.secao.teus"), "", sc.teus.map((i) => cartao(i, tp(i))), fmt("loja.secao.contagem", { n: sc.teus.length, total: itens.length }));
+    secao("ganha", t("loja.secao.ganha"), t("loja.secao.ganha.sub"), sc.ganha.map((i) => cartao(i, tp(i))));
+    if (sep === "temas") {
+      const ap = cartoesApoio(PRODUTOS, (x) => !!meta.pagos[x]);
+      secao("apoiar", t("loja.secao.apoiar"), t("loja.secao.apoiar.sub"), ap.map(cartaoApoio), "", t("loja.aviso.compras"));
+      if (compras.ofertavel(SKU_SEM_ANUNCIOS)) caixa.append(btn(fmt("mo.loja.sem_anuncios.comprar", { preco: compras.preco(SKU_SEM_ANUNCIOS) }), async () => {
+        const x = await compras.comprar(SKU_SEM_ANUNCIOS);
+        if (x.resultado === "concluida") {
+          aviso.textContent = t("mo.loja.sem_anuncios.ok");
+          lista();
+        } else erroCompra(x);
+      }));
+      caixa.append(botaoAnuncio("A4", {}, (c) => {
+        aviso.textContent = fmt("mo.ad.A4.ok", { n: c.moedas });
+        lista();
+      }));
+    }
   }
   lista();
-  r.append(caixa, aviso, par(t("mo.loja.sub")), btn(t("mo.loja.restaurar"), async () => {
-    const x = await compras.restaurar();
-    aviso.textContent = t(x.resultado === "erro" ? "mo.loja.sem_ligacao" : x.n ? "mo.loja.restaurado" : "mo.loja.restaurar.vazio");
-    lista();
-  }));
+  r.append(saldo, abas, caixa, aviso, par(t("mo.loja.sub")), btnRestaurar(aviso, lista));
 }
 function mpMenu() {
   const r = ecra("E13");
@@ -1117,13 +1680,7 @@ function mpMenu() {
   );
 }
 async function copiar(texto, aviso) {
-  try {
-    if (navigator.share) {
-      await navigator.share({ text: texto });
-      return;
-    }
-  } catch {
-  }
+  if (await partilharTexto(texto) !== "indisponivel") return;
   try {
     await navigator.clipboard.writeText(texto);
     aviso.textContent = t("mo.mp.codigo.copiado");
@@ -1180,6 +1737,20 @@ function ecraPartidas(erroChave = "") {
   const ac = document.createElement("div");
   ac.className = "acoes";
   ac.append(btn(t("tab.async.convidar"), convidar, "principal"), btn(t("tab.async.colar"), () => ecraColar(), "contorno"));
+  const oferta = document.createElement("div");
+  oferta.className = "acoes";
+  oferta.id = "oferta-codigo";
+  r.append(oferta);
+  (async () => {
+    try {
+      const tx = await navigator.clipboard.readText();
+      if (ecraAtual === "E9P" && lerCodigo(normalizarEntrada(tx)).ok) oferta.append(btn(t("tab.async.colar.usar"), () => {
+        const k = importar(tx);
+        if (k) ecraColar(k);
+      }, "principal"));
+    } catch {
+    }
+  })();
   r.append(ac, par(fmt("tab.async.contador", { n: partidas.length }), "nota contador"));
   if (aviso) r.append(faixaErro(aviso, () => ecraPartidas()));
   if (!partidas.length) r.append(par(t("tab.async.vazio")));
@@ -1241,7 +1812,7 @@ function convidar() {
 function abrirPartida(g) {
   const est = estadoLista(g);
   if (est === "terminada") return ecraFimMP(g);
-  if (!g.jogadas && g.euSou === "A") return ecraEnviar(g, { convite: true });
+  if (!g.jogadas && g.euSou === "A" && corDe(g) !== 1) return ecraEnviar(g, { convite: true });
   ecraPartida(g);
 }
 function fazerDesistir(g) {
@@ -1258,14 +1829,13 @@ function fazerDesistir(g) {
 async function partilharCodigo(g, aviso, via) {
   const texto = textoPartilha(t("tab.async.frase"), g.codigo);
   if (via === "partilha") {
-    try {
-      if (navigator.share) {
-        await navigator.share({ text: texto });
+    {
+      const r = await partilharTexto(texto);
+      if (r === "cancelado") return false;
+      if (r === "partilhado") {
         emitir("async:enviado", { semente: g.semente, via });
         return true;
       }
-    } catch {
-      return false;
     }
   }
   try {
@@ -1368,7 +1938,7 @@ function ecraPartida(g) {
     nivel: "media",
     cor: corDe(g),
     semente: g.semente,
-    historico: lr.jogadas.filter((m) => m !== "X"),
+    historico: lr.jogadas.filter((m) => m !== "X" && m !== "W"),
     titulo: fmt("tab.async.e12.titulo", { semente: g.codigo.split("-")[1] }),
     corTexto: t(corDe(g) === 1 ? "tab.async.cor.brancas" : "tab.async.cor.pretas"),
     ultima: ultimaDoAdversario(g)
@@ -1432,7 +2002,7 @@ function contarPartidaCodigo(g, f) {
   } catch {
   }
   if (cont.includes(g.semente)) return;
-  const eu = corDe(g), lr = lerCodigo(g.codigo), js = lr.ok ? lr.jogadas.filter((m) => m !== "X") : [];
+  const eu = corDe(g), lr = lerCodigo(g.codigo), js = lr.ok ? lr.jogadas.filter((m) => m !== "X" && m !== "W") : [];
   const resultado = f.vencedor === 0 ? "e" : f.vencedor === eu ? "v" : "d";
   let moinhos = 0, q = null, fase3 = false;
   try {
@@ -1449,8 +2019,12 @@ function contarPartidaCodigo(g, f) {
   stats = registarGlobais(stats, { moinhos, resultado, dia: hojeISO() }, meta.contadores.melhorSerie);
   gravarStats();
   const rf = registarFim(meta, { modo: "codigo", resultado, jogadas: js.length, jogadasMinhas: minhas, moinhos, desistencia: !!f.adversarioDesistiu, fase3 }, ctxMeta());
-  meta = rf.meta;
-  gravarMeta();
+  {
+    const antes = meta;
+    meta = rf.meta;
+    gravarMeta();
+    avisarCosm(antes);
+  }
   cont.push(g.semente);
   escreverJSON("moinho_contadas", cont.slice(-100));
   if (rf.xp.total) emitir("xp:ganho", { total: rf.xp.total, linhas: rf.xp.linhas });
@@ -1473,6 +2047,7 @@ function ecraFimMP(g) {
   r.append(h);
   r.append(par(fmt("tab.async.linha", { semente: g.codigo.split("-")[1] }), "nota"), btn(t("tab.async.fim.nova"), convidar, "principal"), btn(t("tab.async.fim.partidas"), () => ecraPartidas(), "contorno"));
 }
+const AVATARES = ["\u{1F98A}", "\u{1F43B}", "\u{1F43C}", "\u{1F989}", "\u{1F419}", "\u{1F422}", "\u{1F981}", "\u{1F438}", "\u{1F984}", "\u{1F427}", "\u{1F98B}", "\u{1F41D}"];
 function amigos(msgInicial = "") {
   const r = ecra("E14");
   r.append(topo(t("mo.mp.amigos"), mpMenu));
@@ -1485,8 +2060,27 @@ function amigos(msgInicial = "") {
     campo2.placeholder = t("mo.mp.alcunha");
     campo2.maxLength = 16;
     campo2.setAttribute("aria-label", t("mo.mp.alcunha"));
-    r.append(par(t("mo.mp.alcunha"), "sub"), campo2, btn(t("mo.mp.guardar"), () => {
-      const x = novoPerfil(campo2.value);
+    let av = 0;
+    const grelha = document.createElement("div");
+    grelha.className = "avatares";
+    grelha.setAttribute("role", "group");
+    grelha.setAttribute("aria-label", t("tab.cartao.escolhe_avatar"));
+    const bs = AVATARES.map((e, i) => {
+      const b = btn(e, () => {
+        av = i;
+        marca();
+      }, "avatar-b");
+      b.setAttribute("aria-label", fmt("tab.cartao.avatar", { n: i + 1 }));
+      return b;
+    });
+    const marca = () => bs.forEach((b, i) => {
+      b.setAttribute("aria-pressed", i === av);
+      b.classList.toggle("sel", i === av);
+    });
+    marca();
+    grelha.append(...bs);
+    r.append(par(t("mo.mp.alcunha"), "sub"), campo2, par(t("tab.cartao.escolhe_avatar"), "nota"), grelha, btn(t("mo.mp.guardar"), () => {
+      const x = novoPerfil(campo2.value, av);
       if (!x.ok) {
         msg.textContent = t("mo.mp.alcunha.invalida");
         return;
@@ -1502,33 +2096,93 @@ function amigos(msgInicial = "") {
   const cp = document.createElement("p");
   cp.className = "codigo";
   cp.textContent = cartao;
-  r.append(par(t("mo.mp.cartao.teu"), "sub"), cp, btn(t("mo.mp.codigo.partilhar"), () => copiar(cartao, msg), "principal"));
+  const partilhar = async () => {
+    const txt = t("tab.cartao.partilha_frase") + cartao;
+    {
+      const r2 = await partilharTexto(txt);
+      if (r2 === "cancelado") return;
+      if (r2 === "partilhado") {
+        emitir("cartao:partilhado", { via: "partilha" });
+        return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(txt);
+      msg.textContent = t("tab.cartao.copiado");
+      emitir("cartao:partilhado", { via: "copiar" });
+    } catch {
+      msg.textContent = cartao;
+    }
+  };
+  const copiarC = async () => {
+    try {
+      await navigator.clipboard.writeText(cartao);
+      msg.textContent = t("tab.cartao.copiado");
+    } catch {
+      msg.textContent = cartao;
+    }
+  };
+  r.append(par(t("mo.mp.cartao.teu"), "sub"), cp, btn(t("mo.mp.codigo.partilhar"), partilhar, "principal"), btn(t("tab.cartao.copiar"), copiarC, "contorno"));
   const campo = document.createElement("input");
   campo.type = "text";
   campo.className = "campo";
   campo.placeholder = t("mo.mp.cartao.colar");
   campo.setAttribute("aria-label", t("mo.mp.cartao.colar"));
-  r.append(campo, btn(t("mo.mp.cartao.colar"), () => {
-    const x = adicionarAmigo(meta.amigos, campo.value, meta.perfil.id);
+  const ERRO = { proprio: "tab.cartao.proprio", cheia: "tab.cartao.cheia" };
+  const importar2 = (texto) => {
+    const antes = meta.amigos.length;
+    const x = adicionarAmigo(meta.amigos, texto, meta.perfil.id);
     if (!x.ok) {
-      msg.textContent = t("mo.mp.cartao.invalido");
+      emitir("cartao:erro", { erro: x.erro });
+      msg.textContent = t(ERRO[x.erro] || "tab.cartao.erro.invalido");
       return;
     }
+    const nova = x.tabela.length > antes, id = texto.trim().split("-")[2];
     meta.amigos = x.tabela;
     gravarMeta();
     eventoMeta("amigo");
-    amigos(t("mo.mp.cartao.adicionado"));
-  }), msg);
-  const tabela = ordenarTabela([{ alcunha: meta.perfil.alcunha, pontos: meta.pontos, id: meta.perfil.id }, ...meta.amigos]);
+    emitir("cartao:importado", { id, nova });
+    amigos(t(nova ? "mo.mp.cartao.adicionado" : "tab.cartao.atualizado"));
+  };
+  const colarArea = async () => {
+    let txt = "";
+    try {
+      txt = await navigator.clipboard.readText();
+    } catch {
+    }
+    campo.value = txt;
+    importar2(txt);
+  };
+  r.append(campo, btn(t("mo.mp.cartao.colar"), () => importar2(campo.value), "principal"), btn(t("tab.cartao.colar_area"), colarArea, "contorno"), msg);
+  r.append(par(t("tab.cartao.tabela"), "sub"));
+  const eu = { alcunha: meta.perfil.alcunha, pontos: meta.pontos, id: meta.perfil.id, eu: true };
   const ol = document.createElement("ol");
-  ol.className = "conq";
-  for (const a of tabela) {
+  ol.className = "tabela-amigos";
+  for (const a of ordenarTabela([eu, ...meta.amigos])) {
     const li = document.createElement("li");
-    li.className = a.id === meta.perfil.id ? "on" : "";
-    li.textContent = `${a.alcunha} \xB7 ${fmt("mo.rank.pontos", { n: a.pontos })}`;
+    if (a.eu) li.className = "eu";
+    const nome = document.createElement("span");
+    nome.className = "nome";
+    nome.textContent = `${a.alcunha} \xB7 ${fmt("mo.rank.pontos", { n: a.pontos })}`;
+    li.append(nome);
+    const e = document.createElement("span");
+    e.className = "etiqueta";
+    li.append(e);
+    if (a.eu) e.textContent = t("tab.cartao.tu");
+    else {
+      e.textContent = "? " + t("tab.cartao.nao_verificado");
+      const b = btn("\u2715", () => confirmar(t("tab.cartao.remover.confirma"), t("tab.cartao.remover"), () => {
+        meta.amigos = meta.amigos.filter((m) => m.id !== a.id);
+        gravarMeta();
+        amigos(t("tab.cartao.removido"));
+      }), "icone-b remover");
+      b.setAttribute("aria-label", `${t("tab.cartao.remover")} ${a.alcunha}`);
+      li.append(b);
+    }
     ol.append(li);
   }
   r.append(ol);
+  if (!meta.amigos.length) r.append(par(t("tab.cartao.vazio"), "nota"));
 }
 let ultimoVoltar = 0, plat = null;
 function voltar() {
@@ -1575,8 +2229,18 @@ async function arrancar() {
   } catch {
     temas = {};
   }
+  try {
+    cosmeticos = await (await fetch(new URL("../data/cosmeticos.json", import.meta.url))).json();
+  } catch {
+    cosmeticos = [];
+  }
   carregar();
   aplicarTema(meta.tema);
+  if (!meta.instalado) {
+    meta.instalado = Date.now();
+    escreverJSON(CHAVE_META, meta);
+  }
+  anuncios.configurar({ semAnuncios: () => semAnuncios(meta) });
   try {
     await contas.iniciar({ jogoId: JOGO_ID, schema: SCHEMA, merge: mergeConta, aoMudar: (e) => {
       if (ocupadoConta || !e.sessao || e.sync !== "ok") return;
@@ -1597,6 +2261,7 @@ async function arrancar() {
   document.addEventListener("pointerdown", () => window.JogoAudio && window.JogoAudio.desbloquear(), { once: true });
   plat = ligarCicloDeVida({ aoVoltar: voltar });
   entrada();
+  anuncios.iniciar();
 }
 function entrada() {
   if (contas.ativo() && !contas.estado().sessao) ecraLogin(contas, { ecra, btn, par, t }, () => menu());

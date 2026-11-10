@@ -79,6 +79,7 @@ function aoResolver(doc, puzzle, { semPista }) {
     doc.lascas.ganhasTotal += lascas;
     eventos.push(["lascas:alteradas", { delta: lascas, saldo: doc.lascas.saldo, motivo: "nivel" }]);
     darItem(doc, idSelo(n), "nivel", eventos);
+    if (n === 3) darItem(doc, "PEDRA-XISTO", "nivel", eventos);
     if (n === 5) darItem(doc, "MOLD-MESTRE", "nivel", eventos);
     if (PACOTE_DO_NIVEL[n]) darItem(doc, PACOTE_DO_NIVEL[n], "nivel", eventos);
     eventos.push(["oficio:nivel", { antes: n - 1, nivel: n, lascas, selo: idSelo(n) }]);

@@ -1,6 +1,6 @@
 import { lerConfig } from "./config.js";
 import { criarSimulado, armazemMemoria } from "./adaptadores/simulado.js";
-import { criarSupabase } from "./adaptadores/supabase.js";
+import { criarSupabase, limparSessaoLocal } from "./adaptadores/supabase.js";
 import {
   LIMITE_BYTES,
   BACKOFF_MS,
@@ -13,7 +13,7 @@ import {
   reconciliar
 } from "./sync.js";
 const VERSAO = "1.0.0";
-const CODIGOS = ["rede", "credenciais", "email_existe", "email_invalido", "password_fraca", "cancelado", "sem_sessao", "conflito", "limite", "email_limite", "espera", "google_sem_id", "google_indisponivel", "desconhecido"];
+const CODIGOS = ["rede", "credenciais", "email_existe", "email_invalido", "password_fraca", "cancelado", "sem_sessao", "conflito", "limite", "email_limite", "espera", "email_nao_confirmado", "google_sem_id", "google_indisponivel", "desconhecido"];
 const err = (e) => ({ ok: false, erro: { codigo: CODIGOS.includes(e && e.codigo) ? e.codigo : "desconhecido" } });
 function armazemLocal() {
   try {
@@ -93,6 +93,10 @@ function criarContas() {
       return { ...est };
     },
     ativo: () => tem(),
+    clienteSupabase() {
+      return adaptador && adaptador.cliente ? adaptador.cliente() : Promise.resolve(null);
+    },
+    // N-39
     async criarConta(email, password) {
       if (!tem()) return err({ codigo: "desconhecido" });
       try {
@@ -136,6 +140,15 @@ function criarContas() {
         return err(e);
       }
     },
+    async reenviarConfirmacao(email) {
+      if (!tem() || !adaptador.reenviar) return err({ codigo: "desconhecido" });
+      try {
+        await adaptador.reenviar(email);
+        return { ok: true };
+      } catch (e) {
+        return err(e);
+      }
+    },
     async recuperarPassword(email) {
       if (!tem()) return err({ codigo: "desconhecido" });
       try {
@@ -146,7 +159,10 @@ function criarContas() {
       }
     },
     async sair() {
-      if (!tem()) return { ok: true };
+      if (!tem()) {
+        limparSessaoLocal();
+        return { ok: true };
+      }
       cancelarTimer();
       try {
         await adaptador.sair();

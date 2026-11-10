@@ -328,7 +328,10 @@
     "n": 1
    },
    "premio": {
-    "lascas": 40
+    "lascas": 40,
+    "extra": [
+     "PEDRA-AREIA"
+    ]
    }
   },
   {
@@ -432,7 +435,10 @@
     "n": 40
    },
    "premio": {
-    "lascas": 50
+    "lascas": 50,
+    "extra": [
+     "PAL-ESTUARIO"
+    ]
    }
   },
   {
@@ -458,7 +464,10 @@
    },
    "premio": {
     "lascas": 60,
-    "item": "SELO-100"
+    "item": "SELO-100",
+    "extra": [
+     "MOLD-PINHAL"
+    ]
    }
   },
   {
@@ -495,7 +504,10 @@
    },
    "premio": {
     "lascas": 80,
-    "item": "MOLD-TRIMESTRE"
+    "item": "MOLD-TRIMESTRE",
+    "extra": [
+     "PEDRA-CORTICA"
+    ]
    }
   },
   {
@@ -507,7 +519,10 @@
     "n": 6
    },
    "premio": {
-    "lascas": 150
+    "lascas": 150,
+    "extra": [
+     "PAL-OLIVAL"
+    ]
    }
   },
   {
